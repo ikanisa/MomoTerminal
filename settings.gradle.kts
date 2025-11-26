@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "MomoTerminal"
 include(":app")
+include(":baselineprofile")

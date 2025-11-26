@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <!-- Debug Tools Initializer - runs before Application.onCreate() -->
+        <provider
+            android:name="com.momoterminal.debug.DebugToolsInitializer"
+            android:authorities="${applicationId}.debug-tools-init"
+            android:exported="false" />
+    </application>
+
+</manifest>
