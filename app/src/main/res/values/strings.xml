@@ -35,4 +35,8 @@
     <string name="action_settings">Settings</string>
     <string name="action_history">Transaction History</string>
     <string name="action_sync">Sync Now</string>
+<resources>
+    <string name="app_name">MomoTerminal</string>
+    <string name="service_description">Momo Payment Tag</string>
+    <string name="aid_group_description">Momo Payment AID Group</string>
 </resources>

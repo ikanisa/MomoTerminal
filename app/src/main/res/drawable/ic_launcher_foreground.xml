@@ -32,5 +32,20 @@
         <path
             android:fillColor="#FFFFFF"
             android:pathData="M36,66 L36,42 L42,42 L48,54 L54,42 L60,42 L60,66 L54,66 L54,54 L48,66 L42,66 L42,54 L36,66"/>
+    <group android:scaleX="1.5"
+        android:scaleY="1.5"
+        android:translateX="27"
+        android:translateY="27">
+        <!-- M letter for MomoTerminal -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M4,32h8l6,-16 6,16h8v-24h-6v14l-4,-10h-8l-4,10v-14h-6z" />
+        <!-- Payment/wallet icon below -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M6,36h24v4h-24z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M10,42h16v8h-16z" />
     </group>
 </vector>

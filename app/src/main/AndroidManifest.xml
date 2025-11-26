@@ -7,6 +7,14 @@
     <uses-feature
         android:name="android.hardware.nfc"
         android:required="true" />
+    <!-- Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- NFC HCE Feature -->
     <uses-feature
         android:name="android.hardware.nfc.hce"
         android:required="true" />
@@ -24,6 +32,7 @@
 
     <application
         android:name=".MomoTerminalApp"
+    <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -37,6 +46,13 @@
             android:name=".ui.MainActivity"
             android:exported="true"
             android:launchMode="singleTop">
+        tools:targetApi="34">
+
+        <!-- Main Activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.MomoTerminal">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -46,6 +62,19 @@
         <!-- NFC Host Card Emulation Service -->
         <service
             android:name=".nfc.MomoHceService"
+        <!-- SMS Receiver -->
+        <receiver
+            android:name=".SmsReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- NFC HCE Service -->
+        <service
+            android:name=".NfcHceService"
             android:exported="true"
             android:permission="android.permission.BIND_NFC_SERVICE">
             <intent-filter>
@@ -70,6 +99,9 @@
         <service
             android:name=".api.SyncService"
             android:exported="false" />
+
+                android:resource="@xml/apduservice" />
+        </service>
 
     </application>
 
