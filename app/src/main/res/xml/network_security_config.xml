@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Network Security Configuration for MomoTerminal
+    
+    IMPORTANT: Before deploying to production, replace the placeholder certificate
+    pins with actual SHA-256 pins from your SSL certificate chain:
+    1. Get your server's certificate: openssl s_client -connect api.momoterminal.com:443
+    2. Extract the public key and generate the pin:
+       openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64
+    3. Replace PLACEHOLDER_PRIMARY_PIN and PLACEHOLDER_BACKUP_PIN
+-->
+<network-security-config>
+    <!-- Disable cleartext traffic globally -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    
+    <!-- Production domain with certificate pinning -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api.momoterminal.com</domain>
+        <pin-set expiration="2026-01-01">
+            <!-- Primary pin - MUST be replaced before production deployment -->
+            <pin digest="SHA-256">PLACEHOLDER_PRIMARY_PIN</pin>
+            <!-- Backup pin - MUST be replaced before production deployment -->
+            <pin digest="SHA-256">PLACEHOLDER_BACKUP_PIN</pin>
+        </pin-set>
+    </domain-config>
+    
+    <!-- Debug configuration for development -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="user" />
+            <certificates src="system" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>

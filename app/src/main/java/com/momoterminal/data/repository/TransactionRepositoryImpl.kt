@@ -1,0 +1,104 @@
+package com.momoterminal.data.repository
+
+import com.momoterminal.data.local.dao.TransactionDao
+import com.momoterminal.data.mapper.TransactionMapper
+import com.momoterminal.data.remote.api.MomoApiService
+import com.momoterminal.domain.model.SyncStatus
+import com.momoterminal.domain.model.Transaction
+import com.momoterminal.domain.repository.TransactionRepository
+import com.momoterminal.security.SecureStorage
+import com.momoterminal.util.Result
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Implementation of TransactionRepository.
+ * Handles data operations between local database and remote API.
+ */
+@Singleton
+class TransactionRepositoryImpl @Inject constructor(
+    private val transactionDao: TransactionDao,
+    private val apiService: MomoApiService,
+    private val secureStorage: SecureStorage
+) : TransactionRepository {
+    
+    override suspend fun insertTransaction(transaction: Transaction): Result<Long> {
+        return try {
+            val entity = TransactionMapper.domainToEntity(transaction)
+            val id = transactionDao.insert(entity)
+            Result.Success(id)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+    
+    override suspend fun getPendingTransactions(): Result<List<Transaction>> {
+        return try {
+            val entities = transactionDao.getPendingTransactions()
+            val transactions = TransactionMapper.entityListToDomain(entities)
+            Result.Success(transactions)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+    
+    override suspend fun updateTransactionStatus(id: Long, status: SyncStatus): Result<Unit> {
+        return try {
+            transactionDao.updateStatus(id, status.value)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+    
+    override fun getRecentTransactions(limit: Int): Flow<List<Transaction>> {
+        return transactionDao.getRecentTransactions(limit).map { entities ->
+            TransactionMapper.entityListToDomain(entities)
+        }
+    }
+    
+    override fun getPendingCount(): Flow<Int> {
+        return transactionDao.getPendingCount()
+    }
+    
+    override suspend fun syncPendingTransactions(): Result<Int> {
+        return try {
+            val merchantPhone = secureStorage.getMerchantCode() ?: ""
+            val pendingEntities = transactionDao.getPendingTransactions()
+            var syncedCount = 0
+            
+            for (entity in pendingEntities) {
+                try {
+                    val request = TransactionMapper.entityToSyncRequest(entity, merchantPhone)
+                    val response = apiService.syncTransaction(request)
+                    
+                    if (response.isSuccessful && response.body()?.success == true) {
+                        transactionDao.updateStatus(entity.id, SyncStatus.SENT.value)
+                        syncedCount++
+                    } else {
+                        // Keep as pending for retry
+                    }
+                } catch (e: Exception) {
+                    // Individual sync failure - continue with others
+                }
+            }
+            
+            Result.Success(syncedCount)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+    
+    override suspend fun deleteOldTransactions(olderThanDays: Int): Result<Int> {
+        return try {
+            val threshold = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(olderThanDays.toLong())
+            val deletedCount = transactionDao.deleteOldTransactions(threshold)
+            Result.Success(deletedCount)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+}

@@ -23,6 +23,7 @@ import com.momoterminal.databinding.ActivityMainBinding
 import com.momoterminal.nfc.MomoHceService
 import com.momoterminal.sms.SmsReceiver
 import com.momoterminal.ussd.UssdHelper
+import dagger.hilt.android.AndroidEntryPoint
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -36,6 +37,7 @@ import java.util.Locale
  * - Activating/deactivating the NFC terminal
  * - Viewing SMS relay status and recent transactions
  */
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
