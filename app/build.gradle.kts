@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
     alias(libs.plugins.firebase.perf)
+    alias(libs.plugins.baselineprofile)
     id("jacoco")
 }
 
@@ -30,15 +31,32 @@ android {
             configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
                 mappingFileUploadEnabled = false
             }
+            buildConfigField("boolean", "STRICT_MODE_ENABLED", "true")
+            buildConfigField("boolean", "LEAK_CANARY_ENABLED", "true")
         }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
+                "proguard-rules-r8-full.pro"
             )
+            buildConfigField("boolean", "STRICT_MODE_ENABLED", "false")
+            buildConfigField("boolean", "LEAK_CANARY_ENABLED", "false")
         }
+        create("benchmark") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+            isDebuggable = false
+            proguardFiles("benchmark-rules.pro")
+        }
+    }
+    
+    baselineProfile {
+        automaticGenerationDuringBuild = false
+        saveInSrc = true
     }
 
     compileOptions {
@@ -166,7 +184,7 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
-    implementation(libs.compose.material3.window.size.class)
+    implementation(libs.compose.material3.windowsizeclass)
     implementation(libs.compose.runtime)
     implementation(libs.compose.foundation)
     debugImplementation(libs.compose.ui.tooling)
@@ -289,4 +307,13 @@ dependencies {
     androidTestImplementation(libs.turbine)
     androidTestImplementation(libs.coroutines.test)
     androidTestImplementation(libs.navigation.testing)
+
+    // Performance Optimization
+    implementation(libs.androidx.profileinstaller)
+    baselineProfile(project(":baselineprofile"))
+    debugImplementation(libs.leakcanary)
+    implementation(libs.androidx.startup)
+    implementation(libs.androidx.tracing)
+    implementation(libs.androidx.tracing.ktx)
+    debugImplementation(libs.compose.runtime.tracing)
 }
