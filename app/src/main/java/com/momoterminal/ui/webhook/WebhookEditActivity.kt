@@ -120,6 +120,29 @@ class WebhookEditActivity : AppCompatActivity() {
             return
         }
         
+        // Warn about insecure HTTP URLs
+        if (url.startsWith("http://") && !url.startsWith("http://localhost") && !url.startsWith("http://127.0.0.1")) {
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Security Warning")
+                .setMessage("HTTP URLs transmit data in plain text. For Mobile Money data, HTTPS is strongly recommended. Continue anyway?")
+                .setPositiveButton("Continue") { _, _ ->
+                    proceedWithSave(name, url, phoneNumber, apiKey, hmacSecret)
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+            return
+        }
+        
+        proceedWithSave(name, url, phoneNumber, apiKey, hmacSecret)
+    }
+    
+    private fun proceedWithSave(
+        name: String,
+        url: String,
+        phoneNumber: String,
+        apiKey: String,
+        hmacSecret: String
+    ) {
         if (apiKey.isEmpty()) {
             etApiKey.error = "API Key is required"
             return

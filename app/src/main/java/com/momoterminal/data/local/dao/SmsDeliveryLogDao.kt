@@ -150,6 +150,22 @@ interface SmsDeliveryLogDao {
     ): PagingSource<Int, SmsDeliveryLogEntity>
     
     /**
+     * Get filtered logs as a Flow.
+     */
+    @Query("""
+        SELECT * FROM sms_delivery_logs 
+        WHERE (:webhookId IS NULL OR webhookId = :webhookId)
+          AND (:status IS NULL OR status = :status)
+        ORDER BY createdAt DESC
+        LIMIT :limit
+    """)
+    fun getFilteredLogs(
+        webhookId: Long?,
+        status: String?,
+        limit: Int = 100
+    ): Flow<List<SmsDeliveryLogEntity>>
+    
+    /**
      * Get recent logs limited to a certain count.
      */
     @Query("SELECT * FROM sms_delivery_logs ORDER BY createdAt DESC LIMIT :limit")

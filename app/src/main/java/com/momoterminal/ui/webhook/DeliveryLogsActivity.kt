@@ -141,26 +141,15 @@ class DeliveryLogsActivity : AppCompatActivity() {
     
     private fun observeLogs() {
         lifecycleScope.launch {
-            // Get filtered logs based on selection
-            val logsFlow = if (selectedWebhookId != null) {
-                webhookRepository.getLogsByWebhook(selectedWebhookId!!)
-            } else if (selectedStatus != null) {
-                webhookRepository.getLogsByStatus(selectedStatus!!)
-            } else {
-                webhookRepository.getRecentDeliveryLogs(100)
-            }
-            
-            logsFlow.collectLatest { logs ->
-                // Apply additional filter if both are selected
-                val filteredLogs = logs.filter { log ->
-                    val statusMatch = selectedStatus == null || log.status == selectedStatus
-                    val webhookMatch = selectedWebhookId == null || log.webhookId == selectedWebhookId
-                    statusMatch && webhookMatch
-                }
+            // Use database-level filtering for better efficiency
+            webhookRepository.getFilteredLogs(
+                webhookId = selectedWebhookId,
+                status = selectedStatus,
+                limit = 100
+            ).collectLatest { logs ->
+                adapter.submitList(logs)
                 
-                adapter.submitList(filteredLogs)
-                
-                if (filteredLogs.isEmpty()) {
+                if (logs.isEmpty()) {
                     recyclerView.visibility = View.GONE
                     emptyView.visibility = View.VISIBLE
                 } else {

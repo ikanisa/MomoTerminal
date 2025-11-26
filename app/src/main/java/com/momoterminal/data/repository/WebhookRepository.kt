@@ -119,6 +119,17 @@ class WebhookRepository @Inject constructor(
     }
     
     /**
+     * Get filtered delivery logs using database-level filtering.
+     */
+    fun getFilteredLogs(
+        webhookId: Long?,
+        status: String?,
+        limit: Int = 100
+    ): Flow<List<SmsDeliveryLogEntity>> {
+        return smsDeliveryLogDao.getFilteredLogs(webhookId, status, limit)
+    }
+    
+    /**
      * Get a delivery log by ID.
      */
     suspend fun getDeliveryLogById(id: Long): SmsDeliveryLogEntity? {

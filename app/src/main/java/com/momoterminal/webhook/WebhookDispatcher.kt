@@ -11,6 +11,8 @@ import com.momoterminal.data.local.entity.WebhookConfigEntity
 import com.momoterminal.util.NetworkMonitor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -42,6 +44,7 @@ class WebhookDispatcher @Inject constructor(
         private const val TAG = "WebhookDispatcher"
         private const val PAYLOAD_VERSION = "1.0"
         private const val PAYLOAD_SOURCE = "momoterminal"
+        private const val MAX_RESPONSE_BODY_LENGTH = 1000
         
         private val client = OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
@@ -65,6 +68,7 @@ class WebhookDispatcher @Inject constructor(
     
     /**
      * Dispatch an SMS to all matching webhooks based on phone number.
+     * Delivery to multiple webhooks is performed in parallel for better performance.
      *
      * @param phoneNumber The phone number the SMS was received on
      * @param sender The sender of the SMS
@@ -82,28 +86,27 @@ class WebhookDispatcher @Inject constructor(
             // Find all active webhooks matching the phone number
             val matchingWebhooks = webhookConfigDao.getWebhooksByPhoneNumber(phoneNumber)
             
-            if (matchingWebhooks.isEmpty()) {
+            val webhooksToUse = if (matchingWebhooks.isEmpty()) {
                 Log.d(TAG, "No matching webhooks found for phone: $phoneNumber")
-                // Also check for webhooks with wildcard or empty phone number
-                val activeWebhooks = webhookConfigDao.getActiveWebhooksList()
-                for (webhook in activeWebhooks) {
-                    if (webhook.phoneNumber.isBlank() || webhook.phoneNumber == "*") {
-                        val logId = queueDelivery(webhook, phoneNumber, sender, message)
-                        logIds.add(logId)
-                    }
+                // Fall back to wildcard/catch-all webhooks
+                webhookConfigDao.getActiveWebhooksList().filter { 
+                    it.phoneNumber.isBlank() || it.phoneNumber == "*" 
                 }
             } else {
-                for (webhook in matchingWebhooks) {
-                    val logId = queueDelivery(webhook, phoneNumber, sender, message)
-                    logIds.add(logId)
-                }
+                matchingWebhooks
             }
             
-            // If online, attempt immediate delivery
+            // Queue all deliveries
+            for (webhook in webhooksToUse) {
+                val logId = queueDelivery(webhook, phoneNumber, sender, message)
+                logIds.add(logId)
+            }
+            
+            // If online, attempt immediate delivery in parallel
             if (networkMonitor.isConnected && logIds.isNotEmpty()) {
-                for (logId in logIds) {
-                    deliverLog(logId)
-                }
+                logIds.map { logId ->
+                    async { deliverLog(logId) }
+                }.awaitAll()
             }
             
         } catch (e: Exception) {
@@ -163,7 +166,7 @@ class WebhookDispatcher @Inject constructor(
                 .build()
             
             client.newCall(request).execute().use { response ->
-                val responseBody = response.body?.string()?.take(1000) // Limit response storage
+                val responseBody = response.body?.string()?.take(MAX_RESPONSE_BODY_LENGTH)
                 
                 if (response.isSuccessful) {
                     smsDeliveryLogDao.updateDeliveryStatus(

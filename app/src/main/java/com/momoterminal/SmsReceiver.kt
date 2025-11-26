@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
+import com.momoterminal.config.AppConfig
 import com.momoterminal.data.AppDatabase
 import com.momoterminal.data.TransactionEntity
 import com.momoterminal.sync.SyncManager
@@ -84,8 +85,8 @@ class SmsReceiver : BroadcastReceiver() {
     private fun dispatchToWebhooks(context: Context, sender: String, body: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Get the device's phone number (if available) for routing
-                // For now, we use the sender as the identifier since we're receiving SMS
+                // Get the configured merchant phone number for routing
+                // This allows matching webhooks by the device's MoMo phone number
                 val phoneNumber = getDevicePhoneNumber(context)
                 
                 webhookDispatcher.dispatchSms(
@@ -105,14 +106,18 @@ class SmsReceiver : BroadcastReceiver() {
     }
     
     /**
-     * Get the device phone number if available.
-     * Falls back to empty string if not accessible.
+     * Get the device phone number from configuration.
+     * Uses the merchant phone number configured in settings for webhook routing.
+     * Falls back to empty string which will match wildcard/catch-all webhooks.
      */
     private fun getDevicePhoneNumber(context: Context): String {
-        // Note: Getting the phone number requires additional permissions
-        // and may not always be available. The webhook routing should
-        // also support matching by wildcard or empty phone number.
-        return ""
+        return try {
+            val appConfig = AppConfig(context)
+            appConfig.getMerchantPhone().takeIf { it.isNotBlank() } ?: ""
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not get merchant phone number", e)
+            ""
+        }
     }
     
     private fun saveToDatabase(context: Context, sender: String, body: String, timestamp: Long) {
