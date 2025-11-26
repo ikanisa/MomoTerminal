@@ -1,0 +1,217 @@
+package com.momoterminal.data.repository
+
+import com.google.common.truth.Truth.assertThat
+import com.momoterminal.data.local.dao.TransactionDao
+import com.momoterminal.data.local.entity.TransactionEntity
+import com.momoterminal.data.remote.api.MomoApiService
+import com.momoterminal.data.remote.dto.SyncResponse
+import com.momoterminal.domain.model.SyncStatus
+import com.momoterminal.domain.model.Transaction
+import com.momoterminal.security.SecureStorage
+import com.momoterminal.util.Result
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
+import org.junit.Before
+import org.junit.Test
+import retrofit2.Response
+
+/**
+ * Unit tests for TransactionRepositoryImpl.
+ */
+class TransactionRepositoryImplTest {
+
+    private lateinit var transactionDao: TransactionDao
+    private lateinit var apiService: MomoApiService
+    private lateinit var secureStorage: SecureStorage
+    private lateinit var repository: TransactionRepositoryImpl
+
+    @Before
+    fun setup() {
+        transactionDao = mockk(relaxed = true)
+        apiService = mockk(relaxed = true)
+        secureStorage = mockk(relaxed = true)
+        
+        every { secureStorage.getMerchantCode() } returns "0244123456"
+        
+        repository = TransactionRepositoryImpl(transactionDao, apiService, secureStorage)
+    }
+
+    @Test
+    fun `insertTransaction returns success with ID`() = runTest {
+        val transaction = createTestTransaction()
+        coEvery { transactionDao.insert(any()) } returns 1L
+        
+        val result = repository.insertTransaction(transaction)
+        
+        assertThat(result).isInstanceOf(Result.Success::class.java)
+        assertThat((result as Result.Success).data).isEqualTo(1L)
+    }
+
+    @Test
+    fun `insertTransaction returns error on exception`() = runTest {
+        val transaction = createTestTransaction()
+        coEvery { transactionDao.insert(any()) } throws RuntimeException("Database error")
+        
+        val result = repository.insertTransaction(transaction)
+        
+        assertThat(result).isInstanceOf(Result.Error::class.java)
+    }
+
+    @Test
+    fun `getPendingTransactions returns list of transactions`() = runTest {
+        val entities = listOf(
+            createTestEntity(1),
+            createTestEntity(2)
+        )
+        coEvery { transactionDao.getPendingTransactions() } returns entities
+        
+        val result = repository.getPendingTransactions()
+        
+        assertThat(result).isInstanceOf(Result.Success::class.java)
+        assertThat((result as Result.Success).data).hasSize(2)
+    }
+
+    @Test
+    fun `getPendingTransactions returns error on exception`() = runTest {
+        coEvery { transactionDao.getPendingTransactions() } throws RuntimeException("Error")
+        
+        val result = repository.getPendingTransactions()
+        
+        assertThat(result).isInstanceOf(Result.Error::class.java)
+    }
+
+    @Test
+    fun `updateTransactionStatus calls dao with correct parameters`() = runTest {
+        coEvery { transactionDao.updateStatus(any(), any()) } returns Unit
+        
+        val result = repository.updateTransactionStatus(1L, SyncStatus.SENT)
+        
+        assertThat(result).isInstanceOf(Result.Success::class.java)
+        coVerify { transactionDao.updateStatus(1L, "SENT") }
+    }
+
+    @Test
+    fun `getRecentTransactions returns flow of transactions`() = runTest {
+        val entities = listOf(createTestEntity(1))
+        every { transactionDao.getRecentTransactions(any()) } returns flowOf(entities)
+        
+        val flow = repository.getRecentTransactions(10)
+        
+        flow.collect { transactions ->
+            assertThat(transactions).hasSize(1)
+        }
+    }
+
+    @Test
+    fun `getPendingCount returns flow of count`() = runTest {
+        every { transactionDao.getPendingCount() } returns flowOf(5)
+        
+        val flow = repository.getPendingCount()
+        
+        flow.collect { count ->
+            assertThat(count).isEqualTo(5)
+        }
+    }
+
+    @Test
+    fun `syncPendingTransactions syncs all pending`() = runTest {
+        val entities = listOf(
+            createTestEntity(1),
+            createTestEntity(2)
+        )
+        coEvery { transactionDao.getPendingTransactions() } returns entities
+        coEvery { apiService.syncTransaction(any()) } returns Response.success(
+            SyncResponse(success = true, message = "Synced")
+        )
+        
+        val result = repository.syncPendingTransactions()
+        
+        assertThat(result).isInstanceOf(Result.Success::class.java)
+        assertThat((result as Result.Success).data).isEqualTo(2)
+    }
+
+    @Test
+    fun `syncPendingTransactions updates status for synced transactions`() = runTest {
+        val entities = listOf(createTestEntity(1))
+        coEvery { transactionDao.getPendingTransactions() } returns entities
+        coEvery { apiService.syncTransaction(any()) } returns Response.success(
+            SyncResponse(success = true, message = "Synced")
+        )
+        
+        repository.syncPendingTransactions()
+        
+        coVerify { transactionDao.updateStatus(1L, "SENT") }
+    }
+
+    @Test
+    fun `syncPendingTransactions handles API failure gracefully`() = runTest {
+        val entities = listOf(createTestEntity(1))
+        coEvery { transactionDao.getPendingTransactions() } returns entities
+        coEvery { apiService.syncTransaction(any()) } throws RuntimeException("Network error")
+        
+        val result = repository.syncPendingTransactions()
+        
+        // Should not crash, returns success with 0 synced
+        assertThat(result).isInstanceOf(Result.Success::class.java)
+        assertThat((result as Result.Success).data).isEqualTo(0)
+    }
+
+    @Test
+    fun `syncPendingTransactions returns zero when no pending transactions`() = runTest {
+        coEvery { transactionDao.getPendingTransactions() } returns emptyList()
+        
+        val result = repository.syncPendingTransactions()
+        
+        assertThat(result).isInstanceOf(Result.Success::class.java)
+        assertThat((result as Result.Success).data).isEqualTo(0)
+    }
+
+    @Test
+    fun `deleteOldTransactions calls dao with correct threshold`() = runTest {
+        coEvery { transactionDao.deleteOldTransactions(any()) } returns 5
+        
+        val result = repository.deleteOldTransactions(30)
+        
+        assertThat(result).isInstanceOf(Result.Success::class.java)
+        assertThat((result as Result.Success).data).isEqualTo(5)
+    }
+
+    @Test
+    fun `deleteOldTransactions returns error on exception`() = runTest {
+        coEvery { transactionDao.deleteOldTransactions(any()) } throws RuntimeException("Error")
+        
+        val result = repository.deleteOldTransactions(30)
+        
+        assertThat(result).isInstanceOf(Result.Error::class.java)
+    }
+
+    private fun createTestTransaction(): Transaction {
+        return Transaction(
+            id = 0,
+            amount = 50.0,
+            senderPhone = "0201234567",
+            transactionId = "TX123",
+            provider = "MTN",
+            timestamp = System.currentTimeMillis(),
+            status = SyncStatus.PENDING,
+            rawMessage = "Payment received"
+        )
+    }
+
+    private fun createTestEntity(id: Long): TransactionEntity {
+        return TransactionEntity(
+            id = id,
+            amount = 50.0,
+            senderPhone = "0201234567",
+            transactionId = "TX$id",
+            provider = "MTN",
+            timestamp = System.currentTimeMillis(),
+            status = "PENDING",
+            rawMessage = "Payment received"
+        )
+    }
+}
