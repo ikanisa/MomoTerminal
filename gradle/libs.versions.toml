@@ -1,48 +1,88 @@
 [versions]
-agp = "8.2.2"
-kotlin = "1.9.22"
-compose-bom = "2024.01.00"
-compose-compiler = "1.5.8"
-hilt = "2.50"
+# Core Build Tools
+agp = "8.5.2"
+kotlin = "2.0.21"
+ksp = "2.0.21-1.0.27"
+
+# Compose (compose-compiler no longer needed with Kotlin 2.0 Compose plugin)
+compose-bom = "2024.11.00"
+
+# DI
+hilt = "2.52"
+
+# Database
 room = "2.6.1"
-retrofit = "2.9.0"
+
+# Networking
+retrofit = "2.11.0"
 okhttp = "4.12.0"
-coroutines = "1.7.3"
-lifecycle = "2.7.0"
-navigation = "2.7.6"
-lottie = "6.3.0"
-accompanist = "0.32.0"
-firebase-bom = "32.7.1"
+
+# Async
+coroutines = "1.9.0"
+
+# Lifecycle
+lifecycle = "2.8.7"
+
+# Navigation
+navigation = "2.8.4"
+
+# UI
+lottie = "6.6.0"
+accompanist = "0.36.0"
+
+# Firebase
+firebase-bom = "33.6.0"
+
+# Logging
 timber = "5.0.1"
-core-ktx = "1.12.0"
-appcompat = "1.6.1"
-material = "1.11.0"
-activity = "1.8.2"
-constraintlayout = "2.1.4"
+
+# Core Android
+core-ktx = "1.15.0"
+appcompat = "1.7.0"
+material = "1.12.0"
+activity = "1.9.3"
+constraintlayout = "2.2.0"
 recyclerview = "1.3.2"
-work = "2.9.0"
-paging = "3.2.1"
+
+# Background Work
+work = "2.10.0"
+
+# Paging
+paging = "3.3.4"
+
 # Note: security-crypto uses alpha version for API 34 compatibility
 # Stable 1.0.0 has known issues with some devices
 security-crypto = "1.1.0-alpha06"
-biometric = "1.1.0"
-play-services-auth = "20.7.0"
-jacoco = "0.8.11"
+
+# Biometric - using alpha for Android 15 (SDK 35) compatibility and improved APIs
+biometric = "1.2.0-alpha05"
+
+# Play Services
+play-services-auth = "21.2.0"
+
+# Code Coverage
+jacoco = "0.8.12"
+
+# Splash Screen
+splashscreen = "1.0.1"
+
+# DataStore
+datastore = "1.1.1"
 
 # Testing
 junit = "4.13.2"
-mockk = "1.13.9"
-truth = "1.2.0"
-turbine = "1.0.0"
-robolectric = "4.11.1"
-espresso = "3.5.1"
-test-ext-junit = "1.1.5"
-test-core = "1.5.0"
-test-runner = "1.5.2"
-test-rules = "1.5.0"
+mockk = "1.13.13"
+truth = "1.4.4"
+turbine = "1.2.0"
+robolectric = "4.14"
+espresso = "3.6.1"
+test-ext-junit = "1.2.1"
+test-core = "1.6.1"
+test-runner = "1.6.2"
+test-rules = "1.6.1"
 arch-core-testing = "2.2.0"
-mockito = "5.8.0"
-mockito-kotlin = "5.2.1"
+mockito = "5.14.2"
+mockito-kotlin = "5.4.0"
 
 [libraries]
 # Core Android
@@ -85,9 +125,9 @@ navigation-testing = { module = "androidx.navigation:navigation-testing", versio
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
-hilt-work = { module = "androidx.hilt:hilt-work", version = "1.1.0" }
-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version = "1.1.0" }
-hilt-androidx-compiler = { module = "androidx.hilt:hilt-compiler", version = "1.1.0" }
+hilt-work = { module = "androidx.hilt:hilt-work", version = "1.2.0" }
+hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version = "1.2.0" }
+hilt-androidx-compiler = { module = "androidx.hilt:hilt-compiler", version = "1.2.0" }
 
 # Room
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
@@ -119,11 +159,11 @@ coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-androi
 coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 
 # Serialization
-gson = { module = "com.google.code.gson:gson", version = "2.10.1" }
+gson = { module = "com.google.code.gson:gson", version = "2.11.0" }
 
 # Google Play Services
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "play-services-auth" }
-play-services-auth-api-phone = { module = "com.google.android.gms:play-services-auth-api-phone", version = "18.0.2" }
+play-services-auth-api-phone = { module = "com.google.android.gms:play-services-auth-api-phone", version = "18.1.0" }
 
 # Firebase
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
@@ -141,6 +181,12 @@ lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "
 
 # Logging
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+
+# Splash Screen
+androidx-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "splashscreen" }
+
+# DataStore
+datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 
 # Testing - Unit
 junit = { module = "junit:junit", version.ref = "junit" }
@@ -162,8 +208,9 @@ test-rules = { module = "androidx.test:rules", version.ref = "test-rules" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-google-services = { id = "com.google.gms.google-services", version = "4.4.0" }
-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version = "2.9.9" }
+google-services = { id = "com.google.gms.google-services", version = "4.4.2" }
+firebase-crashlytics = { id = "com.google.firebase.crashlytics", version = "3.0.2" }
 firebase-perf = { id = "com.google.firebase.firebase-perf", version = "1.4.2" }

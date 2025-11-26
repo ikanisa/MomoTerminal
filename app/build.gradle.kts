@@ -1,7 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
@@ -11,12 +12,12 @@ plugins {
 
 android {
     namespace = "com.momoterminal"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.momoterminal"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -53,10 +54,6 @@ android {
         viewBinding = true
         compose = true
         buildConfig = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 
     // App bundle optimization
@@ -188,10 +185,10 @@ dependencies {
 
     // Hilt Dependency Injection
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
     implementation(libs.hilt.work)
     implementation(libs.hilt.navigation.compose)
-    kapt(libs.hilt.androidx.compiler)
+    ksp(libs.hilt.androidx.compiler)
 
     // Security - EncryptedSharedPreferences
     // Note: Using alpha version as it's the most recent with API 34 compatibility
@@ -205,7 +202,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     implementation(libs.room.paging)
-    kapt(libs.room.compiler)
+    ksp(libs.room.compiler)
 
     // Paging 3
     implementation(libs.paging.runtime)
@@ -262,11 +259,11 @@ dependencies {
     testImplementation(libs.hilt.android.testing)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
-    kaptTest(libs.hilt.compiler)
+    kspTest(libs.hilt.compiler)
     
     // Testing - Android Instrumented Tests
     androidTestImplementation(libs.hilt.android.testing)
-    kaptAndroidTest(libs.hilt.compiler)
+    kspAndroidTest(libs.hilt.compiler)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)
     androidTestImplementation(libs.test.ext.junit)
@@ -279,8 +276,4 @@ dependencies {
     androidTestImplementation(libs.turbine)
     androidTestImplementation(libs.coroutines.test)
     androidTestImplementation(libs.navigation.testing)
-}
-
-kapt {
-    correctErrorTypes = true
 }
