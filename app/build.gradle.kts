@@ -184,6 +184,7 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
+    implementation(libs.compose.material3.windowSizeClass)
     implementation(libs.compose.material3.windowsizeclass)
     implementation(libs.compose.runtime)
     implementation(libs.compose.foundation)
@@ -277,6 +278,32 @@ dependencies {
 
     // Play Integrity API
     implementation(libs.play.integrity)
+
+    // ML Kit Barcode Scanning
+    implementation(libs.mlkit.barcode.scanning)
+
+    // CameraX
+    implementation(libs.camerax.core)
+    implementation(libs.camerax.camera2)
+    implementation(libs.camerax.lifecycle)
+    implementation(libs.camerax.view)
+
+    // Vico Charts
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m3)
+    implementation(libs.vico.core)
+
+    // Play App Update
+    implementation(libs.play.app.update)
+    implementation(libs.play.app.update.ktx)
+
+    // Play Review
+    implementation(libs.play.review)
+    implementation(libs.play.review.ktx)
+
+    // Coil Image Loading
+    implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
 
     // Testing - Unit Tests
     testImplementation(libs.junit)
