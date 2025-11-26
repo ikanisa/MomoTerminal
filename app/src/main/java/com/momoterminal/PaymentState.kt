@@ -14,9 +14,11 @@ object PaymentState {
     // Current payment URI for NFC broadcasting
     var currentPaymentUri: String? = null
     
-    // Webhook URL for SMS relay. 
-    // Configure this value before using the SMS relay feature.
-    // For testing, use https://webhook.site to generate a unique URL.
+    // Current payment amount for NFC broadcasting
+    var currentAmount: String? = null
+    
+    // Webhook URL for SMS relay (legacy - now uses AppConfig)
+    @Deprecated("Use AppConfig instead")
     var webhookUrl: String = ""
     
     // LiveData for SMS log updates
@@ -61,6 +63,7 @@ object PaymentState {
      */
     fun clearPayment() {
         currentPaymentUri = null
+        currentAmount = null
         statusUpdate.postValue("Payment cancelled")
     }
 }
