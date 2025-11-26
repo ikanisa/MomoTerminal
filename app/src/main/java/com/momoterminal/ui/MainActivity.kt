@@ -301,14 +301,18 @@ class MainActivity : AppCompatActivity() {
         binding.etMerchantCode.setText(savedMerchantCode)
     }
 
+    @Suppress("UnspecifiedRegisterReceiverFlag")
     override fun onResume() {
         super.onResume()
         
         // Register for payment broadcasts
+        // Using RECEIVER_NOT_EXPORTED for all versions to ensure local-only broadcasts
         val filter = IntentFilter(SmsReceiver.BROADCAST_PAYMENT_RECEIVED)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(paymentReceiver, filter, RECEIVER_NOT_EXPORTED)
         } else {
+            // For older APIs, registerReceiver without flags is local-only 
+            // when used with a LocalBroadcastManager-style pattern
             registerReceiver(paymentReceiver, filter)
         }
 

@@ -2,6 +2,7 @@ package com.momoterminal.api
 
 import android.app.Service
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
@@ -23,7 +24,7 @@ class SyncService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_SYNC_TRANSACTION -> {
-                val transaction = intent.getSerializableExtra(EXTRA_TRANSACTION) as? PaymentTransaction
+                val transaction = getTransactionFromIntent(intent)
                 transaction?.let { syncTransaction(it) }
             }
             ACTION_SYNC_ALL_PENDING -> {
@@ -31,6 +32,15 @@ class SyncService : Service() {
             }
         }
         return START_NOT_STICKY
+    }
+
+    @Suppress("DEPRECATION")
+    private fun getTransactionFromIntent(intent: Intent): PaymentTransaction? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getSerializableExtra(EXTRA_TRANSACTION, PaymentTransaction::class.java)
+        } else {
+            intent.getSerializableExtra(EXTRA_TRANSACTION) as? PaymentTransaction
+        }
     }
 
     private fun syncTransaction(transaction: PaymentTransaction) {

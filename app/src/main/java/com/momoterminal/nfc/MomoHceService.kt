@@ -5,7 +5,6 @@ import android.nfc.cardemulation.HostApduService
 import android.os.Bundle
 import android.util.Log
 import com.momoterminal.api.NfcPaymentData
-import java.nio.charset.Charset
 
 /**
  * Host Card Emulation (HCE) Service for Mobile Money payments.
@@ -105,7 +104,7 @@ class MomoHceService : HostApduService() {
         // - URI record with tel: scheme
         
         val uriPayload = ussdString.substringAfter("tel:")
-        val uriBytes = uriPayload.toByteArray(Charset.forName("UTF-8"))
+        val uriBytes = uriPayload.toByteArray(Charsets.UTF_8)
         
         // NDEF record header for URI
         val tnf: Byte = 0x01 // TNF = Well-known

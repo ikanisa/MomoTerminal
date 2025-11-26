@@ -46,30 +46,41 @@ class SmsReceiver : BroadcastReceiver() {
 
     /**
      * Check if the SMS is from a mobile money provider.
+     * Uses multiple validation layers to reduce false positives.
      */
     private fun isPaymentSms(sender: String, body: String): Boolean {
-        // Check sender ID patterns for common mobile money providers
-        val mobileMoneyProviders = listOf(
-            "MTN", "MobileMoney", "MOMO", "VodaCash", "Vodafone",
-            "AirtelTigo", "ATMoney", "MoMo", "mPesa", "MPESA"
+        // Known sender IDs for mobile money providers in Ghana
+        // These are the official shortcodes/sender IDs
+        val knownProviderSenderIds = setOf(
+            "MTN", "MobileMoney", "MTN MoMo", "MTN-MOMO",
+            "VodaCash", "Vodafone", "VodafoneCash",
+            "AirtelTigo", "ATMoney", "AT-Money",
+            "MoMo", "mPesa", "MPESA"
         )
         
-        // Check if sender matches known providers
-        val isMomoSender = mobileMoneyProviders.any { 
-            sender.contains(it, ignoreCase = true) 
+        // Check if sender exactly matches known providers (case-insensitive)
+        val isKnownSender = knownProviderSenderIds.any { 
+            sender.equals(it, ignoreCase = true) ||
+            sender.startsWith(it, ignoreCase = true)
         }
         
-        // Check if body contains payment-related keywords
-        val paymentKeywords = listOf(
-            "received", "payment", "transferred", "credited",
-            "GHS", "GHC", "amount", "from", "transaction"
-        )
-        
-        val hasPaymentKeyword = paymentKeywords.any { 
-            body.contains(it, ignoreCase = true) 
+        // If sender is not from known provider, reject early
+        // This prevents spoofing by arbitrary SMS sources
+        if (!isKnownSender) {
+            return false
         }
         
-        return isMomoSender || hasPaymentKeyword
+        // Additional validation: body must contain payment confirmation patterns
+        // At minimum, must have both amount and transaction indicator
+        val hasAmount = body.contains(Regex("GH[SC]?\\s*\\d+", RegexOption.IGNORE_CASE)) ||
+                       body.contains(Regex("\\d+\\.?\\d*\\s*GH[SC]?", RegexOption.IGNORE_CASE))
+        
+        val hasTransactionIndicator = body.contains("received", ignoreCase = true) ||
+                                      body.contains("credited", ignoreCase = true) ||
+                                      body.contains("transferred", ignoreCase = true) ||
+                                      body.contains("payment", ignoreCase = true)
+        
+        return hasAmount && hasTransactionIndicator
     }
 
     /**
@@ -118,10 +129,14 @@ class SmsReceiver : BroadcastReceiver() {
         }
 
         // Pattern for transaction ID (various formats)
+        // More specific patterns to avoid matching phone numbers
         val txIdPatterns = listOf(
-            Pattern.compile("(?:transaction|txn|ref|id)[:\\s#]*([A-Z0-9]+)", Pattern.CASE_INSENSITIVE),
+            // Explicitly labeled transaction IDs: "Transaction ID: ABC123456"
+            Pattern.compile("(?:transaction\\s*(?:id|ref)?|txn\\s*(?:id)?|ref(?:erence)?)[:\\s#]*([A-Z0-9]{6,20})", Pattern.CASE_INSENSITIVE),
+            // Format: 2-4 letter prefix followed by 6-12 digits (e.g., "MP123456789")
             Pattern.compile("\\b([A-Z]{2,4}[0-9]{6,12})\\b"),
-            Pattern.compile("\\b([0-9]{10,14})\\b")
+            // Only match 12+ digit numbers that appear after "ID" or "Ref" context
+            Pattern.compile("(?:id|ref)[:\\s]*([0-9]{12,16})\\b", Pattern.CASE_INSENSITIVE)
         )
         for (pattern in txIdPatterns) {
             val matcher = pattern.matcher(body)
