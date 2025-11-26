@@ -3,29 +3,41 @@
     <!-- Base application theme - Dark Theme -->
     <style name="Theme.MomoTerminal" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color -->
-        <item name="colorPrimary">#00C853</item>
-        <item name="colorPrimaryVariant">#00E676</item>
-        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorPrimary">@color/momo_yellow</item>
+        <item name="colorPrimaryVariant">@color/momo_yellow_light</item>
+        <item name="colorOnPrimary">@android:color/black</item>
         
         <!-- Secondary brand color -->
-        <item name="colorSecondary">#00C853</item>
-        <item name="colorSecondaryVariant">#00E676</item>
+        <item name="colorSecondary">@color/momo_blue</item>
+        <item name="colorSecondaryVariant">@color/momo_blue_light</item>
         <item name="colorOnSecondary">@android:color/white</item>
         
         <!-- Background and surface colors -->
-        <item name="android:colorBackground">#121212</item>
-        <item name="colorSurface">#1E1E1E</item>
+        <item name="android:colorBackground">@color/background_dark</item>
+        <item name="colorSurface">@color/surface_dark</item>
         <item name="colorOnSurface">@android:color/white</item>
         
         <!-- Status bar and navigation bar -->
-        <item name="android:statusBarColor">#121212</item>
-        <item name="android:navigationBarColor">#121212</item>
+        <item name="android:statusBarColor">@color/background_dark</item>
+        <item name="android:navigationBarColor">@color/background_dark</item>
         
         <!-- Window background -->
-        <item name="android:windowBackground">#121212</item>
+        <item name="android:windowBackground">@color/background_dark</item>
         
         <!-- Text colors -->
         <item name="android:textColorPrimary">@android:color/white</item>
         <item name="android:textColorSecondary">#B3FFFFFF</item>
+    </style>
+    
+    <!-- Splash Screen Theme -->
+    <style name="Theme.MomoTerminal.Splash" parent="Theme.SplashScreen">
+        <!-- Splash screen background color -->
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <!-- Splash screen animated icon -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_animated</item>
+        <!-- Animation duration (only works on Android 12+) -->
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <!-- Theme to apply after splash screen -->
+        <item name="postSplashScreenTheme">@style/Theme.MomoTerminal</item>
     </style>
 </resources>

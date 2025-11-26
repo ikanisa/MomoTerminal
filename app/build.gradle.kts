@@ -166,6 +166,7 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
+    implementation(libs.compose.material3.window.size.class)
     implementation(libs.compose.runtime)
     implementation(libs.compose.foundation)
     debugImplementation(libs.compose.ui.tooling)
@@ -182,6 +183,12 @@ dependencies {
     // Accompanist utilities
     implementation(libs.accompanist.permissions)
     implementation(libs.accompanist.systemuicontroller)
+
+    // Splash Screen
+    implementation(libs.androidx.splashscreen)
+
+    // Window (for adaptive layouts)
+    implementation(libs.androidx.window)
 
     // Hilt Dependency Injection
     implementation(libs.hilt.android)

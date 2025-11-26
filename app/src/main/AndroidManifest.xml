@@ -28,17 +28,23 @@
         android:theme="@style/Theme.MomoTerminal"
         tools:targetApi="34">
 
-        <!-- Compose Main Activity (New Launcher) -->
+        <!-- Splash Activity (New Launcher) -->
         <activity
-            android:name=".presentation.ComposeMainActivity"
+            android:name=".ui.splash.SplashActivity"
             android:exported="true"
-            android:launchMode="singleTop"
-            android:theme="@style/Theme.MomoTerminal">
+            android:theme="@style/Theme.MomoTerminal.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Compose Main Activity -->
+        <activity
+            android:name=".presentation.ComposeMainActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.MomoTerminal" />
 
         <!-- Legacy Main Activity (kept for backward compatibility) -->
         <activity

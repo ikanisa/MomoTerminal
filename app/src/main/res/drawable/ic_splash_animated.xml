@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+
+    <aapt:attr name="android:drawable">
+        <vector
+            android:name="vector"
+            android:width="108dp"
+            android:height="108dp"
+            android:viewportWidth="108"
+            android:viewportHeight="108">
+            
+            <!-- Background circle -->
+            <group android:name="background_group">
+                <path
+                    android:name="background_circle"
+                    android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0"
+                    android:fillColor="#0046AD"/>
+            </group>
+            
+            <!-- M letter for MoMo -->
+            <group 
+                android:name="letter_group"
+                android:pivotX="54"
+                android:pivotY="54">
+                <path
+                    android:name="letter_m"
+                    android:pathData="M32,70 L32,38 L44,55 L54,38 L64,55 L76,38 L76,70 L68,70 L68,52 L58,66 L50,66 L40,52 L40,70 Z"
+                    android:fillColor="#FFCC00"/>
+            </group>
+            
+            <!-- Money symbol accent -->
+            <group 
+                android:name="money_group"
+                android:pivotX="54"
+                android:pivotY="54">
+                <path
+                    android:name="money_symbol"
+                    android:pathData="M80,30 L84,30 L84,34 L80,34 Z"
+                    android:fillColor="#00A651"/>
+            </group>
+        </vector>
+    </aapt:attr>
+
+    <!-- Scale animation for the letter -->
+    <target android:name="letter_group">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="scaleX"
+                    android:duration="600"
+                    android:valueFrom="0.8"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/overshoot"/>
+                <objectAnimator
+                    android:propertyName="scaleY"
+                    android:duration="600"
+                    android:valueFrom="0.8"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/overshoot"/>
+            </set>
+        </aapt:attr>
+    </target>
+
+    <!-- Fade in animation for money symbol -->
+    <target android:name="money_symbol">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:duration="400"
+                android:startOffset="400"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:valueType="floatType"
+                android:interpolator="@android:interpolator/decelerate_quad"/>
+        </aapt:attr>
+    </target>
+
+</animated-vector>
