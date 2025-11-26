@@ -1,5 +1,6 @@
 package com.momoterminal.data.local.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Data Access Object for transaction operations.
  * Provides methods to insert, query, and update transactions in the local database.
+ * Includes PagingSource queries for efficient pagination.
  */
 @Dao
 interface TransactionDao {
@@ -67,4 +69,102 @@ interface TransactionDao {
      */
     @Query("DELETE FROM transactions")
     suspend fun clearAll()
+    
+    // ============= Pagination Queries =============
+    
+    /**
+     * Get all transactions with pagination support.
+     * Used with Paging 3 library for efficient infinite scrolling.
+     */
+    @Query("SELECT * FROM transactions ORDER BY timestamp DESC")
+    fun getTransactionsPagingSource(): PagingSource<Int, TransactionEntity>
+    
+    /**
+     * Get transactions filtered by status with pagination.
+     */
+    @Query("SELECT * FROM transactions WHERE status = :status ORDER BY timestamp DESC")
+    fun getTransactionsByStatusPagingSource(status: String): PagingSource<Int, TransactionEntity>
+    
+    /**
+     * Get transactions filtered by sender (provider) with pagination.
+     */
+    @Query("SELECT * FROM transactions WHERE sender LIKE '%' || :provider || '%' ORDER BY timestamp DESC")
+    fun getTransactionsByProviderPagingSource(provider: String): PagingSource<Int, TransactionEntity>
+    
+    /**
+     * Get transactions filtered by date range with pagination.
+     */
+    @Query("""
+        SELECT * FROM transactions 
+        WHERE timestamp >= :startTimestamp AND timestamp <= :endTimestamp 
+        ORDER BY timestamp DESC
+    """)
+    fun getTransactionsByDateRangePagingSource(
+        startTimestamp: Long,
+        endTimestamp: Long
+    ): PagingSource<Int, TransactionEntity>
+    
+    /**
+     * Search transactions by text content with pagination.
+     */
+    @Query("""
+        SELECT * FROM transactions 
+        WHERE body LIKE '%' || :query || '%' 
+           OR sender LIKE '%' || :query || '%'
+           OR transactionId LIKE '%' || :query || '%'
+        ORDER BY timestamp DESC
+    """)
+    fun searchTransactionsPagingSource(query: String): PagingSource<Int, TransactionEntity>
+    
+    /**
+     * Get transactions with combined filters.
+     * Filters are applied when the parameter is not null.
+     */
+    @Query("""
+        SELECT * FROM transactions 
+        WHERE (:status IS NULL OR status = :status)
+          AND (:provider IS NULL OR sender LIKE '%' || :provider || '%')
+          AND (:startTimestamp IS NULL OR timestamp >= :startTimestamp)
+          AND (:endTimestamp IS NULL OR timestamp <= :endTimestamp)
+          AND (:searchQuery IS NULL OR body LIKE '%' || :searchQuery || '%' 
+               OR sender LIKE '%' || :searchQuery || '%'
+               OR transactionId LIKE '%' || :searchQuery || '%')
+          AND (:minAmount IS NULL OR amount >= :minAmount)
+          AND (:maxAmount IS NULL OR amount <= :maxAmount)
+        ORDER BY timestamp DESC
+    """)
+    fun getFilteredTransactionsPagingSource(
+        status: String?,
+        provider: String?,
+        startTimestamp: Long?,
+        endTimestamp: Long?,
+        searchQuery: String?,
+        minAmount: Double?,
+        maxAmount: Double?
+    ): PagingSource<Int, TransactionEntity>
+    
+    /**
+     * Get total count of transactions matching filters.
+     * Useful for showing total count in UI.
+     */
+    @Query("""
+        SELECT COUNT(*) FROM transactions 
+        WHERE (:status IS NULL OR status = :status)
+          AND (:provider IS NULL OR sender LIKE '%' || :provider || '%')
+          AND (:startTimestamp IS NULL OR timestamp >= :startTimestamp)
+          AND (:endTimestamp IS NULL OR timestamp <= :endTimestamp)
+          AND (:searchQuery IS NULL OR body LIKE '%' || :searchQuery || '%' 
+               OR sender LIKE '%' || :searchQuery || '%')
+          AND (:minAmount IS NULL OR amount >= :minAmount)
+          AND (:maxAmount IS NULL OR amount <= :maxAmount)
+    """)
+    fun getFilteredTransactionCount(
+        status: String?,
+        provider: String?,
+        startTimestamp: Long?,
+        endTimestamp: Long?,
+        searchQuery: String?,
+        minAmount: Double?,
+        maxAmount: Double?
+    ): Flow<Int>
 }

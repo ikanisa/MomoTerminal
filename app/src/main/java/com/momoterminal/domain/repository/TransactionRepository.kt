@@ -1,7 +1,9 @@
 package com.momoterminal.domain.repository
 
+import androidx.paging.PagingData
 import com.momoterminal.domain.model.SyncStatus
 import com.momoterminal.domain.model.Transaction
+import com.momoterminal.domain.model.TransactionFilter
 import com.momoterminal.util.Result
 import kotlinx.coroutines.flow.Flow
 
@@ -45,4 +47,17 @@ interface TransactionRepository {
      * Delete old synced transactions.
      */
     suspend fun deleteOldTransactions(olderThanDays: Int = 30): Result<Int>
+    
+    // ============= Pagination Methods =============
+    
+    /**
+     * Get paginated transactions with optional filters.
+     * Uses Paging 3 library for efficient infinite scrolling.
+     */
+    fun getTransactionsPaged(filter: TransactionFilter = TransactionFilter()): Flow<PagingData<Transaction>>
+    
+    /**
+     * Get count of transactions matching the filter.
+     */
+    fun getFilteredTransactionCount(filter: TransactionFilter): Flow<Int>
 }
