@@ -1,3 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Momo Terminal</string>
+    <string name="hce_service_description">Mobile Money NFC Payment Terminal</string>
+    <string name="aid_group_description">Mobile Money Payment AID</string>
+    
+    <!-- Main Activity -->
+    <string name="amount_hint">Enter Amount</string>
+    <string name="activate_nfc">Activate NFC Terminal</string>
+    <string name="deactivate_nfc">Deactivate Terminal</string>
+    <string name="nfc_active">NFC Terminal Active - Ready for Tap</string>
+    <string name="nfc_inactive">NFC Terminal Inactive</string>
+    <string name="merchant_code_hint">Merchant Code</string>
+    <string name="currency_symbol">GHS</string>
+    
+    <!-- SMS Relay -->
+    <string name="sms_relay_status">SMS Relay Status</string>
+    <string name="sms_relay_active">SMS Relay Active</string>
+    <string name="sms_relay_inactive">SMS Relay Inactive</string>
+    <string name="last_transaction">Last Transaction</string>
+    
+    <!-- Permissions -->
+    <string name="permission_sms_title">SMS Permission Required</string>
+    <string name="permission_sms_message">To relay payment confirmations, we need access to SMS messages.</string>
+    <string name="permission_phone_title">Phone Permission Required</string>
+    <string name="permission_phone_message">To initiate USSD payments, we need phone calling permission.</string>
+    
+    <!-- Errors -->
+    <string name="error_nfc_not_supported">NFC is not supported on this device</string>
+    <string name="error_nfc_disabled">Please enable NFC in settings</string>
+    <string name="error_invalid_amount">Please enter a valid amount</string>
+    <string name="error_sync_failed">Failed to sync with server</string>
+    
+    <!-- Actions -->
+    <string name="action_settings">Settings</string>
+    <string name="action_history">Transaction History</string>
+    <string name="action_sync">Sync Now</string>
 <resources>
     <string name="app_name">MomoTerminal</string>
     <string name="service_description">Momo Payment Tag</string>
