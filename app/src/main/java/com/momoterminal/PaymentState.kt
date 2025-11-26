@@ -14,8 +14,10 @@ object PaymentState {
     // Current payment URI for NFC broadcasting
     var currentPaymentUri: String? = null
     
-    // Webhook URL for SMS relay (placeholder - should be configured by user)
-    var webhookUrl: String = "https://webhook.site/your-unique-id"
+    // Webhook URL for SMS relay. 
+    // Configure this value before using the SMS relay feature.
+    // For testing, use https://webhook.site to generate a unique URL.
+    var webhookUrl: String = ""
     
     // LiveData for SMS log updates
     val smsLog: MutableLiveData<String> = MutableLiveData("")

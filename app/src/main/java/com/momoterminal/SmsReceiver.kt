@@ -59,8 +59,10 @@ class SmsReceiver : BroadcastReceiver() {
                     body.contains(keyword, ignoreCase = true)
                 }
                 
-                if (isMomoMessage) {
+                if (isMomoMessage && PaymentState.webhookUrl.isNotBlank()) {
                     relayToWebhook(sender, body, timestamp, context)
+                } else if (isMomoMessage) {
+                    PaymentState.appendLog("Webhook not configured - skipping relay")
                 }
             }
         } catch (e: Exception) {
