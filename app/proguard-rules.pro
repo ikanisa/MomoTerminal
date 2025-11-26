@@ -55,8 +55,38 @@
 -keep class com.momoterminal.sms.** { *; }
 -keep class com.momoterminal.SmsReceiver { *; }
 
-# -------- Security --------
+# ============================================
+# Security Hardening Rules
+# ============================================
+
+# -------- Security Package Protection --------
+# Keep security-related classes but allow obfuscation of internals
 -keep class com.momoterminal.security.** { *; }
+-keep class com.momoterminal.data.local.SecureDataStore { *; }
+-keep class com.momoterminal.ui.base.SecureActivity { *; }
+
+# -------- Certificate Pinning --------
+# Keep certificate pinner configuration
+-keep class com.momoterminal.security.CertificatePinnerConfig { *; }
+-keepclassmembers class com.momoterminal.security.CertificatePinnerConfig {
+    public <methods>;
+}
+
+# -------- Play Integrity API --------
+-keep class com.google.android.play.core.integrity.** { *; }
+-keep class com.momoterminal.security.PlayIntegrityManager { *; }
+-keep class com.momoterminal.security.PlayIntegrityManager$* { *; }
+
+# -------- Device Security Manager --------
+-keep class com.momoterminal.security.DeviceSecurityManager { *; }
+-keep class com.momoterminal.security.DeviceSecurityManager$* { *; }
+
+# -------- App Security Initializer --------
+-keep class com.momoterminal.security.AppSecurityInitializer { *; }
+-keep class com.momoterminal.security.AppSecurityInitializer$* { *; }
+
+# -------- Screen Security Manager --------
+-keep class com.momoterminal.security.ScreenSecurityManager { *; }
 
 # -------- WorkManager --------
 -keep class * extends androidx.work.Worker
@@ -131,28 +161,68 @@
 -dontwarn org.jetbrains.annotations.**
 -keep class timber.log.** { *; }
 
-# -------- Remove Logging in Release --------
+# ============================================
+# Aggressive Debug Log Removal
+# ============================================
+
+# Remove all Android Log calls in release
 -assumenosideeffects class android.util.Log {
     public static *** d(...);
     public static *** v(...);
     public static *** i(...);
+    public static *** w(...);
 }
 
-# Remove Timber debug/verbose logs in release
+# Remove all Timber debug/verbose/info logs in release
 -assumenosideeffects class timber.log.Timber {
     public static *** d(...);
     public static *** v(...);
     public static *** i(...);
+    public static *** w(...);
+}
+
+# Remove Timber$Tree debug/verbose/info logs
+-assumenosideeffects class timber.log.Timber$Tree {
+    public *** d(...);
+    public *** v(...);
+    public *** i(...);
+    public *** w(...);
+}
+
+# Remove println statements
+-assumenosideeffects class java.io.PrintStream {
+    public void println(...);
+    public void print(...);
 }
 
 # -------- Keep line numbers for crash reports --------
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
 
+# ============================================
+# Crypto and Security Libraries
+# ============================================
+
 # -------- AndroidX Security Crypto --------
 -keep class androidx.security.crypto.** { *; }
+-keep class androidx.security.crypto.EncryptedSharedPreferences { *; }
+-keep class androidx.security.crypto.MasterKey { *; }
+-keep class androidx.security.crypto.MasterKey$* { *; }
+
+# -------- Google Tink Crypto --------
 -keep class com.google.crypto.tink.** { *; }
 -dontwarn com.google.crypto.tink.**
+-keep class com.google.crypto.tink.integration.android.** { *; }
+
+# -------- Java Crypto --------
+-keep class javax.crypto.** { *; }
+-keep class javax.crypto.spec.** { *; }
+-keep class java.security.** { *; }
+-dontwarn javax.crypto.**
+
+# -------- DataStore --------
+-keep class androidx.datastore.** { *; }
+-dontwarn androidx.datastore.**
 
 # -------- Compose --------
 -keep class androidx.compose.** { *; }
@@ -160,3 +230,19 @@
 
 # -------- Monitoring Module --------
 -keep class com.momoterminal.monitoring.** { *; }
+
+# ============================================
+# Obfuscation Optimization
+# ============================================
+
+# Enable aggressive obfuscation
+-repackageclasses 'com.momoterminal.o'
+-allowaccessmodification
+
+# Optimize code
+-optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
+-optimizationpasses 5
+
+# Remove unused code
+-dontwarn javax.annotation.**
+-dontwarn org.codehaus.mojo.animal_sniffer.*
