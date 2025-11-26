@@ -1,6 +1,7 @@
 package com.momoterminal.data.local.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -19,6 +20,12 @@ interface TransactionDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(transaction: TransactionEntity): Long
+    
+    /**
+     * Delete a transaction.
+     */
+    @Delete
+    suspend fun delete(transaction: TransactionEntity)
     
     /**
      * Get all pending transactions.
@@ -52,6 +59,12 @@ interface TransactionDao {
     
     /**
      * Get transaction by ID.
+     */
+    @Query("SELECT * FROM transactions WHERE id = :id")
+    suspend fun getById(id: Long): TransactionEntity?
+    
+    /**
+     * Get transaction by ID (alias for getById).
      */
     @Query("SELECT * FROM transactions WHERE id = :id")
     suspend fun getTransactionById(id: Long): TransactionEntity?

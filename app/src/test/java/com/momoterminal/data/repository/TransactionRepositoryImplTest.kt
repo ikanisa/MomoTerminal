@@ -192,13 +192,14 @@ class TransactionRepositoryImplTest {
     private fun createTestTransaction(): Transaction {
         return Transaction(
             id = 0,
+            sender = "0201234567",
+            body = "Payment received GHS 50.00",
             amount = 50.0,
-            senderPhone = "0201234567",
+            currency = "GHS",
             transactionId = "TX123",
-            provider = "MTN",
             timestamp = System.currentTimeMillis(),
             status = SyncStatus.PENDING,
-            rawMessage = "Payment received"
+            merchantCode = "0244123456"
         )
     }
 
