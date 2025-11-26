@@ -1,0 +1,125 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  JAVA_VERSION: '17'
+
+jobs:
+  # ==================== PR Review with Danger ====================
+  danger:
+    name: Danger PR Review
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+          bundler-cache: true
+
+      - name: Install Danger
+        run: gem install danger danger-android_lint
+
+      - name: Run Danger
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: danger --verbose
+        continue-on-error: true
+
+  # ==================== APK Size Check ====================
+  apk-size-check:
+    name: APK Size Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Create google-services.json for CI
+        run: |
+          echo '{"project_info":{"project_id":"momoterminal-ci"},"client":[{"client_info":{"mobilesdk_app_id":"1:123456789:android:abcdef","android_client_info":{"package_name":"com.momoterminal"}},"api_key":[{"current_key":"AIza_placeholder"}]}]}' > app/google-services.json
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Check APK Size
+        run: |
+          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+          APK_SIZE=$(stat -c%s "$APK_PATH")
+          APK_SIZE_MB=$((APK_SIZE / 1024 / 1024))
+          
+          echo "APK Size: ${APK_SIZE_MB}MB (${APK_SIZE} bytes)"
+          
+          # Fail if APK is larger than 25MB
+          MAX_SIZE=$((25 * 1024 * 1024))
+          if [ "$APK_SIZE" -gt "$MAX_SIZE" ]; then
+            echo "::error::APK size (${APK_SIZE_MB}MB) exceeds maximum allowed size (25MB)"
+            exit 1
+          fi
+          
+          echo "::notice::APK size (${APK_SIZE_MB}MB) is within acceptable limits"
+
+      - name: Comment APK size on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { execSync } = require('child_process');
+            
+            const apkPath = 'app/build/outputs/apk/debug/app-debug.apk';
+            const stats = fs.statSync(apkPath);
+            const sizeInMB = (stats.size / 1024 / 1024).toFixed(2);
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `📦 **APK Size Report**\n\nDebug APK Size: **${sizeInMB} MB**\n\n_Maximum allowed size: 25 MB_`
+            });
+
+  # ==================== Conventional Commits Check ====================
+  commit-lint:
+    name: Commit Message Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install commitlint
+        run: |
+          npm install --save-dev @commitlint/cli @commitlint/config-conventional
+
+      - name: Create commitlint config
+        run: |
+          echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
+
+      - name: Validate PR commits
+        run: |
+          npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+        continue-on-error: true

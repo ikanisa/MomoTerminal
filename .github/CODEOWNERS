@@ -1,0 +1,32 @@
+# Code Owners for MomoTerminal
+# These owners will be requested for review when PRs modify their respective areas
+
+# Global fallback
+* @momoterminal/mobile-team
+
+# Android build configuration
+*.gradle.kts @momoterminal/android-leads
+build.gradle* @momoterminal/android-leads
+settings.gradle* @momoterminal/android-leads
+gradle.properties @momoterminal/android-leads
+
+# CI/CD workflows
+.github/workflows/ @momoterminal/devops
+
+# Security-related files
+app/proguard-rules.pro @momoterminal/security
+**/security/ @momoterminal/security
+**/xml/network_security_config.xml @momoterminal/security
+
+# Core business logic
+**/domain/ @momoterminal/mobile-team
+**/nfc/ @momoterminal/mobile-team @momoterminal/payments-team
+**/sms/ @momoterminal/mobile-team @momoterminal/payments-team
+**/sync/ @momoterminal/mobile-team
+
+# UI and presentation layer
+**/presentation/ @momoterminal/mobile-team
+
+# Documentation
+docs/ @momoterminal/documentation
+*.md @momoterminal/documentation

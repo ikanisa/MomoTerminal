@@ -104,8 +104,42 @@
     java.lang.Object readResolve();
 }
 
+# -------- Firebase Crashlytics --------
+-keepattributes *Annotation*
+-keepattributes SourceFile,LineNumberTable
+-keep public class * extends java.lang.Exception
+-keep class com.google.firebase.crashlytics.** { *; }
+-dontwarn com.google.firebase.crashlytics.**
+
+# -------- Firebase Analytics --------
+-keep class com.google.firebase.analytics.** { *; }
+-dontwarn com.google.firebase.analytics.**
+
+# -------- Firebase Performance --------
+-keep class com.google.firebase.perf.** { *; }
+-dontwarn com.google.firebase.perf.**
+
+# -------- Firebase Common --------
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+
+# -------- Google Play Services --------
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
+
+# -------- Timber --------
+-dontwarn org.jetbrains.annotations.**
+-keep class timber.log.** { *; }
+
 # -------- Remove Logging in Release --------
 -assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+    public static *** i(...);
+}
+
+# Remove Timber debug/verbose logs in release
+-assumenosideeffects class timber.log.Timber {
     public static *** d(...);
     public static *** v(...);
     public static *** i(...);
@@ -119,3 +153,10 @@
 -keep class androidx.security.crypto.** { *; }
 -keep class com.google.crypto.tink.** { *; }
 -dontwarn com.google.crypto.tink.**
+
+# -------- Compose --------
+-keep class androidx.compose.** { *; }
+-dontwarn androidx.compose.**
+
+# -------- Monitoring Module --------
+-keep class com.momoterminal.monitoring.** { *; }

@@ -4,11 +4,13 @@ import com.momoterminal.BuildConfig
 import com.momoterminal.data.remote.api.MomoApiService
 import com.momoterminal.data.remote.interceptor.AuthInterceptor
 import com.momoterminal.data.remote.interceptor.NetworkInterceptor
+import com.momoterminal.data.remote.interceptor.PerformanceInterceptor
 import com.momoterminal.security.SecureStorage
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -26,6 +28,7 @@ object NetworkModule {
 
     private const val DEFAULT_TIMEOUT = 30L
     private const val DEFAULT_BASE_URL = "https://api.momoterminal.com/"
+    private const val API_DOMAIN = "api.momoterminal.com"
 
     /**
      * Provides HttpLoggingInterceptor for debugging network calls.
@@ -65,14 +68,48 @@ object NetworkModule {
     }
 
     /**
-     * Provides OkHttpClient with interceptors and timeouts.
+     * Provides PerformanceInterceptor for Firebase Performance Monitoring.
+     */
+    @Provides
+    @Singleton
+    fun providePerformanceInterceptor(): PerformanceInterceptor {
+        return PerformanceInterceptor()
+    }
+
+    /**
+     * Provides CertificatePinner for SSL certificate pinning.
+     * NOTE: Replace placeholder pins with actual certificate pins before production deployment.
+     */
+    @Provides
+    @Singleton
+    fun provideCertificatePinner(): CertificatePinner {
+        return if (BuildConfig.DEBUG) {
+            // No certificate pinning in debug builds for easier development
+            CertificatePinner.Builder().build()
+        } else {
+            // Production certificate pinning
+            // IMPORTANT: Replace these placeholder pins with actual SHA-256 pins
+            // To get pins: openssl s_client -connect api.momoterminal.com:443 | 
+            //   openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | 
+            //   openssl dgst -sha256 -binary | openssl enc -base64
+            CertificatePinner.Builder()
+                .add(API_DOMAIN, "sha256/PLACEHOLDER_PRIMARY_PIN=")
+                .add(API_DOMAIN, "sha256/PLACEHOLDER_BACKUP_PIN=")
+                .build()
+        }
+    }
+
+    /**
+     * Provides OkHttpClient with interceptors, timeouts, and certificate pinning.
      */
     @Provides
     @Singleton
     fun provideOkHttpClient(
         loggingInterceptor: HttpLoggingInterceptor,
         authInterceptor: AuthInterceptor,
-        networkInterceptor: NetworkInterceptor
+        networkInterceptor: NetworkInterceptor,
+        performanceInterceptor: PerformanceInterceptor,
+        certificatePinner: CertificatePinner
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .connectTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
@@ -80,7 +117,9 @@ object NetworkModule {
             .writeTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS)
             .addInterceptor(authInterceptor)
             .addInterceptor(networkInterceptor)
+            .addInterceptor(performanceInterceptor)
             .addInterceptor(loggingInterceptor)
+            .certificatePinner(certificatePinner)
             .build()
     }
 
