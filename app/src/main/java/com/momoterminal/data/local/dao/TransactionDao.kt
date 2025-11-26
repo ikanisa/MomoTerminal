@@ -155,12 +155,16 @@ interface TransactionDao {
           AND (:endTimestamp IS NULL OR timestamp <= :endTimestamp)
           AND (:searchQuery IS NULL OR body LIKE '%' || :searchQuery || '%' 
                OR sender LIKE '%' || :searchQuery || '%')
+          AND (:minAmount IS NULL OR amount >= :minAmount)
+          AND (:maxAmount IS NULL OR amount <= :maxAmount)
     """)
     fun getFilteredTransactionCount(
         status: String?,
         provider: String?,
         startTimestamp: Long?,
         endTimestamp: Long?,
-        searchQuery: String?
+        searchQuery: String?,
+        minAmount: Double?,
+        maxAmount: Double?
     ): Flow<Int>
 }

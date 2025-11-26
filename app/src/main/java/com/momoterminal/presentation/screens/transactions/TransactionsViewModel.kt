@@ -54,8 +54,11 @@ class TransactionsViewModel @Inject constructor(
         )
     
     // Transaction count matching current filter
-    val filteredTransactionCount: StateFlow<Int> = transactionRepository
-        .getFilteredTransactionCount(_filter.value)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val filteredTransactionCount: StateFlow<Int> = _filter
+        .flatMapLatest { filter ->
+            transactionRepository.getFilteredTransactionCount(filter)
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

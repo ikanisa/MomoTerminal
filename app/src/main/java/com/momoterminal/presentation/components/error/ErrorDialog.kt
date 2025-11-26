@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.momoterminal.error.AppError
 import com.momoterminal.error.ErrorAction
+import com.momoterminal.error.getCategoryTitle
 
 /**
  * Alert dialog for displaying critical errors.
@@ -26,7 +27,7 @@ fun ErrorDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = getErrorTitle(error),
+                text = error.getCategoryTitle(),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
@@ -58,23 +59,6 @@ fun ErrorDialog(
         titleContentColor = MaterialTheme.colorScheme.onSurface,
         textContentColor = MaterialTheme.colorScheme.onSurfaceVariant
     )
-}
-
-/**
- * Get a title for the error dialog based on error type.
- */
-private fun getErrorTitle(error: AppError): String {
-    return when (error) {
-        is AppError.Network -> "Network Error"
-        is AppError.Api -> "Server Error"
-        is AppError.Nfc -> "NFC Error"
-        is AppError.Sms -> "SMS Error"
-        is AppError.Biometric -> "Authentication Error"
-        is AppError.Database -> "Storage Error"
-        is AppError.Validation -> "Validation Error"
-        is AppError.Security -> "Security Error"
-        is AppError.Unknown -> "Error"
-    }
 }
 
 /**

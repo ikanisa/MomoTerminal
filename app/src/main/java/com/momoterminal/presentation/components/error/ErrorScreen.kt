@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.momoterminal.error.AppError
 import com.momoterminal.error.ErrorAction
+import com.momoterminal.error.getTitle
 import com.momoterminal.presentation.components.animations.PaymentErrorAnimation
 
 /**
@@ -61,7 +62,7 @@ fun ErrorScreen(
         
         // Error title
         Text(
-            text = getErrorTitle(error),
+            text = error.getTitle(),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.error,
             textAlign = TextAlign.Center
@@ -138,25 +139,5 @@ fun ErrorCard(
                 Text("Retry")
             }
         }
-    }
-}
-
-/**
- * Get a title for the error based on error type.
- */
-private fun getErrorTitle(error: AppError): String {
-    return when (error) {
-        is AppError.Network.NoConnection -> "No Connection"
-        is AppError.Network.Timeout -> "Request Timed Out"
-        is AppError.Network.ServerError -> "Server Error"
-        is AppError.Network.Unknown -> "Network Error"
-        is AppError.Api -> "Request Failed"
-        is AppError.Nfc -> "NFC Error"
-        is AppError.Sms -> "SMS Error"
-        is AppError.Biometric -> "Authentication Error"
-        is AppError.Database -> "Storage Error"
-        is AppError.Validation -> "Invalid Input"
-        is AppError.Security -> "Security Error"
-        is AppError.Unknown -> "Something Went Wrong"
     }
 }

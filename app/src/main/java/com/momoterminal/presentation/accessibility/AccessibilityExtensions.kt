@@ -48,8 +48,9 @@ fun Modifier.accessibleClickable(
  * E.g., "GHS 100.50" becomes "100 cedis and 50 pesewas"
  */
 fun formatAmountForScreenReader(amount: Double, currencyCode: String = "GHS"): String {
+    // Use rounding to avoid floating-point precision issues
     val wholePart = amount.toLong()
-    val decimalPart = ((amount - wholePart) * 100).toInt()
+    val decimalPart = kotlin.math.round((amount - wholePart) * 100).toInt()
     
     return when (currencyCode.uppercase()) {
         "GHS" -> {

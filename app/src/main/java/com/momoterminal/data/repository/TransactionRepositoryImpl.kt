@@ -145,7 +145,9 @@ class TransactionRepositoryImpl @Inject constructor(
             provider = filter.provider?.displayName,
             startTimestamp = filter.startDate?.time,
             endTimestamp = filter.endDate?.time,
-            searchQuery = filter.searchQuery?.takeIf { it.isNotBlank() }
+            searchQuery = filter.searchQuery?.takeIf { it.isNotBlank() },
+            minAmount = filter.minAmount,
+            maxAmount = filter.maxAmount
         )
     }
 }
