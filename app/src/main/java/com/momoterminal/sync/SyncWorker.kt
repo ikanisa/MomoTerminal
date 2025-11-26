@@ -3,10 +3,13 @@ package com.momoterminal.sync
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.momoterminal.config.AppConfig
 import com.momoterminal.data.AppDatabase
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -18,9 +21,10 @@ import java.util.concurrent.TimeUnit
  * WorkManager worker that syncs pending transactions to the configured webhook URL.
  * Takes "PENDING" items from the local database and pushes them to the configured gateway.
  */
-class SyncWorker(
-    context: Context,
-    params: WorkerParameters
+@HiltWorker
+class SyncWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters
 ) : CoroutineWorker(context, params) {
     
     companion object {

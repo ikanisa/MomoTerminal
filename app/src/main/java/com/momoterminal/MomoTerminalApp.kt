@@ -2,12 +2,21 @@ package com.momoterminal
 
 import android.app.Application
 import android.content.SharedPreferences
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
+import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 /**
  * Main Application class for MomoTerminal.
  * Initializes global application state and provides shared resources.
+ * Annotated with @HiltAndroidApp to enable Hilt dependency injection.
  */
-class MomoTerminalApp : Application() {
+@HiltAndroidApp
+class MomoTerminalApp : Application(), Configuration.Provider {
+
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
 
     lateinit var sharedPreferences: SharedPreferences
         private set
@@ -17,6 +26,11 @@ class MomoTerminalApp : Application() {
         instance = this
         sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
     }
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 
     companion object {
         private const val PREFS_NAME = "momo_terminal_prefs"

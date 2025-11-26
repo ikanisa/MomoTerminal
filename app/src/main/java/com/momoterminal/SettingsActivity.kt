@@ -9,6 +9,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.momoterminal.config.AppConfig
 import android.widget.ImageButton
 import android.widget.TextView
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -23,6 +24,7 @@ import java.util.concurrent.TimeUnit
  * Settings Activity for configuring the gateway connection.
  * Allows admin to configure webhook URL, API secret, and merchant phone number.
  */
+@AndroidEntryPoint
 class SettingsActivity : AppCompatActivity() {
     
     private lateinit var etWebhookUrl: TextInputEditText

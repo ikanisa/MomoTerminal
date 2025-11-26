@@ -31,6 +31,7 @@ import com.momoterminal.adapter.TransactionAdapter
 import com.momoterminal.config.AppConfig
 import com.momoterminal.data.AppDatabase
 import com.momoterminal.sync.SyncManager
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -38,6 +39,7 @@ import kotlinx.coroutines.launch
  * Main Activity for the MomoTerminal application.
  * Handles NFC payment broadcasting, SMS relay functionality, and transaction history.
  */
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     
     // UI Components
