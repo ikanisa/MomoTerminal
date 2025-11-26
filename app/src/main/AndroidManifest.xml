@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 
     <!-- NFC HCE Feature -->
     <uses-feature
@@ -27,9 +28,9 @@
         android:theme="@style/Theme.MomoTerminal"
         tools:targetApi="34">
 
-        <!-- Main Activity -->
+        <!-- Compose Main Activity (New Launcher) -->
         <activity
-            android:name=".MainActivity"
+            android:name=".presentation.ComposeMainActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:theme="@style/Theme.MomoTerminal">
@@ -38,6 +39,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Legacy Main Activity (kept for backward compatibility) -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.MomoTerminal" />
 
         <!-- Settings Activity -->
         <activity
