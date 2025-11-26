@@ -247,6 +247,12 @@ dependencies {
     // Logging
     implementation(libs.timber)
 
+    // DataStore
+    implementation(libs.datastore.preferences)
+
+    // Play Integrity API
+    implementation(libs.play.integrity)
+
     // Testing - Unit Tests
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
