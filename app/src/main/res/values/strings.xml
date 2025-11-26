@@ -35,4 +35,26 @@
     <string name="action_settings">Settings</string>
     <string name="action_history">Transaction History</string>
     <string name="action_sync">Sync Now</string>
+    
+    <!-- Webhook Management -->
+    <string name="webhooks_title">Webhooks</string>
+    <string name="webhook_configuration">Webhook Configuration</string>
+    <string name="delivery_logs_title">Delivery Logs</string>
+    <string name="add_webhook">Add Webhook</string>
+    <string name="no_webhooks_configured">No webhooks configured.\nTap + to add one.</string>
+    <string name="no_delivery_logs">No delivery logs found.</string>
+    <string name="webhook_name">Webhook Name</string>
+    <string name="webhook_url">Webhook URL</string>
+    <string name="associated_phone_number">Associated Phone Number</string>
+    <string name="phone_number_helper">Leave empty to receive all SMS</string>
+    <string name="api_key">API Key</string>
+    <string name="hmac_secret">HMAC Secret</string>
+    <string name="hmac_secret_helper">Used to sign webhook requests</string>
+    <string name="save">Save</string>
+    <string name="test_connection">Test Connection</string>
+    <string name="test">Test</string>
+    <string name="delete">Delete</string>
+    <string name="retry">Retry</string>
+    <string name="back">Back</string>
+    <string name="active_webhooks">Active Webhooks</string>
 </resources>

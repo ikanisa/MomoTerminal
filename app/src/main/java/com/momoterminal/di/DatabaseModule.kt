@@ -3,7 +3,9 @@ package com.momoterminal.di
 import android.content.Context
 import androidx.room.Room
 import com.momoterminal.data.local.MomoDatabase
+import com.momoterminal.data.local.dao.SmsDeliveryLogDao
 import com.momoterminal.data.local.dao.TransactionDao
+import com.momoterminal.data.local.dao.WebhookConfigDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -47,5 +49,27 @@ object DatabaseModule {
         database: MomoDatabase
     ): TransactionDao {
         return database.transactionDao()
+    }
+
+    /**
+     * Provides WebhookConfigDao for webhook configuration operations.
+     */
+    @Provides
+    @Singleton
+    fun provideWebhookConfigDao(
+        database: MomoDatabase
+    ): WebhookConfigDao {
+        return database.webhookConfigDao()
+    }
+
+    /**
+     * Provides SmsDeliveryLogDao for SMS delivery log operations.
+     */
+    @Provides
+    @Singleton
+    fun provideSmsDeliveryLogDao(
+        database: MomoDatabase
+    ): SmsDeliveryLogDao {
+        return database.smsDeliveryLogDao()
     }
 }

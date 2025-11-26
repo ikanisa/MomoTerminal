@@ -8,16 +8,25 @@ import android.util.Log
 import com.momoterminal.data.AppDatabase
 import com.momoterminal.data.TransactionEntity
 import com.momoterminal.sync.SyncManager
+import com.momoterminal.webhook.WebhookDispatcher
+import com.momoterminal.webhook.WebhookWorker
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * BroadcastReceiver that listens for incoming SMS messages
  * and saves Mobile Money related messages to the local database.
  * Uses offline-first approach: save immediately, then trigger sync.
+ * Also dispatches SMS to configured webhooks for multi-endpoint delivery.
  */
+@AndroidEntryPoint
 class SmsReceiver : BroadcastReceiver() {
+    
+    @Inject
+    lateinit var webhookDispatcher: WebhookDispatcher
     
     companion object {
         private const val TAG = "SmsReceiver"
@@ -57,6 +66,9 @@ class SmsReceiver : BroadcastReceiver() {
                     // Trigger sync to upload to configured webhook
                     SyncManager(context).enqueueSyncNow()
                     
+                    // Dispatch to all matching webhooks (multi-webhook relay)
+                    dispatchToWebhooks(context, sender, body)
+                    
                     PaymentState.appendLog("SMS saved and sync triggered")
                 }
             }
@@ -64,6 +76,43 @@ class SmsReceiver : BroadcastReceiver() {
             Log.e(TAG, "Error processing SMS", e)
             PaymentState.appendLog("SMS Error: ${e.message}")
         }
+    }
+    
+    /**
+     * Dispatch SMS to configured webhooks based on phone number matching.
+     */
+    private fun dispatchToWebhooks(context: Context, sender: String, body: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Get the device's phone number (if available) for routing
+                // For now, we use the sender as the identifier since we're receiving SMS
+                val phoneNumber = getDevicePhoneNumber(context)
+                
+                webhookDispatcher.dispatchSms(
+                    phoneNumber = phoneNumber,
+                    sender = sender,
+                    message = body
+                )
+                
+                // Enqueue webhook worker to ensure delivery
+                WebhookWorker.enqueueNow(context)
+                
+                Log.d(TAG, "SMS dispatched to webhooks")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error dispatching to webhooks", e)
+            }
+        }
+    }
+    
+    /**
+     * Get the device phone number if available.
+     * Falls back to empty string if not accessible.
+     */
+    private fun getDevicePhoneNumber(context: Context): String {
+        // Note: Getting the phone number requires additional permissions
+        // and may not always be available. The webhook routing should
+        // also support matching by wildcard or empty phone number.
+        return ""
     }
     
     private fun saveToDatabase(context: Context, sender: String, body: String, timestamp: Long) {
