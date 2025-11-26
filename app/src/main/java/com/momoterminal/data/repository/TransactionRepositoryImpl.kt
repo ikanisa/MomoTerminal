@@ -1,10 +1,15 @@
 package com.momoterminal.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import com.momoterminal.data.local.dao.TransactionDao
 import com.momoterminal.data.mapper.TransactionMapper
 import com.momoterminal.data.remote.api.MomoApiService
 import com.momoterminal.domain.model.SyncStatus
 import com.momoterminal.domain.model.Transaction
+import com.momoterminal.domain.model.TransactionFilter
 import com.momoterminal.domain.repository.TransactionRepository
 import com.momoterminal.security.SecureStorage
 import com.momoterminal.util.Result
@@ -24,6 +29,11 @@ class TransactionRepositoryImpl @Inject constructor(
     private val apiService: MomoApiService,
     private val secureStorage: SecureStorage
 ) : TransactionRepository {
+    
+    companion object {
+        private const val PAGE_SIZE = 20
+        private const val PREFETCH_DISTANCE = 5
+    }
     
     override suspend fun insertTransaction(transaction: Transaction): Result<Long> {
         return try {
@@ -100,5 +110,42 @@ class TransactionRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Result.Error(e)
         }
+    }
+    
+    // ============= Pagination Methods =============
+    
+    override fun getTransactionsPaged(filter: TransactionFilter): Flow<PagingData<Transaction>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = PAGE_SIZE,
+                prefetchDistance = PREFETCH_DISTANCE,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                transactionDao.getFilteredTransactionsPagingSource(
+                    status = filter.status?.value,
+                    provider = filter.provider?.displayName,
+                    startTimestamp = filter.startDate?.time,
+                    endTimestamp = filter.endDate?.time,
+                    searchQuery = filter.searchQuery?.takeIf { it.isNotBlank() },
+                    minAmount = filter.minAmount,
+                    maxAmount = filter.maxAmount
+                )
+            }
+        ).flow.map { pagingData ->
+            pagingData.map { entity ->
+                TransactionMapper.entityToDomain(entity)
+            }
+        }
+    }
+    
+    override fun getFilteredTransactionCount(filter: TransactionFilter): Flow<Int> {
+        return transactionDao.getFilteredTransactionCount(
+            status = filter.status?.value,
+            provider = filter.provider?.displayName,
+            startTimestamp = filter.startDate?.time,
+            endTimestamp = filter.endDate?.time,
+            searchQuery = filter.searchQuery?.takeIf { it.isNotBlank() }
+        )
     }
 }
