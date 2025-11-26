@@ -61,6 +61,8 @@ dependencies {
     kapt("androidx.hilt:hilt-compiler:1.1.0")
 
     // Security - EncryptedSharedPreferences
+    // Note: Using alpha version as it's the most recent with API 34 compatibility
+    // The stable 1.0.0 version has known issues with some devices
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     // Room Database

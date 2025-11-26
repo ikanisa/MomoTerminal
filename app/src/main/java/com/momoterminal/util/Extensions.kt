@@ -107,14 +107,25 @@ fun Long.toDateString(pattern: String = "dd MMM yyyy, HH:mm"): String {
 // Double Extensions (Currency)
 
 /**
+ * Currency locale mappings.
+ * Add new currencies here as the app expands to new regions.
+ */
+private val CURRENCY_LOCALES = mapOf(
+    "GHS" to Locale("en", "GH"),  // Ghana Cedi
+    "RWF" to Locale("rw", "RW"),  // Rwandan Franc
+    "KES" to Locale("en", "KE"),  // Kenyan Shilling
+    "UGX" to Locale("en", "UG"),  // Ugandan Shilling
+    "TZS" to Locale("en", "TZ"),  // Tanzanian Shilling
+    "NGN" to Locale("en", "NG"),  // Nigerian Naira
+    "XOF" to Locale("fr", "SN"),  // West African CFA Franc
+    "XAF" to Locale("fr", "CM")   // Central African CFA Franc
+)
+
+/**
  * Format amount as currency.
  */
 fun Double.toCurrency(currencyCode: String = "GHS"): String {
-    val locale = when (currencyCode) {
-        "GHS" -> Locale("en", "GH")
-        "RWF" -> Locale("rw", "RW")
-        else -> Locale.getDefault()
-    }
+    val locale = CURRENCY_LOCALES[currencyCode] ?: Locale.getDefault()
     
     return try {
         NumberFormat.getCurrencyInstance(locale).format(this)

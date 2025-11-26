@@ -29,13 +29,18 @@ object NetworkModule {
 
     /**
      * Provides HttpLoggingInterceptor for debugging network calls.
-     * Only logs body in debug builds.
+     * Only logs body in debug builds to prevent sensitive data exposure.
      */
     @Provides
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            // Only enable detailed logging in debug builds to prevent sensitive data exposure
+            level = if (BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
         }
     }
 

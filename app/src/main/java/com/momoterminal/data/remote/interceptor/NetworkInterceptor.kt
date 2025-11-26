@@ -8,6 +8,11 @@ import javax.inject.Inject
 /**
  * OkHttp Interceptor for handling network-related concerns.
  * Adds retry logic and custom error handling.
+ * 
+ * Note: This interceptor uses Thread.sleep for backoff delays. While this blocks
+ * the OkHttp dispatcher thread, OkHttp uses a thread pool with configurable size
+ * (default 64 threads) which mitigates the impact. For high-throughput scenarios,
+ * consider using OkHttp's built-in retry mechanisms or custom async handling.
  */
 class NetworkInterceptor @Inject constructor() : Interceptor {
     

@@ -42,7 +42,7 @@ class KeystoreHelper @Inject constructor(
     
     /**
      * Generate a new AES-256 encryption key.
-     */
+    */
     private fun generateEncryptionKey(keyAlias: String): SecretKey {
         val keyGenerator = KeyGenerator.getInstance(
             KeyProperties.KEY_ALGORITHM_AES,
@@ -56,7 +56,11 @@ class KeystoreHelper @Inject constructor(
             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
             .setKeySize(256)
-            .setUserAuthenticationRequired(false) // Allow background operations
+            // User authentication is disabled to allow background operations
+            // such as SMS processing and WorkManager sync jobs.
+            // The key is still protected by the Android Keystore and cannot
+            // be extracted from the device.
+            .setUserAuthenticationRequired(false)
             .apply {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     setInvalidatedByBiometricEnrollment(false)
