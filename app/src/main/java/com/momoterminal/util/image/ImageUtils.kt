@@ -298,6 +298,7 @@ private fun DefaultError(
 
 /**
  * Preload an image URL into the cache.
+ * Uses the app's ImageLoader instance through Coil's singleton.
  */
 @Composable
 fun PreloadImage(imageUrl: String?) {
@@ -305,7 +306,9 @@ fun PreloadImage(imageUrl: String?) {
     
     val context = LocalContext.current
     
-    coil.ImageLoader(context).enqueue(
+    // Use Coil's imageLoader extension which returns the singleton ImageLoader
+    // configured by the app (via Hilt in our case through Coil.setImageLoader)
+    coil.imageLoader(context).enqueue(
         ImageRequest.Builder(context)
             .data(imageUrl)
             .build()

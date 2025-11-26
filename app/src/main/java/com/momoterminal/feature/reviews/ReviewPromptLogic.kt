@@ -45,11 +45,11 @@ class ReviewPromptManager @Inject constructor(
         private val KEY_LAST_PROMPT_TIME = longPreferencesKey("last_prompt_time")
         private val KEY_TOTAL_PROMPTS = intPreferencesKey("total_prompts")
         
-        // Thresholds
-        private const val MIN_DAYS_SINCE_INSTALL = 7
-        private const val MIN_SUCCESSFUL_TRANSACTIONS = 10
-        private const val MIN_DAYS_BETWEEN_PROMPTS = 30
-        private const val MAX_TOTAL_PROMPTS = 3
+        // Thresholds - exposed for ReviewStats consistency
+        const val MIN_DAYS_SINCE_INSTALL = 7
+        const val MIN_SUCCESSFUL_TRANSACTIONS = 10
+        const val MIN_DAYS_BETWEEN_PROMPTS = 30
+        const val MAX_TOTAL_PROMPTS = 3
     }
     
     /**
@@ -183,8 +183,8 @@ data class ReviewStats(
     val totalPrompts: Int
 ) {
     val canShowPrompt: Boolean
-        get() = daysSinceInstall >= 7 &&
-                successfulTransactions >= 10 &&
-                (daysSinceLastPrompt == null || daysSinceLastPrompt >= 30) &&
-                totalPrompts < 3
+        get() = daysSinceInstall >= ReviewPromptManager.MIN_DAYS_SINCE_INSTALL &&
+                successfulTransactions >= ReviewPromptManager.MIN_SUCCESSFUL_TRANSACTIONS &&
+                (daysSinceLastPrompt == null || daysSinceLastPrompt >= ReviewPromptManager.MIN_DAYS_BETWEEN_PROMPTS) &&
+                totalPrompts < ReviewPromptManager.MAX_TOTAL_PROMPTS
 }

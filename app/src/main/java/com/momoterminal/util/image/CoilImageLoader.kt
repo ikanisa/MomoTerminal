@@ -67,7 +67,6 @@ class CoilImageLoaderFactory @Inject constructor(
             .components {
                 add(SvgDecoder.Factory())
             }
-            .crossfade(true)
             .crossfade(300)
             .memoryCachePolicy(CachePolicy.ENABLED)
             .diskCachePolicy(CachePolicy.ENABLED)
