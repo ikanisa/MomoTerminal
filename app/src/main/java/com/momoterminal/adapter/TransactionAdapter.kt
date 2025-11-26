@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -39,19 +40,19 @@ class TransactionAdapter : ListAdapter<TransactionEntity, TransactionAdapter.Vie
             tvBody.text = transaction.body
             tvTimestamp.text = getRelativeTime(transaction.timestamp)
             
-            // Set status icon based on status
+            // Set status icon based on status using custom colors from colors.xml
             when (transaction.status) {
                 "SENT" -> {
                     imgStatus.setImageResource(R.drawable.ic_check_circle)
-                    imgStatus.setColorFilter(itemView.context.getColor(android.R.color.holo_green_light))
+                    imgStatus.setColorFilter(ContextCompat.getColor(itemView.context, R.color.status_sent))
                 }
                 "FAILED" -> {
                     imgStatus.setImageResource(R.drawable.ic_error)
-                    imgStatus.setColorFilter(itemView.context.getColor(android.R.color.holo_red_light))
+                    imgStatus.setColorFilter(ContextCompat.getColor(itemView.context, R.color.status_failed))
                 }
                 else -> { // PENDING
                     imgStatus.setImageResource(R.drawable.ic_pending)
-                    imgStatus.setColorFilter(itemView.context.getColor(android.R.color.holo_orange_light))
+                    imgStatus.setColorFilter(ContextCompat.getColor(itemView.context, R.color.status_pending))
                 }
             }
         }

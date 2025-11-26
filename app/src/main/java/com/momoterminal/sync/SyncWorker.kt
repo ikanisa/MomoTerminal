@@ -68,17 +68,15 @@ class SyncWorker(
                     .addHeader("Content-Type", "application/json")
                     .build()
                 
-                val response = client.newCall(request).execute()
-                
-                if (response.isSuccessful) {
-                    database.transactionDao().updateStatus(txn.id, "SENT")
-                    Log.d(TAG, "Transaction ${txn.id} synced successfully")
-                } else {
-                    Log.w(TAG, "Sync failed for ${txn.id}: ${response.code}")
-                    // Leave as PENDING for retry
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        database.transactionDao().updateStatus(txn.id, "SENT")
+                        Log.d(TAG, "Transaction ${txn.id} synced successfully")
+                    } else {
+                        Log.w(TAG, "Sync failed for ${txn.id}: ${response.code}")
+                        // Leave as PENDING for retry
+                    }
                 }
-                
-                response.close()
                 
             } catch (e: Exception) {
                 // Leave as PENDING, will retry
