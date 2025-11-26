@@ -1,22 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#FF6200EE</color>
-    <color name="primary_dark">#FF3700B3</color>
-    <color name="accent">#FF03DAC5</color>
+    <!-- Primary colors -->
+    <color name="primary">#FFCC00</color>
+    <color name="primary_dark">#CC9900</color>
+    <color name="primary_light">#FFE066</color>
+    <color name="accent">#FF6D00</color>
+    
+    <!-- Secondary colors -->
+    <color name="secondary">#0046AD</color>
+    <color name="secondary_light">#3373C4</color>
+    <color name="secondary_dark">#003080</color>
+    
+    <!-- Tertiary colors -->
+    <color name="tertiary">#00A651</color>
+    <color name="tertiary_light">#4CAF50</color>
+    
+    <!-- MoMo brand colors -->
     <color name="momo_yellow">#FFCC00</color>
-    <color name="momo_blue">#004B87</color>
-    <color name="success_green">#4CAF50</color>
-    <color name="error_red">#F44336</color>
+    <color name="momo_yellow_light">#FFE066</color>
+    <color name="momo_blue">#0046AD</color>
+    <color name="momo_blue_light">#3373C4</color>
+    
+    <!-- Financial app colors -->
+    <color name="trust_blue">#0046AD</color>
+    <color name="success_green">#00A651</color>
+    <color name="success_green_light">#4CAF50</color>
+    <color name="error_red">#E60000</color>
+    <color name="error_red_light">#FF5252</color>
     <color name="warning_orange">#FF9800</color>
+    <color name="warning_orange_light">#FFB74D</color>
+    <color name="info_blue">#2196F3</color>
+    
+    <!-- Surface colors -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
+    <color name="background_light">#FFFBFE</color>
+    <color name="surface_light">#FFFFFF</color>
+    <color name="surface_variant_light">#F5F5F5</color>
+    <color name="background_dark">#121212</color>
+    <color name="surface_dark">#1E1E1E</color>
+    <color name="surface_variant_dark">#2D2D2D</color>
+    
+    <!-- Grey colors -->
     <color name="grey_light">#F5F5F5</color>
     <color name="grey_medium">#9E9E9E</color>
+    
+    <!-- Text colors -->
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#757575</color>
+    <color name="text_primary_dark">#E6E1E5</color>
+    <color name="text_secondary_dark">#CAC4D0</color>
     
     <!-- Status colors for transaction list -->
-    <color name="status_sent">#00C853</color>
+    <color name="status_sent">#00A651</color>
     <color name="status_pending">#FF9800</color>
-    <color name="status_failed">#FF5252</color>
+    <color name="status_failed">#E60000</color>
+    <color name="status_processing">#2196F3</color>
+    
+    <!-- Transaction colors -->
+    <color name="money_in">#00A651</color>
+    <color name="money_out">#E60000</color>
+    
+    <!-- Splash screen background -->
+    <color name="splash_background">#FFCC00</color>
 </resources>
