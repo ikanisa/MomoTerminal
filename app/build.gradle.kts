@@ -180,7 +180,6 @@ dependencies {
     implementation(libs.compose.animation)
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.lifecycle.viewmodel.compose)
-    implementation(libs.hilt.navigation.compose)
     implementation(libs.navigation.compose)
 
     // Accompanist utilities
@@ -191,6 +190,7 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     implementation(libs.hilt.work)
+    implementation(libs.hilt.navigation.compose)
     kapt(libs.hilt.androidx.compiler)
 
     // Security - EncryptedSharedPreferences
