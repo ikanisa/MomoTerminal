@@ -171,8 +171,11 @@ class BiometricHelper @Inject constructor(
             }
         
         if (allowDeviceCredential && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Use recommended setAllowedAuthenticators on Android 11+
             promptInfoBuilder.setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
         } else if (allowDeviceCredential) {
+            // Fallback to deprecated method for Android 10 and below
+            // This is necessary for backward compatibility
             @Suppress("DEPRECATION")
             promptInfoBuilder.setDeviceCredentialAllowed(true)
         } else {

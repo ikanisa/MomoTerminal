@@ -57,8 +57,9 @@ sealed class NfcState {
     
     /**
      * Check if NFC is in an active broadcasting state.
+     * Includes Activating state since UI may need to reflect this.
      */
-    fun isActive(): Boolean = this is Active || this is Processing
+    fun isActive(): Boolean = this is Activating || this is Active || this is Processing
     
     /**
      * Check if NFC is in a terminal state (success, error, timeout).
