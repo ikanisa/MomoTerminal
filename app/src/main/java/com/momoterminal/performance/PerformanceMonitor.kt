@@ -300,6 +300,9 @@ inline fun <T> tracePerformance(name: String, block: () -> T): T {
 /**
  * Inline function to measure memory impact of a code block.
  * 
+ * Note: This provides an approximation of memory usage as Java GC is non-deterministic.
+ * For accurate memory measurements, use Android Studio Profiler or MAT.
+ * 
  * Usage:
  * ```
  * val (result, memoryDelta) = measureMemoryImpact {
@@ -310,16 +313,17 @@ inline fun <T> tracePerformance(name: String, block: () -> T): T {
 inline fun <T> measureMemoryImpact(block: () -> T): Pair<T, Long> {
     val runtime = Runtime.getRuntime()
     
-    // Force garbage collection to get accurate baseline
-    System.gc()
-    Thread.sleep(100)
-    
+    // Get baseline memory (no forced GC - just current state)
     val beforeMemory = runtime.totalMemory() - runtime.freeMemory()
     val result = block()
     val afterMemory = runtime.totalMemory() - runtime.freeMemory()
     
     val memoryDelta = afterMemory - beforeMemory
-    Timber.d("Memory impact: ${memoryDelta / 1024}KB")
+    if (memoryDelta > 0) {
+        Timber.d("Memory impact: ${memoryDelta / 1024}KB allocated")
+    } else {
+        Timber.d("Memory impact: ${-memoryDelta / 1024}KB freed (or GC occurred)")
+    }
     
     return Pair(result, memoryDelta)
 }

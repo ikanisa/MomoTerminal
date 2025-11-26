@@ -50,13 +50,15 @@ class TimberInitializer : Initializer<Unit> {
     
     /**
      * Release build Timber tree that only logs warnings and above.
-     * Errors are also sent to crash reporting.
+     * Errors are also sent to crash reporting via the main app's CrashlyticsTree.
+     * This tree serves as a fallback if initialized before Hilt is ready.
      */
     private class ReleaseTree : Timber.Tree() {
         override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
             if (priority >= android.util.Log.WARN) {
-                // Log warnings and errors
-                // In a real app, you might send these to Crashlytics
+                // Log warnings and errors to system log as fallback
+                // The main CrashlyticsTree (planted by MomoTerminalApp) handles Crashlytics
+                android.util.Log.println(priority, tag ?: "MomoTerminal", message)
             }
         }
     }

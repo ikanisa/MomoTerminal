@@ -25,7 +25,12 @@
 # ============================================
 
 # Remove Kotlin null checks in release builds
-# This is safe as the compiler has already verified nullability
+# WARNING: This optimization assumes Kotlin nullability is correctly annotated.
+# It may cause issues if:
+# - Platform types from Java are used without proper null handling
+# - Unsafe casts (as instead of as?) are used
+# - Reflection is used to bypass null checks
+# Only enable this if you're confident about your null handling.
 -assumenosideeffects class kotlin.jvm.internal.Intrinsics {
     public static void checkNotNull(...);
     public static void checkNotNullExpressionValue(...);
