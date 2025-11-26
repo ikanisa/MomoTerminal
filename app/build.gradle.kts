@@ -107,7 +107,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         "**/Hilt_*.*"
     )
     
-    val debugTree = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+    val debugTree = fileTree(layout.buildDirectory.dir("tmp/kotlin-classes/debug")) {
         exclude(fileFilter)
     }
     
@@ -115,7 +115,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     
     sourceDirectories.setFrom(files(mainSrc))
     classDirectories.setFrom(files(debugTree))
-    executionData.setFrom(files("${buildDir}/jacoco/testDebugUnitTest.exec"))
+    executionData.setFrom(files(layout.buildDirectory.file("jacoco/testDebugUnitTest.exec")))
 }
 
 tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
@@ -144,12 +144,12 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
         "**/Hilt_*.*"
     )
     
-    val debugTree = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+    val debugTree = fileTree(layout.buildDirectory.dir("tmp/kotlin-classes/debug")) {
         exclude(fileFilter)
     }
     
     classDirectories.setFrom(files(debugTree))
-    executionData.setFrom(files("${buildDir}/jacoco/testDebugUnitTest.exec"))
+    executionData.setFrom(files(layout.buildDirectory.file("jacoco/testDebugUnitTest.exec")))
 }
 
 dependencies {
