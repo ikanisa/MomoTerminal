@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group android:scaleX="1.5"
+        android:scaleY="1.5"
+        android:translateX="27"
+        android:translateY="27">
+        <!-- M letter for MomoTerminal -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M4,32h8l6,-16 6,16h8v-24h-6v14l-4,-10h-8l-4,10v-14h-6z" />
+        <!-- Payment/wallet icon below -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M6,36h24v4h-24z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M10,42h16v8h-16z" />
+    </group>
+</vector>
