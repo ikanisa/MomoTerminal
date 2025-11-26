@@ -22,16 +22,21 @@ class CertificatePinnerConfig @Inject constructor() {
         
         // Production certificate pins (SHA-256)
         // IMPORTANT: Replace these placeholder pins with actual production certificate pins
+        // before deploying to production. Without real pins, certificate pinning will fail.
+        // 
         // To generate pins, use:
         // openssl s_client -connect api.momoterminal.com:443 | \
         //   openssl x509 -pubkey -noout | \
         //   openssl pkey -pubin -outform der | \
         //   openssl dgst -sha256 -binary | \
         //   openssl enc -base64
+        // 
+        // TODO: Replace with actual certificate pins before production deployment
         private const val PRIMARY_PIN = "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
         private const val BACKUP_PIN = "sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB="
         
         // Additional backup pins (root CA pins for certificate rotation)
+        // TODO: Replace with actual root CA pins
         private const val ROOT_CA_PIN = "sha256/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC="
     }
 

@@ -167,12 +167,23 @@ class PlayIntegrityManager @Inject constructor(
     /**
      * Generates a cryptographically secure nonce for integrity requests.
      * 
+     * WARNING: This method is provided for testing/development purposes only.
+     * In production, nonces should ALWAYS be generated server-side and sent 
+     * to the client to prevent replay attacks and ensure freshness.
+     * 
      * The nonce should be:
      * - At least 16 characters long
      * - Base64 encoded
      * - Unique per request
-     * - Generated server-side in production
+     * - Generated server-side in production (NOT client-side)
+     * 
+     * @return A Base64-encoded random nonce for development/testing
      */
+    @Deprecated(
+        message = "Nonces should be generated server-side in production. " +
+                "This method is for development/testing only.",
+        level = DeprecationLevel.WARNING
+    )
     fun generateNonce(): String {
         val bytes = ByteArray(32)
         java.security.SecureRandom().nextBytes(bytes)

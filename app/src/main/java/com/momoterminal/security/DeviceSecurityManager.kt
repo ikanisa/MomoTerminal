@@ -257,9 +257,29 @@ class DeviceSecurityManager @Inject constructor(
         }
     }
 
+    /**
+     * Gets a system property value using allowed keys only.
+     * Only whitelisted keys are allowed to prevent command injection.
+     */
     private fun getSystemProperty(key: String): String? {
+        // Whitelist of allowed system property keys
+        val allowedKeys = setOf(
+            "ro.debuggable",
+            "ro.secure",
+            "ro.build.tags",
+            "ro.build.type"
+        )
+        
+        // Validate key is in whitelist
+        if (key !in allowedKeys) {
+            return null
+        }
+        
         return try {
-            val process = Runtime.getRuntime().exec("getprop $key")
+            // Use ProcessBuilder for safer execution
+            val process = ProcessBuilder("getprop", key)
+                .redirectErrorStream(true)
+                .start()
             process.inputStream.bufferedReader().readLine()
         } catch (e: Exception) {
             null
@@ -272,7 +292,19 @@ class DeviceSecurityManager @Inject constructor(
     private fun checkRWSystem(): Boolean {
         return try {
             val mounts = File("/proc/mounts").readText()
-            mounts.contains("/system") && mounts.contains("rw,")
+            // Parse mount entries more precisely
+            val lines = mounts.lines()
+            lines.any { line ->
+                val parts = line.split(" ")
+                if (parts.size >= 4) {
+                    val mountPoint = parts[1]
+                    val options = parts[3]
+                    // Check specifically for /system mount with rw option
+                    mountPoint == "/system" && options.split(",").contains("rw")
+                } else {
+                    false
+                }
+            }
         } catch (e: Exception) {
             false
         }

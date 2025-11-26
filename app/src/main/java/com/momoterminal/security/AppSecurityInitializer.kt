@@ -26,7 +26,7 @@ class AppSecurityInitializer @Inject constructor(
         /**
          * Security checks passed successfully.
          */
-        data object Success : InitializationResult()
+        object Success : InitializationResult()
 
         /**
          * Security checks failed.
