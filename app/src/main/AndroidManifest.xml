@@ -65,6 +65,24 @@
             android:exported="false"
             android:theme="@style/Theme.MomoTerminal" />
 
+        <!-- Webhook List Activity -->
+        <activity
+            android:name=".ui.webhook.WebhookListActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MomoTerminal" />
+
+        <!-- Webhook Edit Activity -->
+        <activity
+            android:name=".ui.webhook.WebhookEditActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MomoTerminal" />
+
+        <!-- Delivery Logs Activity -->
+        <activity
+            android:name=".ui.webhook.DeliveryLogsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MomoTerminal" />
+
         <!-- SMS Receiver -->
         <receiver
             android:name=".SmsReceiver"

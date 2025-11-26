@@ -5,19 +5,29 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
+import com.momoterminal.config.AppConfig
 import com.momoterminal.data.AppDatabase
 import com.momoterminal.data.TransactionEntity
 import com.momoterminal.sync.SyncManager
+import com.momoterminal.webhook.WebhookDispatcher
+import com.momoterminal.webhook.WebhookWorker
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * BroadcastReceiver that listens for incoming SMS messages
  * and saves Mobile Money related messages to the local database.
  * Uses offline-first approach: save immediately, then trigger sync.
+ * Also dispatches SMS to configured webhooks for multi-endpoint delivery.
  */
+@AndroidEntryPoint
 class SmsReceiver : BroadcastReceiver() {
+    
+    @Inject
+    lateinit var webhookDispatcher: WebhookDispatcher
     
     companion object {
         private const val TAG = "SmsReceiver"
@@ -57,12 +67,56 @@ class SmsReceiver : BroadcastReceiver() {
                     // Trigger sync to upload to configured webhook
                     SyncManager(context).enqueueSyncNow()
                     
+                    // Dispatch to all matching webhooks (multi-webhook relay)
+                    dispatchToWebhooks(context, sender, body)
+                    
                     PaymentState.appendLog("SMS saved and sync triggered")
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error processing SMS", e)
             PaymentState.appendLog("SMS Error: ${e.message}")
+        }
+    }
+    
+    /**
+     * Dispatch SMS to configured webhooks based on phone number matching.
+     */
+    private fun dispatchToWebhooks(context: Context, sender: String, body: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Get the configured merchant phone number for routing
+                // This allows matching webhooks by the device's MoMo phone number
+                val phoneNumber = getDevicePhoneNumber(context)
+                
+                webhookDispatcher.dispatchSms(
+                    phoneNumber = phoneNumber,
+                    sender = sender,
+                    message = body
+                )
+                
+                // Enqueue webhook worker to ensure delivery
+                WebhookWorker.enqueueNow(context)
+                
+                Log.d(TAG, "SMS dispatched to webhooks")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error dispatching to webhooks", e)
+            }
+        }
+    }
+    
+    /**
+     * Get the device phone number from configuration.
+     * Uses the merchant phone number configured in settings for webhook routing.
+     * Falls back to empty string which will match wildcard/catch-all webhooks.
+     */
+    private fun getDevicePhoneNumber(context: Context): String {
+        return try {
+            val appConfig = AppConfig(context)
+            appConfig.getMerchantPhone().takeIf { it.isNotBlank() } ?: ""
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not get merchant phone number", e)
+            ""
         }
     }
     
