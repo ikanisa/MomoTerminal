@@ -1,6 +1,7 @@
 package com.momoterminal.data.local
 
 import android.content.Context
+// Using android.util.Base64 instead of java.util.Base64 for API 24+ (minSdk) compatibility
 import android.util.Base64
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey

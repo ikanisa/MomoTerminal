@@ -12,7 +12,6 @@ import com.momoterminal.presentation.ComposeMainActivity
 import timber.log.Timber
 import java.io.PrintWriter
 import java.io.StringWriter
-import kotlin.system.exitProcess
 
 /**
  * Crash recovery manager for handling app crashes and automatic restart.
@@ -199,7 +198,6 @@ object CrashRecoveryManager {
             
             // Kill the current process
             Process.killProcess(Process.myPid())
-            exitProcess(2)
         } catch (e: Exception) {
             Timber.e(e, "Failed to schedule restart")
         }

@@ -214,8 +214,8 @@ private fun CrashRecoveryScreen(
     ErrorScreen(
         error = error,
         onRetry = if (error.isRecoverable) onRetry else null,
-        onAction = { onRestart() },
-        action = com.momoterminal.error.ErrorAction.Retry,
+        onAction = { _ -> onRestart() },
+        action = com.momoterminal.error.ErrorAction.Dismiss,
         actionLabel = "Restart App",
         modifier = modifier
     )
