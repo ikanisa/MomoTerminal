@@ -102,35 +102,29 @@ fun ErrorBoundary(
         if (errorState.hasError) {
             val appError = errorState.error?.let { throwable ->
                 when (throwable) {
-                    is OutOfMemoryError -> AppError.System(
+                    is OutOfMemoryError -> AppError.Unknown(
                         message = "The app ran out of memory. Please restart the app.",
-                        cause = throwable,
-                        isRecoverable = false
+                        cause = throwable
                     )
-                    is SecurityException -> AppError.Permission(
-                        permission = "unknown",
-                        message = "A permission error occurred: ${throwable.message}",
-                        isRecoverable = true
+                    is SecurityException -> AppError.Security.EncryptionFailed(
+                        cause = throwable
                     )
                     is IllegalStateException -> AppError.Unknown(
                         message = "An unexpected error occurred: ${throwable.message}",
-                        cause = throwable,
-                        isRecoverable = true
+                        cause = throwable
                     )
-                    is IllegalArgumentException -> AppError.Validation(
-                        message = "Invalid data: ${throwable.message}",
-                        isRecoverable = true
+                    is IllegalArgumentException -> AppError.Validation.InvalidInput(
+                        field = "data",
+                        message = "Invalid data: ${throwable.message}"
                     )
                     else -> AppError.Unknown(
                         message = throwable.message ?: "An unexpected error occurred",
-                        cause = throwable,
-                        isRecoverable = true
+                        cause = throwable
                     )
                 }
             } ?: AppError.Unknown(
                 message = "An unexpected error occurred",
-                cause = null,
-                isRecoverable = true
+                cause = null
             )
 
             fallback(appError) {

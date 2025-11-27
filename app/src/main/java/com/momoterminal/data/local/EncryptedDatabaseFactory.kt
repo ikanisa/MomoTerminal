@@ -1,13 +1,13 @@
 package com.momoterminal.data.local
 
 import android.content.Context
+import android.util.Base64
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import net.sqlcipher.database.SupportFactory
 import timber.log.Timber
 import java.security.SecureRandom
-import java.util.Base64
 
 /**
  * Factory for creating encrypted Room database instances using SQLCipher.
@@ -61,11 +61,11 @@ object EncryptedDatabaseFactory {
 
         return if (storedPassphrase != null) {
             Timber.d("Using existing database encryption passphrase")
-            Base64.getDecoder().decode(storedPassphrase)
+            Base64.decode(storedPassphrase, Base64.NO_WRAP)
         } else {
             Timber.d("Generating new database encryption passphrase")
             val newPassphrase = generateSecurePassphrase()
-            val encodedPassphrase = Base64.getEncoder().encodeToString(newPassphrase)
+            val encodedPassphrase = Base64.encodeToString(newPassphrase, Base64.NO_WRAP)
             
             encryptedPrefs.edit()
                 .putString(KEY_DB_PASSPHRASE, encodedPassphrase)

@@ -43,6 +43,9 @@ object CrashRecoveryManager {
     private const val KEY_CRASH_STACK_TRACE = "crash_stack_trace"
     private const val KEY_WAS_CRASHED = "was_crashed"
     private const val KEY_CRASH_ACTIVITY = "crash_activity"
+    
+    /** Intent extra key indicating the app was restarted from a crash. */
+    const val EXTRA_FROM_CRASH = "from_crash"
 
     // Maximum consecutive crashes before disabling auto-restart
     private const val MAX_CONSECUTIVE_CRASHES = 3
@@ -190,7 +193,7 @@ object CrashRecoveryManager {
         try {
             val intent = Intent(context, ComposeMainActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                putExtra("from_crash", true)
+                putExtra(EXTRA_FROM_CRASH, true)
             }
             context.startActivity(intent)
             
