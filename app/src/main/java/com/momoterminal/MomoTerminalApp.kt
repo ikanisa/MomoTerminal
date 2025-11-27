@@ -41,8 +41,19 @@ class MomoTerminalApp : Application(), Configuration.Provider {
         instance = this
         sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
 
+        initializeCrashRecovery()
         initializeFirebase()
         initializeTimber()
+    }
+
+    /**
+     * Initialize crash recovery manager for automatic app restart after crashes.
+     */
+    private fun initializeCrashRecovery() {
+        com.momoterminal.startup.CrashRecoveryManager.initialize(
+            application = this,
+            autoRestart = !BuildConfig.DEBUG // Only auto-restart in release builds
+        )
     }
 
     /**

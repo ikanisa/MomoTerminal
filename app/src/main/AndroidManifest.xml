@@ -47,12 +47,47 @@
             </intent-filter>
         </activity>
 
-        <!-- Compose Main Activity -->
+        <!-- Compose Main Activity with deep link support -->
         <activity
             android:name=".presentation.ComposeMainActivity"
-            android:exported="false"
+            android:exported="true"
             android:launchMode="singleTop"
-            android:theme="@style/Theme.MomoTerminal" />
+            android:theme="@style/Theme.MomoTerminal">
+            
+            <!-- App Links (verified deep links) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="momoterminal.com"
+                    android:pathPrefix="/app" />
+                <data
+                    android:scheme="https"
+                    android:host="www.momoterminal.com"
+                    android:pathPrefix="/app" />
+            </intent-filter>
+
+            <!-- Custom scheme deep links (momoterminal://) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="momoterminal" />
+            </intent-filter>
+            
+            <!-- Transaction notification deep links -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="momoterminal"
+                    android:host="transaction"
+                    android:pathPattern="/.*" />
+            </intent-filter>
+        </activity>
 
         <!-- Legacy Main Activity (kept for backward compatibility) -->
         <activity

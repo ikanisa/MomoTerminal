@@ -1,4 +1,5 @@
 import java.io.File
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -13,6 +14,26 @@ plugins {
     id("jacoco")
 }
 
+// Load version properties for automated version management
+val versionProps = Properties().apply {
+    val versionFile = rootProject.file("version.properties")
+    if (versionFile.exists()) {
+        load(versionFile.inputStream())
+    }
+}
+
+val versionMajor = versionProps.getProperty("VERSION_MAJOR", "1").toInt()
+val versionMinor = versionProps.getProperty("VERSION_MINOR", "0").toInt()
+val versionPatch = versionProps.getProperty("VERSION_PATCH", "0").toInt()
+val buildNumber = System.getenv("BUILD_NUMBER")?.toIntOrNull() 
+    ?: versionProps.getProperty("BUILD_NUMBER", "0").toIntOrNull() 
+    ?: 0
+
+// Calculate version code: MAJOR * 10000 + MINOR * 100 + PATCH + BUILD_NUMBER
+val calculatedVersionCode = versionMajor * 10000 + versionMinor * 100 + versionPatch + buildNumber
+val calculatedVersionName = "$versionMajor.$versionMinor.$versionPatch" + 
+    if (buildNumber > 0) ".$buildNumber" else ""
+
 android {
     namespace = "com.momoterminal"
     compileSdk = 35
@@ -21,8 +42,8 @@ android {
         applicationId = "com.momoterminal"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = calculatedVersionCode
+        versionName = calculatedVersionName
 
         testInstrumentationRunner = "com.momoterminal.HiltTestRunner"
 
