@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.momoterminal.R
-import com.momoterminal.data.TransactionEntity
+import com.momoterminal.data.local.entity.TransactionEntity
 import java.util.concurrent.TimeUnit
 
 /**

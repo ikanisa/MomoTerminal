@@ -6,8 +6,9 @@ import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
 import com.momoterminal.config.AppConfig
-import com.momoterminal.data.AppDatabase
-import com.momoterminal.data.TransactionEntity
+import com.momoterminal.data.local.MomoDatabase
+import com.momoterminal.data.local.dao.TransactionDao
+import com.momoterminal.data.local.entity.TransactionEntity
 import com.momoterminal.sync.SyncManager
 import com.momoterminal.webhook.WebhookDispatcher
 import com.momoterminal.webhook.WebhookWorker
@@ -29,11 +30,23 @@ class SmsReceiver : BroadcastReceiver() {
     @Inject
     lateinit var webhookDispatcher: WebhookDispatcher
     
+    @Inject
+    lateinit var transactionDao: TransactionDao
+    
     companion object {
         private const val TAG = "SmsReceiver"
         
         // Keywords to filter Mobile Money messages
         private val MOMO_KEYWORDS = listOf("MOMO", "MobileMoney", "MTN", "RWF", "received", "sent", "payment")
+        
+        // Broadcast action for payment received
+        const val BROADCAST_PAYMENT_RECEIVED = "com.momoterminal.action.PAYMENT_RECEIVED"
+        
+        // Extras for the broadcast
+        const val EXTRA_AMOUNT = "extra_amount"
+        const val EXTRA_SENDER = "extra_sender"
+        const val EXTRA_TRANSACTION_ID = "extra_transaction_id"
+        const val EXTRA_TIMESTAMP = "extra_timestamp"
     }
     
     override fun onReceive(context: Context, intent: Intent) {
@@ -123,14 +136,15 @@ class SmsReceiver : BroadcastReceiver() {
     private fun saveToDatabase(context: Context, sender: String, body: String, timestamp: Long) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val database = AppDatabase.getDatabase(context)
+                val appConfig = AppConfig(context)
                 val transaction = TransactionEntity(
                     sender = sender,
                     body = body,
                     timestamp = timestamp,
-                    status = "PENDING"
+                    status = "PENDING",
+                    merchantCode = appConfig.getMerchantPhone()
                 )
-                database.transactionDao().insert(transaction)
+                transactionDao.insert(transaction)
                 Log.d(TAG, "Transaction saved to database")
             } catch (e: Exception) {
                 Log.e(TAG, "Error saving to database", e)

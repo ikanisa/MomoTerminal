@@ -7,7 +7,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.momoterminal.config.AppConfig
-import com.momoterminal.data.AppDatabase
+import com.momoterminal.data.local.dao.TransactionDao
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import okhttp3.MediaType.Companion.toMediaType
@@ -24,7 +24,8 @@ import java.util.concurrent.TimeUnit
 @HiltWorker
 class SyncWorker @AssistedInject constructor(
     @Assisted context: Context,
-    @Assisted params: WorkerParameters
+    @Assisted params: WorkerParameters,
+    private val transactionDao: TransactionDao
 ) : CoroutineWorker(context, params) {
     
     companion object {
@@ -48,8 +49,7 @@ class SyncWorker @AssistedInject constructor(
             return Result.failure()
         }
         
-        val database = AppDatabase.getDatabase(applicationContext)
-        val pendingTransactions = database.transactionDao().getPendingTransactions()
+        val pendingTransactions = transactionDao.getPendingTransactions()
         
         Log.d(TAG, "Found ${pendingTransactions.size} pending transactions to sync")
         
@@ -62,6 +62,9 @@ class SyncWorker @AssistedInject constructor(
                     put("timestamp", txn.timestamp)
                     put("device", Build.MODEL)
                     put("merchant", appConfig.getMerchantPhone())
+                    txn.amount?.let { put("amount", it) }
+                    txn.currency?.let { put("currency", it) }
+                    txn.transactionId?.let { put("transactionId", it) }
                 }
                 
                 // POST to gateway
@@ -74,7 +77,7 @@ class SyncWorker @AssistedInject constructor(
                 
                 client.newCall(request).execute().use { response ->
                     if (response.isSuccessful) {
-                        database.transactionDao().updateStatus(txn.id, "SENT")
+                        transactionDao.updateStatus(txn.id, "SENT")
                         Log.d(TAG, "Transaction ${txn.id} synced successfully")
                     } else {
                         Log.w(TAG, "Sync failed for ${txn.id}: ${response.code}")
