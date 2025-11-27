@@ -1,3 +1,6 @@
+import java.io.File
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -11,6 +14,26 @@ plugins {
     id("jacoco")
 }
 
+// Load version properties for automated version management
+val versionProps = Properties().apply {
+    val versionFile = rootProject.file("version.properties")
+    if (versionFile.exists()) {
+        load(versionFile.inputStream())
+    }
+}
+
+val versionMajor = versionProps.getProperty("VERSION_MAJOR", "1").toInt()
+val versionMinor = versionProps.getProperty("VERSION_MINOR", "0").toInt()
+val versionPatch = versionProps.getProperty("VERSION_PATCH", "0").toInt()
+val buildNumber = System.getenv("BUILD_NUMBER")?.toIntOrNull() 
+    ?: versionProps.getProperty("BUILD_NUMBER", "0").toIntOrNull() 
+    ?: 0
+
+// Calculate version code: MAJOR * 10000 + MINOR * 100 + PATCH + BUILD_NUMBER
+val calculatedVersionCode = versionMajor * 10000 + versionMinor * 100 + versionPatch + buildNumber
+val calculatedVersionName = "$versionMajor.$versionMinor.$versionPatch" + 
+    if (buildNumber > 0) ".$buildNumber" else ""
+
 android {
     namespace = "com.momoterminal"
     compileSdk = 35
@@ -19,10 +42,42 @@ android {
         applicationId = "com.momoterminal"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = calculatedVersionCode
+        versionName = calculatedVersionName
 
         testInstrumentationRunner = "com.momoterminal.HiltTestRunner"
+
+        // BuildConfig fields for environment configuration
+        buildConfigField("String", "BASE_URL", "\"https://api.momoterminal.com/\"")
+    }
+
+    // Release signing configuration
+    // NOTE: For production, provide these values via environment variables or local.properties
+    // Do NOT commit actual keystore credentials to version control
+    signingConfigs {
+        create("release") {
+            // Load signing config from environment variables or gradle.properties
+            // Example local.properties entries:
+            // MOMO_KEYSTORE_FILE=path/to/keystore.jks
+            // MOMO_KEYSTORE_PASSWORD=your_password
+            // MOMO_KEY_ALIAS=your_alias
+            // MOMO_KEY_PASSWORD=your_key_password
+            val keystoreFile = System.getenv("MOMO_KEYSTORE_FILE")
+                ?: project.findProperty("MOMO_KEYSTORE_FILE")?.toString()
+            val keystorePassword = System.getenv("MOMO_KEYSTORE_PASSWORD")
+                ?: project.findProperty("MOMO_KEYSTORE_PASSWORD")?.toString()
+            val keyAlias = System.getenv("MOMO_KEY_ALIAS")
+                ?: project.findProperty("MOMO_KEY_ALIAS")?.toString()
+            val keyPassword = System.getenv("MOMO_KEY_PASSWORD")
+                ?: project.findProperty("MOMO_KEY_PASSWORD")?.toString()
+
+            if (keystoreFile != null && File(keystoreFile).exists()) {
+                storeFile = File(keystoreFile)
+                storePassword = keystorePassword
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPassword
+            }
+        }
     }
 
     buildTypes {
@@ -33,6 +88,7 @@ android {
             }
             buildConfigField("boolean", "STRICT_MODE_ENABLED", "true")
             buildConfigField("boolean", "LEAK_CANARY_ENABLED", "true")
+            buildConfigField("String", "BASE_URL", "\"https://api.dev.momoterminal.com/\"")
         }
         release {
             isMinifyEnabled = true
@@ -44,6 +100,12 @@ android {
             )
             buildConfigField("boolean", "STRICT_MODE_ENABLED", "false")
             buildConfigField("boolean", "LEAK_CANARY_ENABLED", "false")
+            
+            // Use release signing config if available, otherwise fall back to debug
+            val releaseSigningConfig = signingConfigs.findByName("release")
+            if (releaseSigningConfig?.storeFile != null) {
+                signingConfig = releaseSigningConfig
+            }
         }
         create("benchmark") {
             initWith(getByName("release"))
@@ -229,6 +291,10 @@ dependencies {
     implementation(libs.room.ktx)
     implementation(libs.room.paging)
     ksp(libs.room.compiler)
+
+    // SQLCipher - Database Encryption for financial data protection
+    implementation(libs.sqlcipher.android)
+    implementation(libs.sqlite.ktx)
 
     // Paging 3
     implementation(libs.paging.runtime)

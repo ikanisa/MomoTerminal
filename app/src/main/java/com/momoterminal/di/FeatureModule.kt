@@ -2,7 +2,7 @@ package com.momoterminal.di
 
 import android.content.Context
 import coil.ImageLoader
-import com.momoterminal.data.TransactionDao
+import com.momoterminal.data.local.dao.TransactionDao
 import com.momoterminal.feature.charts.ChartDataProvider
 import com.momoterminal.feature.receipt.PdfReceiptGenerator
 import com.momoterminal.feature.reviews.InAppReviewManager

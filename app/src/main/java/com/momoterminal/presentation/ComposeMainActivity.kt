@@ -20,14 +20,17 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.momoterminal.presentation.components.error.AppErrorBoundary
 import com.momoterminal.presentation.navigation.NavGraph
 import com.momoterminal.presentation.navigation.Screen
 import com.momoterminal.presentation.theme.MomoTerminalTheme
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 
 /**
  * Main Activity using Jetpack Compose.
  * Hosts the navigation graph and bottom navigation bar.
+ * Wrapped with AppErrorBoundary for global error handling.
  */
 @AndroidEntryPoint
 class ComposeMainActivity : ComponentActivity() {
@@ -38,7 +41,14 @@ class ComposeMainActivity : ComponentActivity() {
         
         setContent {
             MomoTerminalTheme {
-                MomoTerminalApp()
+                // Wrap the entire app with error boundary for crash recovery
+                AppErrorBoundary(
+                    onError = { throwable ->
+                        Timber.e(throwable, "Error caught by AppErrorBoundary")
+                    }
+                ) {
+                    MomoTerminalApp()
+                }
             }
         }
     }

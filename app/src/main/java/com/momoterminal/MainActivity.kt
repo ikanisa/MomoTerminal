@@ -29,11 +29,12 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.momoterminal.adapter.TransactionAdapter
 import com.momoterminal.config.AppConfig
-import com.momoterminal.data.AppDatabase
+import com.momoterminal.data.local.dao.TransactionDao
 import com.momoterminal.sync.SyncManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Main Activity for the MomoTerminal application.
@@ -62,10 +63,13 @@ class MainActivity : AppCompatActivity() {
     // NFC Adapter
     private var nfcAdapter: NfcAdapter? = null
     
-    // Config and Database
+    // Config
     private lateinit var appConfig: AppConfig
-    private lateinit var database: AppDatabase
     private lateinit var transactionAdapter: TransactionAdapter
+    
+    // Injected dependencies
+    @Inject
+    lateinit var transactionDao: TransactionDao
     
     // Permission launcher
     private val permissionLauncher = registerForActivityResult(
@@ -85,7 +89,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         
         appConfig = AppConfig(this)
-        database = AppDatabase.getDatabase(this)
         
         initViews()
         setupRecyclerView()
@@ -211,14 +214,14 @@ class MainActivity : AppCompatActivity() {
         
         // Observe recent transactions from Room database
         lifecycleScope.launch {
-            database.transactionDao().getRecentTransactions().collectLatest { transactions ->
+            transactionDao.getRecentTransactions().collectLatest { transactions ->
                 transactionAdapter.submitList(transactions)
             }
         }
         
         // Observe pending count
         lifecycleScope.launch {
-            database.transactionDao().getPendingCount().collectLatest { count ->
+            transactionDao.getPendingCount().collectLatest { count ->
                 tvPendingCount.text = "$count pending uploads"
             }
         }

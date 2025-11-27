@@ -214,6 +214,11 @@
 -dontwarn com.google.crypto.tink.**
 -keep class com.google.crypto.tink.integration.android.** { *; }
 
+# -------- SQLCipher Database Encryption --------
+-keep class net.sqlcipher.** { *; }
+-keep class net.sqlcipher.database.** { *; }
+-dontwarn net.sqlcipher.**
+
 # -------- Java Crypto --------
 -keep class javax.crypto.** { *; }
 -keep class javax.crypto.spec.** { *; }
