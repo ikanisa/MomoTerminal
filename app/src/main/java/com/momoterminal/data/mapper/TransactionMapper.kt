@@ -9,6 +9,9 @@ import android.os.Build
 
 /**
  * Mapper functions for converting between domain models, entities, and DTOs.
+ * 
+ * Note: All amount values are in pesewas (smallest currency unit) to avoid
+ * floating-point precision errors. 1 GHS = 100 pesewas.
  */
 object TransactionMapper {
     
@@ -20,7 +23,7 @@ object TransactionMapper {
             id = entity.id,
             sender = entity.sender,
             body = entity.body,
-            amount = entity.amount,
+            amountInPesewas = entity.amountInPesewas,
             currency = entity.currency ?: "GHS",
             transactionId = entity.transactionId,
             timestamp = entity.timestamp,
@@ -37,7 +40,7 @@ object TransactionMapper {
             id = transaction.id,
             sender = transaction.sender,
             body = transaction.body,
-            amount = transaction.amount,
+            amountInPesewas = transaction.amountInPesewas,
             currency = transaction.currency,
             transactionId = transaction.transactionId,
             timestamp = transaction.timestamp,
@@ -59,7 +62,7 @@ object TransactionMapper {
             timestamp = entity.timestamp,
             device = Build.MODEL,
             merchant = merchantPhone,
-            amount = entity.amount,
+            amountInPesewas = entity.amountInPesewas,
             transactionId = entity.transactionId
         )
     }
@@ -72,7 +75,7 @@ object TransactionMapper {
             id = dto.id?.toLongOrNull() ?: 0,
             sender = dto.sender,
             body = dto.body ?: "",
-            amount = dto.amount,
+            amountInPesewas = dto.amountInPesewas,
             currency = dto.currency,
             transactionId = dto.transactionId,
             timestamp = dto.timestamp,

@@ -55,14 +55,14 @@ class SyncWorker @AssistedInject constructor(
         
         for (txn in pendingTransactions) {
             try {
-                // Construct JSON payload
+                // Construct JSON payload (using amountInPesewas for precision)
                 val json = JSONObject().apply {
                     put("sender", txn.sender)
                     put("text", txn.body)
                     put("timestamp", txn.timestamp)
                     put("device", Build.MODEL)
                     put("merchant", appConfig.getMerchantPhone())
-                    txn.amount?.let { put("amount", it) }
+                    txn.amountInPesewas?.let { put("amount_in_pesewas", it) }
                     txn.currency?.let { put("currency", it) }
                     txn.transactionId?.let { put("transactionId", it) }
                 }

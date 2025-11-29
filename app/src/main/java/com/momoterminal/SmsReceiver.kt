@@ -36,8 +36,8 @@ class SmsReceiver : BroadcastReceiver() {
     companion object {
         private const val TAG = "SmsReceiver"
         
-        // Keywords to filter Mobile Money messages
-        private val MOMO_KEYWORDS = listOf("MOMO", "MobileMoney", "MTN", "RWF", "received", "sent", "payment")
+        // Keywords to filter Mobile Money messages (Ghana-focused)
+        private val MOMO_KEYWORDS = listOf("MOMO", "MobileMoney", "MTN", "GHS", "received", "sent", "payment")
         
         // Broadcast action for payment received
         const val BROADCAST_PAYMENT_RECEIVED = "com.momoterminal.action.PAYMENT_RECEIVED"

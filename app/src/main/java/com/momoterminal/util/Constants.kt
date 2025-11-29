@@ -41,9 +41,9 @@ object Constants {
     const val STATUS_SENT = "SENT"
     const val STATUS_FAILED = "FAILED"
     
-    // SMS Keywords for filtering
+    // SMS Keywords for filtering (Ghana-focused)
     val MOMO_KEYWORDS = listOf(
-        "MOMO", "MobileMoney", "MTN", "RWF", "GHS",
+        "MOMO", "MobileMoney", "MTN", "GHS",
         "received", "sent", "payment", "credited",
         "transferred", "VodaCash", "AirtelTigo"
     )

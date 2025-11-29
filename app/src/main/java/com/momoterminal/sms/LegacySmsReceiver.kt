@@ -95,7 +95,7 @@ class LegacySmsReceiver : BroadcastReceiver() {
         val parsedData = parsePaymentDetails(body)
         
         val transaction = PaymentTransaction(
-            amount = parsedData.amount,
+            amountInPesewas = parsedData.amountInPesewas,
             currency = parsedData.currency,
             senderNumber = parsedData.senderPhone ?: sender,
             transactionId = parsedData.transactionId ?: generateTransactionId(),
@@ -113,9 +113,10 @@ class LegacySmsReceiver : BroadcastReceiver() {
 
     /**
      * Parse payment details from SMS body.
+     * Returns amount in pesewas (smallest currency unit) for precision.
      */
     private fun parsePaymentDetails(body: String): ParsedPaymentData {
-        var amount = 0.0
+        var amountInPesewas = 0L
         var currency = "GHS"
         var transactionId: String? = null
         var senderPhone: String? = null
@@ -129,7 +130,8 @@ class LegacySmsReceiver : BroadcastReceiver() {
         val amountMatcher = amountPattern.matcher(body)
         if (amountMatcher.find()) {
             val amountStr = amountMatcher.group(2) ?: amountMatcher.group(3)
-            amount = amountStr?.toDoubleOrNull() ?: 0.0
+            val amountDouble = amountStr?.toDoubleOrNull() ?: 0.0
+            amountInPesewas = (amountDouble * 100).toLong()
             currency = "GHS"
         }
 
@@ -159,7 +161,7 @@ class LegacySmsReceiver : BroadcastReceiver() {
         }
 
         return ParsedPaymentData(
-            amount = amount,
+            amountInPesewas = amountInPesewas,
             currency = currency,
             transactionId = transactionId,
             senderPhone = senderPhone

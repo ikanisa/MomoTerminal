@@ -142,9 +142,9 @@ class ConflictResolver @Inject constructor() {
             }
         }
         
-        // Check for data mismatch
+        // Check for data mismatch (using amountInPesewas for comparison)
         if (local.body != server.body || 
-            local.amount != server.amount ||
+            local.amountInPesewas != server.amountInPesewas ||
             local.sender != server.sender) {
             
             // Check if both were modified (concurrent modification)

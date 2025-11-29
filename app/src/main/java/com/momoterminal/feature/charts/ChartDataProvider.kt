@@ -50,6 +50,8 @@ data class TransactionSummary(
 
 /**
  * Data class representing transaction breakdown by category.
+ * Note: Amount is in main currency units (GHS) for display purposes.
+ * This is aggregated data computed from transactions stored in pesewas.
  */
 data class CategoryBreakdown(
     val category: String,
