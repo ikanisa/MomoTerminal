@@ -4,7 +4,6 @@ import android.content.Intent
 import android.nfc.cardemulation.HostApduService
 import android.os.Bundle
 import android.util.Log
-import com.momoterminal.api.NfcPaymentData
 
 /**
  * Host Card Emulation (HCE) Service for Mobile Money payments.
@@ -87,8 +86,8 @@ class MomoHceService : HostApduService() {
         val paymentData = currentPaymentData ?: return byteArrayOf()
         
         // Create an NDEF record with the USSD dial string
-        // Format: tel:*170*1*1*merchantCode*amount#
-        val ussdString = paymentData.toNdefPayload()
+        // Format: tel:*170*1*1*merchantPhone*amount#
+        val ussdString = paymentData.toUssdString()
         val ndefMessage = createNdefMessage(ussdString)
         
         Log.d(TAG, "Sending USSD: $ussdString")
@@ -175,14 +174,14 @@ class MomoHceService : HostApduService() {
         intent?.let {
             if (it.action == ACTION_SET_PAYMENT_DATA) {
                 val amount = it.getDoubleExtra(EXTRA_AMOUNT, 0.0)
-                val merchantCode = it.getStringExtra(EXTRA_MERCHANT_CODE) ?: ""
-                val ussdCode = it.getStringExtra(EXTRA_USSD_CODE) ?: ""
+                val merchantPhone = it.getStringExtra(EXTRA_MERCHANT_CODE) ?: ""
+                val providerName = it.getStringExtra(EXTRA_PROVIDER) ?: "MTN"
                 
-                if (amount > 0 && merchantCode.isNotEmpty()) {
+                if (amount > 0 && merchantPhone.isNotEmpty()) {
                     currentPaymentData = NfcPaymentData(
-                        amount = amount,
-                        merchantCode = merchantCode,
-                        ussdCode = ussdCode
+                        merchantPhone = merchantPhone,
+                        amount = "%.2f".format(amount),
+                        provider = NfcPaymentData.Provider.fromString(providerName)
                     )
                     Log.d(TAG, "Payment data set: $currentPaymentData")
                 }
@@ -208,7 +207,7 @@ class MomoHceService : HostApduService() {
         const val ACTION_CLEAR_PAYMENT_DATA = "com.momoterminal.action.CLEAR_PAYMENT_DATA"
         const val EXTRA_AMOUNT = "extra_amount"
         const val EXTRA_MERCHANT_CODE = "extra_merchant_code"
-        const val EXTRA_USSD_CODE = "extra_ussd_code"
+        const val EXTRA_PROVIDER = "extra_provider"
     }
 }
 

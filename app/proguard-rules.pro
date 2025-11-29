@@ -251,3 +251,32 @@
 # Remove unused code
 -dontwarn javax.annotation.**
 -dontwarn org.codehaus.mojo.animal_sniffer.*
+
+# ============================================
+# R8 Full Mode Compatibility
+# ============================================
+
+# Keep continuation for coroutines
+-keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
+
+# Keep KotlinExtensions for Retrofit
+-dontwarn kotlin.Unit
+-dontwarn retrofit2.KotlinExtensions
+-dontwarn retrofit2.KotlinExtensions$*
+-if interface * { @retrofit2.http.* <methods>; }
+-keep,allowobfuscation interface <1>
+
+# Gson SerializedName annotations
+-keepclassmembers,allowobfuscation class * {
+  @com.google.gson.annotations.SerializedName <fields>;
+}
+
+# R8 full mode - keep all annotations
+-keepattributes RuntimeVisibleAnnotations,RuntimeVisibleParameterAnnotations
+-keepattributes AnnotationDefault,EnclosingMethod
+
+# NFC HCE Service - Must not be obfuscated for system to find it
+-keep class com.momoterminal.NfcHceService { *; }
+
+# -------- User Preferences DataStore --------
+-keep class com.momoterminal.data.preferences.** { *; }

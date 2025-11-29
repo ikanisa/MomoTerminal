@@ -3,12 +3,14 @@ package com.momoterminal.presentation.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.momoterminal.config.AppConfig
+import com.momoterminal.data.preferences.UserPreferences
 import com.momoterminal.security.BiometricHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -25,7 +27,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val appConfig: AppConfig,
-    private val biometricHelper: BiometricHelper
+    private val biometricHelper: BiometricHelper,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
     
     /**
@@ -63,16 +66,29 @@ class SettingsViewModel @Inject constructor(
     
     init {
         loadSettings()
+        observeBiometricPreference()
     }
     
     private fun loadSettings() {
-        _uiState.value = _uiState.value.copy(
-            webhookUrl = appConfig.getGatewayUrl(),
-            apiSecret = appConfig.getApiSecret(),
-            merchantPhone = appConfig.getMerchantPhone(),
-            isConfigured = appConfig.isConfigured(),
-            isBiometricAvailable = biometricHelper.isBiometricAvailable()
-        )
+        viewModelScope.launch {
+            val biometricEnabled = userPreferences.biometricEnabledFlow.first()
+            _uiState.value = _uiState.value.copy(
+                webhookUrl = appConfig.getGatewayUrl(),
+                apiSecret = appConfig.getApiSecret(),
+                merchantPhone = appConfig.getMerchantPhone(),
+                isConfigured = appConfig.isConfigured(),
+                isBiometricAvailable = biometricHelper.isBiometricAvailable(),
+                isBiometricEnabled = biometricEnabled
+            )
+        }
+    }
+    
+    private fun observeBiometricPreference() {
+        viewModelScope.launch {
+            userPreferences.biometricEnabledFlow.collect { enabled ->
+                _uiState.value = _uiState.value.copy(isBiometricEnabled = enabled)
+            }
+        }
     }
     
     fun updateWebhookUrl(url: String) {
@@ -89,7 +105,9 @@ class SettingsViewModel @Inject constructor(
     
     fun toggleBiometric(enabled: Boolean) {
         _uiState.value = _uiState.value.copy(isBiometricEnabled = enabled)
-        // TODO: Persist this setting
+        viewModelScope.launch {
+            userPreferences.setBiometricEnabled(enabled)
+        }
     }
     
     fun saveSettings(): Boolean {
