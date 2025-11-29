@@ -1,0 +1,286 @@
+# MomoTerminal Fastlane Configuration
+# https://docs.fastlane.tools
+#
+# This file contains the fastlane.tools configuration
+# For a list of all available actions, check out
+#     https://docs.fastlane.tools/actions
+
+default_platform(:android)
+
+platform :android do
+
+  # ==================== Build Lanes ====================
+
+  desc "Build debug APK"
+  lane :build_debug do
+    gradle(
+      task: "assembleDebug",
+      print_command: true
+    )
+  end
+
+  desc "Build release APK"
+  lane :build_release do
+    gradle(
+      task: "assembleRelease",
+      print_command: true,
+      properties: {
+        "android.injected.signing.store.file" => ENV["KEYSTORE_FILE"],
+        "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
+      }
+    )
+  end
+
+  desc "Build release AAB (App Bundle)"
+  lane :build_bundle do
+    gradle(
+      task: "bundleRelease",
+      print_command: true,
+      properties: {
+        "android.injected.signing.store.file" => ENV["KEYSTORE_FILE"],
+        "android.injected.signing.store.password" => ENV["KEYSTORE_PASSWORD"],
+        "android.injected.signing.key.alias" => ENV["KEY_ALIAS"],
+        "android.injected.signing.key.password" => ENV["KEY_PASSWORD"]
+      }
+    )
+  end
+
+  # ==================== Test Lanes ====================
+
+  desc "Run unit tests"
+  lane :test do
+    gradle(
+      task: "testDebugUnitTest",
+      print_command: true
+    )
+  end
+
+  desc "Run all tests with coverage"
+  lane :test_coverage do
+    gradle(
+      task: "testDebugUnitTest jacocoTestReport",
+      print_command: true
+    )
+  end
+
+  desc "Run lint checks"
+  lane :lint do
+    gradle(
+      task: "lintDebug",
+      print_command: true
+    )
+  end
+
+  # ==================== Deploy Lanes ====================
+
+  desc "Deploy to Firebase App Distribution (Internal Testing)"
+  lane :firebase do |options|
+    build_release
+
+    firebase_app_distribution(
+      app: ENV["FIREBASE_APP_ID"],
+      groups: options[:groups] || "internal-testers",
+      release_notes: options[:notes] || changelog_from_git_commits(
+        commits_count: 10,
+        pretty: "- %s"
+      ),
+      firebase_cli_token: ENV["FIREBASE_CLI_TOKEN"]
+    )
+  end
+
+  desc "Deploy to Play Store Internal Track"
+  lane :internal do
+    build_bundle
+
+    upload_to_play_store(
+      track: "internal",
+      aab: "app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Deploy to Play Store Alpha Track"
+  lane :alpha do
+    build_bundle
+
+    upload_to_play_store(
+      track: "alpha",
+      aab: "app/build/outputs/bundle/release/app-release.aab"
+    )
+  end
+
+  desc "Deploy to Play Store Beta Track"
+  lane :beta do
+    build_bundle
+
+    upload_to_play_store(
+      track: "beta",
+      aab: "app/build/outputs/bundle/release/app-release.aab"
+    )
+  end
+
+  desc "Deploy to Play Store Production"
+  lane :production do
+    build_bundle
+
+    upload_to_play_store(
+      track: "production",
+      aab: "app/build/outputs/bundle/release/app-release.aab",
+      rollout: "0.1" # Start with 10% rollout
+    )
+  end
+
+  desc "Promote from internal to alpha"
+  lane :promote_internal_to_alpha do
+    upload_to_play_store(
+      track: "internal",
+      track_promote_to: "alpha",
+      skip_upload_aab: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Promote from alpha to beta"
+  lane :promote_alpha_to_beta do
+    upload_to_play_store(
+      track: "alpha",
+      track_promote_to: "beta",
+      skip_upload_aab: true
+    )
+  end
+
+  desc "Promote from beta to production"
+  lane :promote_beta_to_production do
+    upload_to_play_store(
+      track: "beta",
+      track_promote_to: "production",
+      skip_upload_aab: true,
+      rollout: "0.1"
+    )
+  end
+
+  # ==================== Version Lanes ====================
+
+  desc "Increment version code"
+  lane :bump_version_code do
+    version_props = "../version.properties"
+    
+    # Read current version
+    properties = File.read(version_props)
+    current_build = properties.match(/BUILD_NUMBER=(\d+)/)[1].to_i
+    
+    # Increment
+    new_build = current_build + 1
+    
+    # Update file
+    new_properties = properties.gsub(/BUILD_NUMBER=\d+/, "BUILD_NUMBER=#{new_build}")
+    File.write(version_props, new_properties)
+    
+    UI.success("Bumped build number to #{new_build}")
+  end
+
+  desc "Increment patch version"
+  lane :bump_patch do
+    version_props = "../version.properties"
+    
+    properties = File.read(version_props)
+    current_patch = properties.match(/VERSION_PATCH=(\d+)/)[1].to_i
+    
+    new_patch = current_patch + 1
+    new_properties = properties.gsub(/VERSION_PATCH=\d+/, "VERSION_PATCH=#{new_patch}")
+    File.write(version_props, new_properties)
+    
+    UI.success("Bumped patch version to #{new_patch}")
+  end
+
+  desc "Increment minor version"
+  lane :bump_minor do
+    version_props = "../version.properties"
+    
+    properties = File.read(version_props)
+    current_minor = properties.match(/VERSION_MINOR=(\d+)/)[1].to_i
+    
+    new_minor = current_minor + 1
+    new_properties = properties
+      .gsub(/VERSION_MINOR=\d+/, "VERSION_MINOR=#{new_minor}")
+      .gsub(/VERSION_PATCH=\d+/, "VERSION_PATCH=0")
+    File.write(version_props, new_properties)
+    
+    UI.success("Bumped minor version to #{new_minor}")
+  end
+
+  # ==================== Utility Lanes ====================
+
+  desc "Clean build directory"
+  lane :clean do
+    gradle(
+      task: "clean",
+      print_command: true
+    )
+  end
+
+  desc "Verify release build"
+  lane :verify_release do
+    # Run tests
+    test
+
+    # Run lint
+    lint
+
+    # Build release
+    build_release
+
+    UI.success("Release verification complete!")
+  end
+
+  desc "Full CI pipeline"
+  lane :ci do
+    clean
+    lint
+    test_coverage
+    build_debug
+    
+    UI.success("CI pipeline complete!")
+  end
+
+  # ==================== Screenshots ====================
+
+  desc "Capture screenshots for Play Store"
+  lane :screenshots do
+    gradle(
+      task: "assembleDebug assembleAndroidTest"
+    )
+    
+    capture_android_screenshots(
+      app_apk_path: "app/build/outputs/apk/debug/app-debug.apk",
+      tests_apk_path: "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+      locales: ["en-US"],
+      output_directory: "fastlane/metadata/android",
+      clear_previous_screenshots: true,
+      use_tests_in_classes: ["com.momoterminal.screenshots.ScreenshotTest"]
+    )
+  end
+
+end
+
+# ==================== Error Handling ====================
+
+error do |lane, exception|
+  UI.error("Lane #{lane} failed with exception: #{exception}")
+  
+  # Notify on Slack (if configured)
+  # slack(
+  #   message: "Fastlane failed!",
+  #   success: false,
+  #   payload: {
+  #     "Lane" => lane,
+  #     "Error" => exception.message
+  #   }
+  # )
+end
