@@ -142,9 +142,10 @@ object UssdHelper {
         amount: Double
     ): NfcPaymentData {
         val ussdCode = generateUssdCode(provider, merchantCode, amount)
+        val amountInPesewas = (amount * 100).toLong() // Convert to pesewas
         return NfcPaymentData(
             merchantPhone = merchantCode,
-            amount = amount.toString(),
+            amountInPesewas = amountInPesewas,
             provider = when (provider) {
                 Provider.MTN_MOMO -> NfcPaymentData.Provider.MTN
                 Provider.VODAFONE_CASH -> NfcPaymentData.Provider.VODAFONE

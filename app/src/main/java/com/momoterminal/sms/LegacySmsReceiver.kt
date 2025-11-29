@@ -188,7 +188,7 @@ class LegacySmsReceiver : BroadcastReceiver() {
      */
     private fun broadcastTransaction(context: Context, transaction: PaymentTransaction) {
         val intent = Intent(BROADCAST_PAYMENT_RECEIVED).apply {
-            putExtra(EXTRA_AMOUNT, transaction.amount)
+            putExtra(EXTRA_AMOUNT, transaction.amountInPesewas / 100.0) // Convert pesewas to cedis
             putExtra(EXTRA_CURRENCY, transaction.currency)
             putExtra(EXTRA_SENDER, transaction.senderNumber)
             putExtra(EXTRA_TRANSACTION_ID, transaction.transactionId)
@@ -213,7 +213,7 @@ class LegacySmsReceiver : BroadcastReceiver() {
      * Data class for parsed payment information.
      */
     private data class ParsedPaymentData(
-        val amount: Double,
+        val amountInPesewas: Long,
         val currency: String,
         val transactionId: String?,
         val senderPhone: String?
