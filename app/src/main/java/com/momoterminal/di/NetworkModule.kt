@@ -1,12 +1,11 @@
 package com.momoterminal.di
 
 import com.momoterminal.BuildConfig
+import com.momoterminal.api.AuthInterceptor
 import com.momoterminal.data.remote.api.MomoApiService
-import com.momoterminal.data.remote.interceptor.AuthInterceptor
 import com.momoterminal.data.remote.interceptor.NetworkInterceptor
 import com.momoterminal.data.remote.interceptor.PerformanceInterceptor
 import com.momoterminal.security.CertificatePinnerConfig
-import com.momoterminal.security.SecureStorage
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -45,17 +44,6 @@ object NetworkModule {
                 HttpLoggingInterceptor.Level.NONE
             }
         }
-    }
-
-    /**
-     * Provides AuthInterceptor for adding authentication headers.
-     */
-    @Provides
-    @Singleton
-    fun provideAuthInterceptor(
-        secureStorage: SecureStorage
-    ): AuthInterceptor {
-        return AuthInterceptor(secureStorage)
     }
 
     /**

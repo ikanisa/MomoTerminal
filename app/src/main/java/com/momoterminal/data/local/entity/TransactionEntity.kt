@@ -1,15 +1,17 @@
 package com.momoterminal.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlin.math.roundToLong
 
 /**
  * Room Entity representing a transaction stored in the local database.
  * Used for offline-first reliability - SMS messages are saved immediately
  * and synced to the configured webhook when connectivity is available.
  * 
- * Note: Amount is stored in pesewas (smallest currency unit) to avoid
- * floating-point precision errors. 1 GHS = 100 pesewas.
+ * Note: Amount is stored as a Double representing the value in the main currency unit (e.g., GHS).
+ * For calculations requiring precision, convert to the smallest unit (pesewas) by multiplying by 100.
  */
 @Entity(tableName = "transactions")
 data class TransactionEntity(
@@ -37,10 +39,10 @@ data class TransactionEntity(
     val status: String,
     
     /**
-     * Optional: Extracted amount from the SMS in pesewas (smallest currency unit).
-     * 1 GHS = 100 pesewas. Stored as Long to avoid floating-point precision errors.
+     * Optional: Extracted amount from the SMS in the main currency unit (e.g., GHS).
      */
-    val amountInPesewas: Long? = null,
+    @ColumnInfo(name = "amount")
+    val amount: Double? = null,
     
     /**
      * Optional: Currency code (default: GHS).
@@ -56,4 +58,11 @@ data class TransactionEntity(
      * Optional: Merchant code associated with this transaction.
      */
     val merchantCode: String? = null
-)
+) {
+    /**
+     * Get amount in pesewas (smallest currency unit) for precise calculations.
+     * 1 GHS = 100 pesewas. Uses roundToLong() for accurate conversion.
+     */
+    val amountInPesewas: Long?
+        get() = amount?.let { (it * 100).roundToLong() }
+}
