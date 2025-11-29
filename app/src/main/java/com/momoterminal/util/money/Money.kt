@@ -50,7 +50,7 @@ data class Money(
      * Returns the divisor for converting smallest unit to major unit.
      */
     private val divisor: Long
-        get() = Math.pow(10.0, currency.decimals.toDouble()).toLong()
+        get() = BigDecimal.TEN.pow(currency.decimals).toLong()
 
     /**
      * Returns the amount as a BigDecimal for precise calculations.
@@ -184,8 +184,8 @@ data class Money(
          * @return Money instance with amount converted to smallest unit
          */
         fun fromMajorUnits(amount: Double, currency: Currency = Currency.GHS): Money {
-            val divisor = Math.pow(10.0, currency.decimals.toDouble())
-            val smallestUnit = Math.round(amount * divisor)
+            val divisor = BigDecimal.TEN.pow(currency.decimals).toDouble()
+            val smallestUnit = kotlin.math.round(amount * divisor).toLong()
             return Money(smallestUnit, currency)
         }
 

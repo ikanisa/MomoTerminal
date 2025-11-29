@@ -171,9 +171,17 @@ platform :android do
   lane :bump_version_code do
     version_props = "../version.properties"
     
+    unless File.exist?(version_props)
+      UI.user_error!("version.properties not found at #{version_props}. Please create it with VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, and BUILD_NUMBER entries.")
+    end
+    
     # Read current version
     properties = File.read(version_props)
-    current_build = properties.match(/BUILD_NUMBER=(\d+)/)[1].to_i
+    match = properties.match(/BUILD_NUMBER=(\d+)/)
+    unless match
+      UI.user_error!("BUILD_NUMBER not found in version.properties")
+    end
+    current_build = match[1].to_i
     
     # Increment
     new_build = current_build + 1
@@ -189,8 +197,16 @@ platform :android do
   lane :bump_patch do
     version_props = "../version.properties"
     
+    unless File.exist?(version_props)
+      UI.user_error!("version.properties not found at #{version_props}. Please create it with VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, and BUILD_NUMBER entries.")
+    end
+    
     properties = File.read(version_props)
-    current_patch = properties.match(/VERSION_PATCH=(\d+)/)[1].to_i
+    match = properties.match(/VERSION_PATCH=(\d+)/)
+    unless match
+      UI.user_error!("VERSION_PATCH not found in version.properties")
+    end
+    current_patch = match[1].to_i
     
     new_patch = current_patch + 1
     new_properties = properties.gsub(/VERSION_PATCH=\d+/, "VERSION_PATCH=#{new_patch}")
@@ -203,8 +219,16 @@ platform :android do
   lane :bump_minor do
     version_props = "../version.properties"
     
+    unless File.exist?(version_props)
+      UI.user_error!("version.properties not found at #{version_props}. Please create it with VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, and BUILD_NUMBER entries.")
+    end
+    
     properties = File.read(version_props)
-    current_minor = properties.match(/VERSION_MINOR=(\d+)/)[1].to_i
+    match = properties.match(/VERSION_MINOR=(\d+)/)
+    unless match
+      UI.user_error!("VERSION_MINOR not found in version.properties")
+    end
+    current_minor = match[1].to_i
     
     new_minor = current_minor + 1
     new_properties = properties
