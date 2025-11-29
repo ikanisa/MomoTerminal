@@ -3,7 +3,7 @@ package com.momoterminal.presentation.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.NfcOutlined
+import androidx.compose.material.icons.outlined.Nfc
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
@@ -46,8 +46,8 @@ sealed class Screen(
     data object Terminal : Screen(
         route = "terminal",
         title = "Terminal",
-        selectedIcon = Icons.Filled.NfcOutlined,
-        unselectedIcon = Icons.Filled.NfcOutlined
+        selectedIcon = Icons.Outlined.Nfc,
+        unselectedIcon = Icons.Outlined.Nfc
     )
     
     data object Transactions : Screen(

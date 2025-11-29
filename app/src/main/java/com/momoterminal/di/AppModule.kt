@@ -56,15 +56,4 @@ object AppModule {
     ): AppConfig {
         return AppConfig(context)
     }
-
-    /**
-     * Provides SyncManager for background sync operations.
-     */
-    @Provides
-    @Singleton
-    fun provideSyncManager(
-        @ApplicationContext context: Context
-    ): SyncManager {
-        return SyncManager(context)
-    }
 }

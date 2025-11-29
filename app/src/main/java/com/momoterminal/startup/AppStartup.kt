@@ -68,21 +68,15 @@ class TimberInitializer : Initializer<Unit> {
  * Initializes Firebase services.
  * Depends on Timber for logging during initialization.
  */
-class FirebaseInitializer : Initializer<FirebaseApp?> {
+class FirebaseInitializer : Initializer<FirebaseApp> {
     
-    override fun create(context: Context): FirebaseApp? {
+    override fun create(context: Context): FirebaseApp {
         StartupTracing.markMilestone("FirebaseInit:start")
         
-        return try {
-            val firebaseApp = FirebaseApp.initializeApp(context)
-            Timber.d("Firebase initialized successfully")
-            StartupTracing.markMilestone("FirebaseInit:end")
-            firebaseApp
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to initialize Firebase")
-            StartupTracing.markMilestone("FirebaseInit:failed")
-            null
-        }
+        val firebaseApp = FirebaseApp.initializeApp(context)
+        Timber.d("Firebase initialized successfully")
+        StartupTracing.markMilestone("FirebaseInit:end")
+        return firebaseApp ?: throw IllegalStateException("Firebase initialization failed")
     }
     
     override fun dependencies(): List<Class<out Initializer<*>>> {

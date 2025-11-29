@@ -32,6 +32,7 @@
         <path
             android:fillColor="#FFFFFF"
             android:pathData="M36,66 L36,42 L42,42 L48,54 L54,42 L60,42 L60,66 L54,66 L54,54 L48,66 L42,66 L42,54 L36,66"/>
+    </group>
     <group android:scaleX="1.5"
         android:scaleY="1.5"
         android:translateX="27"

@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">MomoTerminal</string>
     <string name="service_description">Mobile Money NFC Payment Terminal</string>
+    <string name="hce_service_description">Mobile Money NFC Payment Terminal Service</string>
     <string name="aid_group_description">Mobile Money Payment AID Group</string>
     
     <!-- Main Activity -->

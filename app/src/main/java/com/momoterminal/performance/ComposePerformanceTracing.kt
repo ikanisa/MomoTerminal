@@ -2,6 +2,7 @@ package com.momoterminal.performance
 
 import android.os.Trace
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import timber.log.Timber
@@ -126,10 +127,11 @@ fun TracedComposable(
     content: @Composable () -> Unit
 ) {
     Trace.beginSection("Compose:$traceName")
-    try {
-        content()
-    } finally {
-        Trace.endSection()
+    content()
+    DisposableEffect(Unit) {
+        onDispose {
+            Trace.endSection()
+        }
     }
 }
 
@@ -186,7 +188,8 @@ inline fun <T> (() -> T).traced(name: String): () -> T = {
  */
 object ComposeTracing {
     
-    private var tracingEnabled = false
+    @PublishedApi
+    internal var tracingEnabled = false
     
     /**
      * Enable tracing for all composables.

@@ -204,7 +204,7 @@ class AppSignatureHelper(private val context: Context) {
                 android.content.pm.PackageManager.GET_SIGNATURES
             ).signatures
             
-            for (signature in signatures) {
+            for (signature in signatures.orEmpty()) {
                 val hash = hash(packageName, signature.toCharsString())
                 if (hash != null) {
                     signatureList.add(hash)

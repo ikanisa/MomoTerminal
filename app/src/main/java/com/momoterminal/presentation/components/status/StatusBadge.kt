@@ -9,7 +9,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Nfc
-import androidx.compose.material.icons.filled.NfcOutlined
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Icon
@@ -100,9 +99,9 @@ fun NfcStatusIndicator(
     }
     
     val icon = when {
-        !isEnabled -> Icons.Filled.NfcOutlined
+        !isEnabled -> Icons.Filled.Nfc
         isActive -> Icons.Filled.Nfc
-        else -> Icons.Filled.NfcOutlined
+        else -> Icons.Filled.Nfc
     }
     
     val label = when {

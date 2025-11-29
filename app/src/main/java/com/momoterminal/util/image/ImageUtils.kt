@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
+import coil.imageLoader
 import coil.request.ImageRequest
 
 /**
@@ -308,7 +309,7 @@ fun PreloadImage(imageUrl: String?) {
     
     // Use Coil's imageLoader extension which returns the singleton ImageLoader
     // configured by the app (via Hilt in our case through Coil.setImageLoader)
-    coil.imageLoader(context).enqueue(
+    context.imageLoader.enqueue(
         ImageRequest.Builder(context)
             .data(imageUrl)
             .build()

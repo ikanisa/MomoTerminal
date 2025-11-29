@@ -132,28 +132,9 @@ fun ErrorBoundary(
                 errorState = ErrorBoundaryState()
             }
         } else {
-            // Wrap content in try-catch for composition errors
-            try {
-                content()
-            } catch (e: Exception) {
-                Timber.e(e, "Error during composition: ${e.message}")
-                
-                // Log to Crashlytics
-                try {
-                    com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance()
-                        .recordException(e)
-                } catch (ex: Exception) {
-                    Timber.w(ex, "Failed to log to Crashlytics")
-                }
-                
-                errorState = ErrorBoundaryState(
-                    hasError = true,
-                    error = e,
-                    errorInfo = "Composition error"
-                )
-                
-                onError?.invoke(e)
-            }
+            // Note: Try-catch around composable invocations is not supported in Kotlin 2.0
+            // Error handling should be done at the data/business logic layer
+            content()
         }
     }
 }

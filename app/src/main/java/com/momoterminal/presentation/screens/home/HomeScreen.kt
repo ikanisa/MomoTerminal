@@ -15,7 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.NfcOutlined
+import androidx.compose.material.icons.outlined.Nfc
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
@@ -117,7 +117,7 @@ fun HomeScreen(
             QuickActionCard(
                 title = "Start NFC Payment",
                 description = "Accept mobile money payments via NFC tap",
-                icon = Icons.Filled.NfcOutlined,
+                icon = Icons.Outlined.Nfc,
                 onClick = onNavigateToTerminal,
                 enabled = uiState.isConfigured
             )

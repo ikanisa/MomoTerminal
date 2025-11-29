@@ -36,7 +36,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.momoterminal.data.local.entity.TransactionEntity
+import com.momoterminal.presentation.components.status.StatusBadge
+import com.momoterminal.presentation.components.terminal.AmountDisplayCompact
 import com.momoterminal.presentation.theme.MomoTerminalTheme
+import com.momoterminal.presentation.theme.PaymentShapes
 import com.momoterminal.presentation.theme.StatusFailed
 import com.momoterminal.presentation.theme.StatusPending
 import com.momoterminal.presentation.theme.StatusSent
@@ -55,6 +58,7 @@ fun TransactionCard(
 ) {
     val isReceived = transaction.body.contains("received", ignoreCase = true)
     val statusColor = getStatusColor(transaction.status)
+    val statusIcon = getStatusIcon(transaction.status)
     
     // Extract amount from body (simplified parsing)
     val amount = extractAmount(transaction.body)
@@ -62,7 +66,7 @@ fun TransactionCard(
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = PaymentShapes.transactionCard,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -77,7 +81,7 @@ fun TransactionCard(
             // Transaction direction icon
             Surface(
                 modifier = Modifier.size(40.dp),
-                shape = CircleShape,
+                shape = PaymentShapes.nfcIndicator,
                 color = if (isReceived) {
                     MaterialTheme.colorScheme.tertiaryContainer
                 } else {
@@ -136,15 +140,9 @@ fun TransactionCard(
                     )
                     
                     if (amount != null) {
-                        Text(
-                            text = "GHS $amount",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = if (isReceived) {
-                                MaterialTheme.colorScheme.tertiary
-                            } else {
-                                MaterialTheme.colorScheme.secondary
-                            }
+                        AmountDisplayCompact(
+                            amount = amount,
+                            isPositive = isReceived
                         )
                     }
                 }
@@ -154,58 +152,62 @@ fun TransactionCard(
 }
 
 /**
- * Status badge showing transaction sync status.
+ * Get color for transaction status.
  */
 @Composable
-fun StatusBadge(
-    status: String,
-    modifier: Modifier = Modifier
-) {
-    val (backgroundColor, textColor, icon) = when (status.uppercase()) {
-        "SENT" -> Triple(
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer,
-            Icons.Filled.CheckCircle
-        )
-        "PENDING" -> Triple(
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.colorScheme.onTertiaryContainer,
-            Icons.Filled.Schedule
-        )
-        "FAILED" -> Triple(
-            MaterialTheme.colorScheme.errorContainer,
-            MaterialTheme.colorScheme.onErrorContainer,
-            Icons.Filled.Error
-        )
-        else -> Triple(
-            MaterialTheme.colorScheme.surfaceVariant,
-            MaterialTheme.colorScheme.onSurfaceVariant,
-            Icons.Filled.Schedule
-        )
+fun getStatusColor(status: String): Color {
+    return when (status.uppercase()) {
+        "SENT" -> StatusSent
+        "PENDING" -> StatusPending
+        "FAILED" -> StatusFailed
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
+}
+
+/**
+ * Get icon for transaction status.
+ */
+fun getStatusIcon(status: String): ImageVector {
+    return when (status.uppercase()) {
+        "SENT" -> Icons.Filled.CheckCircle
+        "PENDING" -> Icons.Filled.Schedule
+        "FAILED" -> Icons.Filled.Error
+        else -> Icons.Filled.Schedule
+    }
+}
+
+/**
+ * Extract amount from transaction body.
+ */
+private fun extractAmount(body: String): String? {
+    val patterns = listOf(
+        "GH[SC]?\\s*([\\d,]+\\.?\\d*)".toRegex(RegexOption.IGNORE_CASE),
+        "([\\d,]+\\.?\\d*)\\s*GH[SC]?".toRegex(RegexOption.IGNORE_CASE)
+    )
     
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(4.dp),
-        color = backgroundColor
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(12.dp),
-                tint = textColor
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = status.lowercase().replaceFirstChar { it.uppercase() },
-                style = MaterialTheme.typography.labelSmall,
-                color = textColor
-            )
+    for (pattern in patterns) {
+        val match = pattern.find(body)
+        if (match != null) {
+            return match.groupValues.getOrNull(1)?.replace(",", "")
         }
+    }
+    return null
+}
+
+/**
+ * Format timestamp to human-readable string.
+ */
+private fun formatTimestamp(timestamp: Long): String {
+    val date = Date(timestamp)
+    val now = System.currentTimeMillis()
+    val diff = now - timestamp
+    
+    return when {
+        diff < 60_000 -> "Just now"
+        diff < 3_600_000 -> "${diff / 60_000}m ago"
+        diff < 86_400_000 -> "${diff / 3_600_000}h ago"
+        diff < 604_800_000 -> SimpleDateFormat("EEE, HH:mm", Locale.getDefault()).format(date)
+        else -> SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(date)
     }
 }
 
@@ -269,74 +271,6 @@ fun TransactionCardPlaceholder(
         }
     }
 }
-
-/**
- * Get color for transaction status.
- */
-@Composable
-fun getStatusColor(status: String): Color {
-    return when (status.uppercase()) {
-        "SENT" -> StatusSent
-        "PENDING" -> StatusPending
-        "FAILED" -> StatusFailed
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-}
-
-/**
- * Get icon for transaction status.
- */
-fun getStatusIcon(status: String): ImageVector {
-    return when (status.uppercase()) {
-        "SENT" -> Icons.Filled.CheckCircle
-        "PENDING" -> Icons.Filled.Schedule
-        "FAILED" -> Icons.Filled.Error
-        else -> Icons.Filled.Schedule
-    }
-}
-
-/**
- * Extract amount from transaction body.
- */
-private fun extractAmount(body: String): String? {
-    val patterns = listOf(
-        "GH[SC]?\\s*([\\d,]+\\.?\\d*)".toRegex(RegexOption.IGNORE_CASE),
-        "([\\d,]+\\.?\\d*)\\s*GH[SC]?".toRegex(RegexOption.IGNORE_CASE)
-    )
-    
-    for (pattern in patterns) {
-        val match = pattern.find(body)
-        if (match != null) {
-            return match.groupValues.getOrNull(1)?.replace(",", "")
-        }
-    }
-    return null
-}
-
-/**
- * Format timestamp to human-readable string.
- * Uses pre-created date formatters for better performance in list rendering.
- */
-private object TimestampFormatter {
-    private val weekDayFormat = SimpleDateFormat("EEE, HH:mm", Locale.getDefault())
-    private val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
-    
-    fun format(timestamp: Long): String {
-        val date = Date(timestamp)
-        val now = System.currentTimeMillis()
-        val diff = now - timestamp
-        
-        return when {
-            diff < 60_000 -> "Just now"
-            diff < 3_600_000 -> "${diff / 60_000}m ago"
-            diff < 86_400_000 -> "${diff / 3_600_000}h ago"
-            diff < 604_800_000 -> synchronized(weekDayFormat) { weekDayFormat.format(date) }
-            else -> synchronized(dateFormat) { dateFormat.format(date) }
-        }
-    }
-}
-
-private fun formatTimestamp(timestamp: Long): String = TimestampFormatter.format(timestamp)
 
 @Preview(showBackground = true)
 @Composable

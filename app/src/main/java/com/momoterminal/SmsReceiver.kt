@@ -33,6 +33,9 @@ class SmsReceiver : BroadcastReceiver() {
     @Inject
     lateinit var transactionDao: TransactionDao
     
+    @Inject
+    lateinit var syncManager: SyncManager
+    
     companion object {
         private const val TAG = "SmsReceiver"
         
@@ -78,7 +81,7 @@ class SmsReceiver : BroadcastReceiver() {
                     saveToDatabase(context, sender, body, timestamp)
                     
                     // Trigger sync to upload to configured webhook
-                    SyncManager(context).enqueueSyncNow()
+                    syncManager.enqueueSyncNow()
                     
                     // Dispatch to all matching webhooks (multi-webhook relay)
                     dispatchToWebhooks(context, sender, body)

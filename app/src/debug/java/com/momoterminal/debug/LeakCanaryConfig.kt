@@ -1,6 +1,7 @@
 package com.momoterminal.debug
 
 import android.app.Application
+import leakcanary.AppWatcher
 import leakcanary.LeakCanary
 import timber.log.Timber
 
@@ -61,7 +62,7 @@ object LeakCanaryConfig {
      */
     fun watchObject(watchedObject: Any, description: String) {
         if (enabled) {
-            LeakCanary.appWatcher.objectWatcher.expectWeaklyReachable(
+            AppWatcher.objectWatcher.expectWeaklyReachable(
                 watchedObject,
                 description
             )
@@ -74,7 +75,7 @@ object LeakCanaryConfig {
      */
     fun retainedObjectCount(): Int {
         return if (enabled) {
-            LeakCanary.appWatcher.objectWatcher.retainedObjectCount
+            AppWatcher.objectWatcher.retainedObjectCount
         } else {
             0
         }
