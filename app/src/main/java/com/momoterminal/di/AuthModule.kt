@@ -82,9 +82,10 @@ object AuthModule {
     @Singleton
     fun provideAuthRepository(
         authApiService: AuthApiService,
+        supabaseAuthService: com.momoterminal.supabase.SupabaseAuthService,
         tokenManager: TokenManager,
         sessionManager: SessionManager
     ): AuthRepository {
-        return AuthRepository(authApiService, tokenManager, sessionManager)
+        return AuthRepository(authApiService, supabaseAuthService, tokenManager, sessionManager)
     }
 }

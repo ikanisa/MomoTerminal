@@ -142,7 +142,7 @@ class AuthViewModel @Inject constructor(
     }
 
     /**
-     * Attempt login with phone number and PIN.
+     * Attempt login with phone number and OTP code.
      */
     fun login() {
         val state = _uiState.value
@@ -153,8 +153,8 @@ class AuthViewModel @Inject constructor(
             return
         }
         
-        if (state.pin.length != PIN_LENGTH) {
-            _uiState.value = state.copy(error = "PIN must be $PIN_LENGTH digits")
+        if (state.otpCode.length != 6) {
+            _uiState.value = state.copy(error = "Please enter the 6-digit OTP code")
             return
         }
 
@@ -164,7 +164,7 @@ class AuthViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            authRepository.login(state.phoneNumber, state.pin)
+            authRepository.login(state.phoneNumber, state.otpCode)
                 .catch { e ->
                     handleLoginFailure(e.message ?: "Login failed")
                 }

@@ -9,6 +9,8 @@ import com.momoterminal.api.OtpResponse
 import com.momoterminal.api.RefreshRequest
 import com.momoterminal.api.RegisterRequest
 import com.momoterminal.api.User
+import com.momoterminal.supabase.SupabaseAuthService
+import com.momoterminal.supabase.AuthResult as SupabaseAuthResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import timber.log.Timber
@@ -17,11 +19,12 @@ import javax.inject.Singleton
 
 /**
  * Repository handling all authentication-related operations.
- * Provides login, registration, token refresh, and logout functionality.
+ * Now uses Supabase for WhatsApp OTP authentication.
  */
 @Singleton
 class AuthRepository @Inject constructor(
     private val authApiService: AuthApiService,
+    private val supabaseAuthService: SupabaseAuthService,
     private val tokenManager: TokenManager,
     private val sessionManager: SessionManager
 ) {
@@ -35,14 +38,15 @@ class AuthRepository @Inject constructor(
     }
 
     /**
-     * Login with phone number and PIN.
+     * Login with phone number using WhatsApp OTP.
+     * For new flow: First call requestOtp(), then call this with the OTP code.
      */
-    fun login(phoneNumber: String, pin: String): Flow<AuthResult<AuthResponse>> = flow {
+    fun login(phoneNumber: String, otpCode: String): Flow<AuthResult<AuthResponse>> = flow {
         emit(AuthResult.Loading)
         
         try {
             // DEV ONLY: Hardcoded login bypass for development
-            if (BuildConfig.DEBUG && phoneNumber == "0788767816" && pin == "123456") {
+            if (BuildConfig.DEBUG && phoneNumber == "0788767816" && otpCode == "123456") {
                 Timber.d("Using hardcoded dev login")
                 
                 // Create mock auth response
@@ -79,38 +83,50 @@ class AuthRepository @Inject constructor(
                 return@flow
             }
             
-            val request = LoginRequest(
-                phoneNumber = phoneNumber,
-                pin = pin
-            )
-            
-            val response = authApiService.login(request)
-            
-            if (response.isSuccessful && response.body() != null) {
-                val authResponse = response.body()!!
-                
-                // Save tokens
-                tokenManager.saveTokens(
-                    accessToken = authResponse.accessToken,
-                    refreshToken = authResponse.refreshToken,
-                    expiresInSeconds = authResponse.expiresIn
-                )
-                
-                // Save user info
-                tokenManager.saveUserInfo(
-                    userId = authResponse.user.id,
-                    phoneNumber = authResponse.user.phoneNumber
-                )
-                
-                // Start session
-                sessionManager.startSession()
-                
-                Timber.d("Login successful for user: ${authResponse.user.id}")
-                emit(AuthResult.Success(authResponse))
-            } else {
-                val errorMessage = response.errorBody()?.string() ?: "Login failed"
-                Timber.e("Login failed: $errorMessage")
-                emit(AuthResult.Error(errorMessage, response.code()))
+            // Use Supabase for WhatsApp OTP verification
+            when (val result = supabaseAuthService.verifyOtp(phoneNumber, otpCode)) {
+                is SupabaseAuthResult.Success -> {
+                    val sessionData = result.data
+                    
+                    // Save tokens from Supabase session
+                    tokenManager.saveTokens(
+                        accessToken = sessionData.accessToken,
+                        refreshToken = sessionData.refreshToken,
+                        expiresInSeconds = sessionData.expiresIn
+                    )
+                    
+                    // Save user info
+                    tokenManager.saveUserInfo(
+                        userId = sessionData.user.id,
+                        phoneNumber = sessionData.user.phone ?: phoneNumber
+                    )
+                    
+                    // Start session
+                    sessionManager.startSession()
+                    
+                    // Convert to AuthResponse for compatibility
+                    val authResponse = AuthResponse(
+                        accessToken = sessionData.accessToken,
+                        refreshToken = sessionData.refreshToken,
+                        expiresIn = sessionData.expiresIn,
+                        user = User(
+                            id = sessionData.user.id,
+                            phoneNumber = sessionData.user.phone ?: phoneNumber,
+                            merchantName = "", // Will be set during profile completion
+                            isVerified = true
+                        )
+                    )
+                    
+                    Timber.d("Login successful for user: ${sessionData.user.id}")
+                    emit(AuthResult.Success(authResponse))
+                }
+                is SupabaseAuthResult.Error -> {
+                    Timber.e("Login failed: ${result.message}")
+                    emit(AuthResult.Error(result.message))
+                }
+                else -> {
+                    emit(AuthResult.Error("Unexpected error during login"))
+                }
             }
         } catch (e: Exception) {
             Timber.e(e, "Login error")
@@ -201,27 +217,30 @@ class AuthRepository @Inject constructor(
     }
 
     /**
-     * Request OTP for phone number verification.
+     * Request WhatsApp OTP for phone number.
      */
     fun requestOtp(phoneNumber: String): Flow<AuthResult<OtpResponse>> = flow {
         emit(AuthResult.Loading)
         
         try {
-            val request = OtpRequest(
-                phoneNumber = phoneNumber,
-                otpCode = "" // Empty for request
-            )
-            
-            val response = authApiService.requestOtp(request)
-            
-            if (response.isSuccessful && response.body() != null) {
-                val otpResponse = response.body()!!
-                Timber.d("OTP request successful")
-                emit(AuthResult.Success(otpResponse))
-            } else {
-                val errorMessage = response.errorBody()?.string() ?: "Failed to send OTP"
-                Timber.e("OTP request failed: $errorMessage")
-                emit(AuthResult.Error(errorMessage, response.code()))
+            // Use Supabase to send WhatsApp OTP
+            when (val result = supabaseAuthService.sendWhatsAppOtp(phoneNumber)) {
+                is SupabaseAuthResult.Success -> {
+                    Timber.d("WhatsApp OTP sent successfully")
+                    // Return success response
+                    val otpResponse = OtpResponse(
+                        success = true,
+                        message = "OTP sent to WhatsApp"
+                    )
+                    emit(AuthResult.Success(otpResponse))
+                }
+                is SupabaseAuthResult.Error -> {
+                    Timber.e("Failed to send WhatsApp OTP: ${result.message}")
+                    emit(AuthResult.Error(result.message))
+                }
+                else -> {
+                    emit(AuthResult.Error("Unexpected error sending OTP"))
+                }
             }
         } catch (e: Exception) {
             Timber.e(e, "OTP request error")

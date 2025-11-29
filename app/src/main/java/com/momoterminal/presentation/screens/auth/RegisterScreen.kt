@@ -277,11 +277,17 @@ private fun PhoneEntryStep(
             fontWeight = FontWeight.SemiBold
         )
 
-        Text(
-            text = "We'll send you a verification code",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text("📱") // WhatsApp icon
+            Text(
+                text = "We'll send you a verification code via WhatsApp",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -289,7 +295,7 @@ private fun PhoneEntryStep(
             value = phoneNumber,
             onValueChange = onPhoneChange,
             label = { Text("Phone Number") },
-            placeholder = { Text("0201234567") },
+            placeholder = { Text("+250788767816") },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Phone,
@@ -331,7 +337,14 @@ private fun PhoneEntryStep(
                     strokeWidth = 2.dp
                 )
             } else {
-                Text("Send Verification Code")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text("📱")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Send WhatsApp Code")
+                }
             }
         }
     }
@@ -357,26 +370,31 @@ private fun OtpVerificationStep(
             fontWeight = FontWeight.SemiBold
         )
 
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text("📱") // WhatsApp icon
+            Text(
+                text = "Enter the 6-digit code sent to WhatsApp",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        
         Text(
-            text = "Enter the 6-digit code sent to $phoneNumber",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text = phoneNumber,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Medium
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        OutlinedTextField(
+        com.momoterminal.presentation.components.OtpInputField(
             value = otpCode,
             onValueChange = onOtpChange,
-            label = { Text("Verification Code") },
-            placeholder = { Text("123456") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done
-            ),
-            enabled = !isLoading
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(16.dp))

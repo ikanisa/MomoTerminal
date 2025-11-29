@@ -79,6 +79,16 @@ android {
         // BuildConfig fields for environment configuration
         buildConfigField("String", "BASE_URL", "\"https://api.momoterminal.com/\"")
         
+        // Supabase configuration
+        val supabaseUrl = localProps.getProperty("SUPABASE_URL")
+            ?: project.findProperty("SUPABASE_URL")?.toString()
+            ?: "https://lhbowpbcpwoiparwnwgt.supabase.co"
+        val supabaseAnonKey = localProps.getProperty("SUPABASE_ANON_KEY")
+            ?: project.findProperty("SUPABASE_ANON_KEY")?.toString()
+            ?: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoYm93cGJjcHdvaXBhcndud2d0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1NTgxMjcsImV4cCI6MjA3NjEzNDEyN30.egf4IDQpkHCpDKeyF63G72jQmIBcgWMHmj7FVt5xgAA"
+        buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
+        
         // Certificate pinning configuration
         // These are loaded from local.properties or gradle.properties at build time
         // IMPORTANT: Replace placeholder pins with real pins before production deployment!
@@ -374,6 +384,13 @@ dependencies {
 
     // Logging
     implementation(libs.timber)
+
+    // Supabase
+    implementation(libs.supabase.postgrest)
+    implementation(libs.supabase.gotrue)
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.utils)
 
     // DataStore
     implementation(libs.datastore.preferences)

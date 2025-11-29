@@ -30,3 +30,9 @@
 
 # To generate a new keystore:
 #   keytool -genkey -v -keystore momo-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias momo
+
+## Supabase Configuration (required for authentication)
+# Supabase project URL
+# SUPABASE_URL=https://your-project.supabase.co
+# Supabase anonymous/public key (safe for client-side use)
+# SUPABASE_ANON_KEY=your_anon_key_here

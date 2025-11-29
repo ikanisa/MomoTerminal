@@ -38,6 +38,10 @@ firebase-bom = "33.6.0"
 # Logging
 timber = "5.0.1"
 
+# Supabase
+supabase = "2.6.1"
+ktor = "2.3.12"
+
 # Core Android
 core-ktx = "1.15.0"
 appcompat = "1.7.0"
@@ -227,6 +231,13 @@ lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "
 
 # Logging
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+
+# Supabase
+supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabase" }
+supabase-gotrue = { module = "io.github.jan-tennert.supabase:gotrue-kt", version.ref = "supabase" }
+ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-utils = { module = "io.ktor:ktor-utils", version.ref = "ktor" }
 
 # Splash Screen
 androidx-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "splashscreen" }
