@@ -57,4 +57,32 @@
     <string name="retry">Retry</string>
     <string name="back">Back</string>
     <string name="active_webhooks">Active Webhooks</string>
+    
+    <!-- Authentication -->
+    <string name="auth_login_title">Welcome Back</string>
+    <string name="auth_login_subtitle">Sign in to continue</string>
+    <string name="auth_register_title">Create Account</string>
+    <string name="auth_phone_number">Phone Number</string>
+    <string name="auth_pin">6-Digit PIN</string>
+    <string name="auth_confirm_pin">Confirm PIN</string>
+    <string name="auth_merchant_name">Business Name</string>
+    <string name="auth_forgot_pin">Forgot PIN?</string>
+    <string name="auth_sign_in">Sign In</string>
+    <string name="auth_sign_up">Create Account</string>
+    <string name="auth_use_biometrics">Use Biometrics</string>
+    <string name="auth_no_account">Don\'t have an account?</string>
+    <string name="auth_has_account">Already have an account?</string>
+    <string name="auth_register">Register</string>
+    
+    <!-- Terms and Conditions -->
+    <string name="terms_title">Terms &amp; Conditions</string>
+    <string name="terms_subtitle">Please review and accept our terms to continue</string>
+    <string name="terms_content">By creating an account, you agree to:\n\n• Process mobile money transactions through your terminal\n• Keep your PIN confidential and secure\n• Comply with all applicable mobile money regulations\n• Allow transaction data to be synced for reconciliation\n• Receive notifications about your transactions\n\nYour data will be encrypted and stored securely.</string>
+    <string name="terms_accept_checkbox">I accept the Terms &amp; Conditions and Privacy Policy</string>
+    
+    <!-- PIN Screen -->
+    <string name="pin_enter_title">Enter PIN</string>
+    <string name="pin_unlock_title">Unlock MomoTerminal</string>
+    <string name="pin_confirm_transaction">Confirm Transaction</string>
+    <string name="pin_attempts_remaining">Attempts remaining: %d</string>
 </resources>

@@ -113,6 +113,72 @@ class SecureStorage @Inject constructor(
         return encryptedPrefs.getString(KEY_API_SECRET, null)
     }
     
+    // ==================== Authentication Token Storage ====================
+    
+    /**
+     * Save the refresh token for authentication.
+     */
+    fun saveRefreshToken(token: String) {
+        encryptedPrefs.edit()
+            .putString(KEY_REFRESH_TOKEN, token)
+            .apply()
+    }
+    
+    /**
+     * Get the stored refresh token.
+     */
+    fun getRefreshToken(): String? {
+        return encryptedPrefs.getString(KEY_REFRESH_TOKEN, null)
+    }
+    
+    /**
+     * Save the token expiry timestamp.
+     */
+    fun saveTokenExpiry(expiryTimeMs: Long) {
+        encryptedPrefs.edit()
+            .putLong(KEY_TOKEN_EXPIRY, expiryTimeMs)
+            .apply()
+    }
+    
+    /**
+     * Get the stored token expiry timestamp.
+     */
+    fun getTokenExpiry(): Long {
+        return encryptedPrefs.getLong(KEY_TOKEN_EXPIRY, 0L)
+    }
+    
+    /**
+     * Save the authenticated user ID.
+     */
+    fun saveUserId(userId: String) {
+        encryptedPrefs.edit()
+            .putString(KEY_USER_ID, userId)
+            .apply()
+    }
+    
+    /**
+     * Get the stored user ID.
+     */
+    fun getUserId(): String? {
+        return encryptedPrefs.getString(KEY_USER_ID, null)
+    }
+    
+    /**
+     * Save the authenticated user's phone number.
+     */
+    fun saveUserPhoneNumber(phoneNumber: String) {
+        encryptedPrefs.edit()
+            .putString(KEY_USER_PHONE, phoneNumber)
+            .apply()
+    }
+    
+    /**
+     * Get the stored user's phone number.
+     */
+    fun getUserPhoneNumber(): String? {
+        return encryptedPrefs.getString(KEY_USER_PHONE, null)
+    }
+    
     /**
      * Check if the app is configured with essential settings.
      */
@@ -127,6 +193,19 @@ class SecureStorage @Inject constructor(
         encryptedPrefs.edit().clear().apply()
     }
     
+    /**
+     * Clear only authentication-related data (for logout).
+     */
+    fun clearAuthData() {
+        encryptedPrefs.edit()
+            .remove(KEY_API_TOKEN)
+            .remove(KEY_REFRESH_TOKEN)
+            .remove(KEY_TOKEN_EXPIRY)
+            .remove(KEY_USER_ID)
+            .remove(KEY_USER_PHONE)
+            .apply()
+    }
+    
     companion object {
         private const val SECURE_PREFS_NAME = "momo_secure_prefs"
         private const val KEY_MERCHANT_CODE = "merchant_code"
@@ -134,5 +213,11 @@ class SecureStorage @Inject constructor(
         private const val KEY_API_ENDPOINT = "api_endpoint"
         private const val KEY_DEVICE_ID = "device_id"
         private const val KEY_API_SECRET = "api_secret"
+        
+        // Authentication-specific keys
+        private const val KEY_REFRESH_TOKEN = "refresh_token"
+        private const val KEY_TOKEN_EXPIRY = "token_expiry"
+        private const val KEY_USER_ID = "user_id"
+        private const val KEY_USER_PHONE = "user_phone"
     }
 }

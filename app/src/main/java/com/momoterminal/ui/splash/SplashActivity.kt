@@ -8,16 +8,22 @@ import android.view.animation.AnticipateInterpolator
 import androidx.activity.ComponentActivity
 import androidx.core.animation.doOnEnd
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.momoterminal.auth.AuthRepository
 import com.momoterminal.presentation.ComposeMainActivity
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Splash screen activity using Android 12+ SplashScreen API.
  * Provides animated icon with scaling and fade effects,
  * security checks during splash display, and smooth exit animation.
+ * Checks authentication state and navigates accordingly.
  */
 @AndroidEntryPoint
 class SplashActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var authRepository: AuthRepository
 
     private var isReady = false
     private val minimumDisplayDurationMs = 1000L
@@ -85,14 +91,24 @@ class SplashActivity : ComponentActivity() {
 
     private fun performSecurityChecks() {
         // Perform any security checks here
-        // For now, we just mark as ready and navigate
+        // Check authentication state and navigate accordingly
         isReady = true
         navigateToMain()
     }
 
     private fun navigateToMain() {
-        val intent = Intent(this, ComposeMainActivity::class.java)
+        // Check if user is authenticated
+        val isAuthenticated = authRepository.isAuthenticated()
+        
+        val intent = Intent(this, ComposeMainActivity::class.java).apply {
+            // Pass authentication state to ComposeMainActivity
+            putExtra(EXTRA_IS_AUTHENTICATED, isAuthenticated)
+        }
         startActivity(intent)
         finish()
+    }
+
+    companion object {
+        const val EXTRA_IS_AUTHENTICATED = "extra_is_authenticated"
     }
 }

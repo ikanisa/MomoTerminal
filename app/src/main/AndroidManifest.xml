@@ -89,19 +89,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Legacy Main Activity (kept for backward compatibility) -->
-        <activity
-            android:name=".MainActivity"
-            android:exported="false"
-            android:launchMode="singleTop"
-            android:theme="@style/Theme.MomoTerminal" />
-
-        <!-- Settings Activity -->
-        <activity
-            android:name=".SettingsActivity"
-            android:exported="false"
-            android:theme="@style/Theme.MomoTerminal" />
-
         <!-- Webhook List Activity -->
         <activity
             android:name=".ui.webhook.WebhookListActivity"
