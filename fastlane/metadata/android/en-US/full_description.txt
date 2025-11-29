@@ -1,0 +1,73 @@
+MomoTerminal - Mobile Money POS for Merchants
+
+Transform your Android phone into a powerful Mobile Money point-of-sale terminal. MomoTerminal is designed for merchants who want to accept mobile money payments efficiently and securely.
+
+🔹 NFC TAP-TO-PAY
+Turn any NFC-enabled Android phone into a payment terminal. Customers simply tap their phone to pay - no app required on their end. The payment amount is automatically sent to their USSD dialer for quick confirmation.
+
+🔹 MULTI-PROVIDER SUPPORT
+Accept payments from all major mobile money providers in Ghana:
+• MTN Mobile Money (MoMo)
+• Vodafone Cash
+• AirtelTigo Money
+
+🔹 AUTOMATIC SMS TRACKING
+Never miss a payment confirmation! MomoTerminal automatically captures incoming payment SMS messages and records them for your records. All transactions are synced to your business dashboard in real-time.
+
+🔹 OFFLINE-FIRST DESIGN
+Network issues? No problem. All transactions are stored locally first and automatically synced when you're back online. Your business never stops.
+
+🔹 BANK-GRADE SECURITY
+Your financial data is protected with:
+• End-to-end encryption
+• Biometric authentication
+• Secure token storage
+• Certificate pinning
+• No data stored on remote servers without your consent
+
+🔹 BUSINESS DASHBOARD SYNC
+Connect MomoTerminal to your PWA dashboard for:
+• Real-time transaction monitoring
+• Daily/weekly/monthly reports
+• Transaction history export
+• Multi-device support
+
+🔹 QR CODE PAYMENTS
+Generate and scan payment QR codes for quick transactions without NFC.
+
+🔹 RECEIPT GENERATION
+Generate digital receipts for your customers instantly.
+
+HOW IT WORKS
+
+1. Enter the payment amount
+2. Activate NFC Terminal
+3. Customer taps their phone
+4. Customer confirms via USSD
+5. You receive SMS confirmation
+6. Transaction synced automatically
+
+PERMISSIONS EXPLAINED
+
+• NFC: Required for tap-to-pay functionality
+• SMS: To capture payment confirmations
+• Internet: For syncing transactions
+• Camera: For QR code scanning (optional)
+
+REQUIREMENTS
+
+• Android 7.0 (Nougat) or higher
+• NFC-enabled device (for tap-to-pay)
+• Active mobile money account
+
+SUPPORT
+
+Need help? Contact us at support@momoterminal.com
+
+Visit our website: https://momoterminal.com
+
+Follow us on Twitter: @MomoTerminal
+
+---
+
+MomoTerminal is committed to supporting local merchants and making mobile money transactions easier than ever.

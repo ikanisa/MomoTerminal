@@ -1,0 +1,10 @@
+MomoTerminal - Mobile Money POS
+
+A comprehensive Mobile Money Point-of-Sale (POS) system for merchants. Accept payments via NFC tap-to-pay and track transactions in real-time.
+
+Key Features:
+• NFC Terminal Mode - Turn your phone into a payment terminal
+• SMS Relay - Automatic transaction tracking and sync
+• Multi-Provider Support - MTN, Vodafone Cash, AirtelTigo
+• Offline Support - Works without internet, syncs when online
+• Secure - End-to-end encryption for all transactions

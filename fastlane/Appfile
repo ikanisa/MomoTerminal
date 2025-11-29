@@ -1,0 +1,9 @@
+# MomoTerminal Fastlane Configuration
+# https://docs.fastlane.tools
+
+# Uncomment the line below if you want to connect to Apple services
+# app_identifier("[[APP_IDENTIFIER]]")
+
+# For Play Store
+json_key_file("play-store-credentials.json")
+package_name("com.momoterminal")

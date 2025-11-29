@@ -1,0 +1,10 @@
+Initial release of MomoTerminal
+
+Features:
+• NFC tap-to-pay terminal functionality
+• SMS relay for payment confirmations
+• Support for MTN, Vodafone Cash, and AirtelTigo
+• Offline transaction storage with auto-sync
+• Biometric authentication
+• QR code payment support
+• Real-time dashboard sync
