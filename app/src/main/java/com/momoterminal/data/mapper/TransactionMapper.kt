@@ -40,7 +40,7 @@ object TransactionMapper {
             id = transaction.id,
             sender = transaction.sender,
             body = transaction.body,
-            amountInPesewas = transaction.amountInPesewas,
+            amount = transaction.amountInPesewas?.let { it / 100.0 },
             currency = transaction.currency,
             transactionId = transaction.transactionId,
             timestamp = transaction.timestamp,
