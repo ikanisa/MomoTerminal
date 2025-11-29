@@ -11,6 +11,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.momoterminal.capabilities.CapabilitiesDemoScreen
 import com.momoterminal.presentation.screens.auth.LoginScreen
 import com.momoterminal.presentation.screens.auth.PinScreen
 import com.momoterminal.presentation.screens.auth.RegisterScreen
@@ -159,6 +160,9 @@ fun NavGraph(
             SettingsScreen(
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToCapabilitiesDemo = {
+                    navController.navigate(Screen.CapabilitiesDemo.route)
                 }
             )
         }
@@ -173,6 +177,15 @@ fun NavGraph(
             val transactionId = backStackEntry.arguments?.getLong("transactionId") ?: 0L
             TransactionDetailScreen(
                 transactionId = transactionId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        // Capabilities Demo screen - demonstrates various Android app capabilities
+        composable(route = Screen.CapabilitiesDemo.route) {
+            CapabilitiesDemoScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

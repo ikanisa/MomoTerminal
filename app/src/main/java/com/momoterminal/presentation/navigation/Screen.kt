@@ -1,10 +1,12 @@
 package com.momoterminal.presentation.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.outlined.Nfc
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
@@ -72,6 +74,14 @@ sealed class Screen(
         fun createRoute(transactionId: Long): String = "transaction/$transactionId"
     }
     
+    // Capabilities Demo screen - demonstrates various Android app capabilities
+    data object CapabilitiesDemo : Screen(
+        route = "capabilities_demo",
+        title = "Capabilities Demo",
+        selectedIcon = Icons.Filled.Build,
+        unselectedIcon = Icons.Outlined.Build
+    )
+    
     companion object {
         /**
          * All screens that appear in the bottom navigation bar.
@@ -96,6 +106,7 @@ sealed class Screen(
                 route == Terminal.route -> Terminal
                 route == Transactions.route -> Transactions
                 route == Settings.route -> Settings
+                route == CapabilitiesDemo.route -> CapabilitiesDemo
                 route.startsWith("transaction/") -> TransactionDetail
                 else -> null
             }
