@@ -62,6 +62,9 @@ import com.momoterminal.R
 import com.momoterminal.auth.AuthViewModel
 import com.momoterminal.presentation.theme.MomoYellow
 
+/** Timer update interval for OTP expiry countdown in milliseconds */
+private const val OTP_TIMER_UPDATE_INTERVAL_MS = 1000L
+
 /**
  * Registration screen with multi-step flow.
  * Steps: Phone Entry -> OTP Verification -> PIN Creation -> Merchant Info -> Terms Acceptance
@@ -368,11 +371,11 @@ private fun OtpVerificationStep(
     
     LaunchedEffect(otpExpiresAt) {
         if (otpExpiresAt > 0) {
-            while (true) {
+            while (kotlinx.coroutines.isActive) {
                 val remaining = ((otpExpiresAt - System.currentTimeMillis()) / 1000).toInt()
                 remainingSeconds = maxOf(0, remaining)
                 if (remainingSeconds <= 0) break
-                kotlinx.coroutines.delay(1000)
+                kotlinx.coroutines.delay(OTP_TIMER_UPDATE_INTERVAL_MS)
             }
         }
     }

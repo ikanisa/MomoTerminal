@@ -220,7 +220,8 @@ class AuthViewModel @Inject constructor(
             error = if (isLockedOut) "Account locked. Please try again later." else message,
             pinAttempts = newAttempts,
             isLockedOut = isLockedOut,
-            pin = ""
+            pin = "",
+            otpCode = "" // Also clear OTP code on failure
         )
     }
 
