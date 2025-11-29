@@ -65,6 +65,26 @@
 -keep class com.momoterminal.data.local.SecureDataStore { *; }
 -keep class com.momoterminal.ui.base.SecureActivity { *; }
 
+# -------- Authentication Package --------
+# Keep auth-related classes for token management and session handling
+-keep class com.momoterminal.auth.** { *; }
+-keep class com.momoterminal.auth.TokenManager { *; }
+-keep class com.momoterminal.auth.SessionManager { *; }
+-keep class com.momoterminal.auth.SessionManager$* { *; }
+-keep class com.momoterminal.auth.AuthRepository { *; }
+-keep class com.momoterminal.auth.AuthRepository$* { *; }
+-keep class com.momoterminal.auth.AuthViewModel { *; }
+-keep class com.momoterminal.auth.AuthViewModel$* { *; }
+
+# -------- Auth API Models --------
+-keep class com.momoterminal.api.LoginRequest { *; }
+-keep class com.momoterminal.api.RegisterRequest { *; }
+-keep class com.momoterminal.api.RefreshRequest { *; }
+-keep class com.momoterminal.api.OtpRequest { *; }
+-keep class com.momoterminal.api.AuthResponse { *; }
+-keep class com.momoterminal.api.OtpResponse { *; }
+-keep class com.momoterminal.api.User { *; }
+
 # -------- Certificate Pinning --------
 # Keep certificate pinner configuration
 -keep class com.momoterminal.security.CertificatePinnerConfig { *; }

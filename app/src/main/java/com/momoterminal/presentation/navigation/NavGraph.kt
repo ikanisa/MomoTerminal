@@ -11,6 +11,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.momoterminal.presentation.screens.auth.LoginScreen
+import com.momoterminal.presentation.screens.auth.PinScreen
+import com.momoterminal.presentation.screens.auth.RegisterScreen
 import com.momoterminal.presentation.screens.home.HomeScreen
 import com.momoterminal.presentation.screens.settings.SettingsScreen
 import com.momoterminal.presentation.screens.terminal.TerminalScreen
@@ -25,11 +28,14 @@ import com.momoterminal.presentation.screens.transactions.TransactionsScreen
 fun NavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    startDestination: String = Screen.Home.route
+    startDestination: String = Screen.Home.route,
+    isAuthenticated: Boolean = true
 ) {
+    val actualStartDestination = if (isAuthenticated) startDestination else Screen.Login.route
+
     NavHost(
         navController = navController,
-        startDestination = startDestination,
+        startDestination = actualStartDestination,
         modifier = modifier,
         enterTransition = {
             fadeIn(animationSpec = tween(300)) + slideIntoContainer(
@@ -56,6 +62,62 @@ fun NavGraph(
             )
         }
     ) {
+        // Login screen
+        composable(route = Screen.Login.route) {
+            LoginScreen(
+                onNavigateToRegister = {
+                    navController.navigate(Screen.Register.route)
+                },
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                },
+                onNavigateToForgotPin = {
+                    // TODO: Implement forgot PIN flow
+                },
+                onShowBiometricPrompt = {
+                    // Handled by the screen itself
+                }
+            )
+        }
+        
+        // Register screen
+        composable(route = Screen.Register.route) {
+            RegisterScreen(
+                onNavigateToLogin = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Register.route) { inclusive = true }
+                    }
+                },
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+        
+        // PIN entry screen
+        composable(route = Screen.PinEntry.route) {
+            PinScreen(
+                title = "Unlock App",
+                subtitle = "Enter your PIN to continue",
+                onPinEntered = { pin ->
+                    // Handle PIN verification
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.PinEntry.route) { inclusive = true }
+                    }
+                },
+                onCancel = {
+                    // Go back to login
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.PinEntry.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         // Home screen
         composable(route = Screen.Home.route) {
             HomeScreen(

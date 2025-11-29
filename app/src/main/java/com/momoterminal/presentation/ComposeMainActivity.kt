@@ -14,26 +14,36 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.momoterminal.auth.AuthViewModel
+import com.momoterminal.auth.SessionManager
 import com.momoterminal.presentation.components.error.AppErrorBoundary
 import com.momoterminal.presentation.navigation.NavGraph
 import com.momoterminal.presentation.navigation.Screen
 import com.momoterminal.presentation.theme.MomoTerminalTheme
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
+import javax.inject.Inject
 
 /**
  * Main Activity using Jetpack Compose.
  * Hosts the navigation graph and bottom navigation bar.
  * Wrapped with AppErrorBoundary for global error handling.
+ * Handles authentication state and session management.
  */
 @AndroidEntryPoint
 class ComposeMainActivity : ComponentActivity() {
+    
+    @Inject
+    lateinit var sessionManager: SessionManager
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,21 +57,71 @@ class ComposeMainActivity : ComponentActivity() {
                         Timber.e(throwable, "Error caught by AppErrorBoundary")
                     }
                 ) {
-                    MomoTerminalApp()
+                    MomoTerminalApp(sessionManager = sessionManager)
                 }
             }
         }
     }
+    
+    override fun onResume() {
+        super.onResume()
+        // Record activity when app comes to foreground
+        sessionManager.onAppForeground()
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        // Handle app going to background
+        sessionManager.onAppBackground()
+    }
 }
 
 @Composable
-fun MomoTerminalApp() {
+fun MomoTerminalApp(
+    sessionManager: SessionManager,
+    authViewModel: AuthViewModel = hiltViewModel()
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    val authUiState by authViewModel.uiState.collectAsState()
+    val sessionState by sessionManager.sessionState.collectAsState()
     
-    // Determine if we should show bottom nav (only for main screens)
-    val showBottomNav = Screen.bottomNavItems.any { screen ->
+    // Check if user is authenticated
+    val isAuthenticated = authUiState.isAuthenticated
+    
+    // Handle session expiration
+    LaunchedEffect(sessionState) {
+        when (sessionState) {
+            is SessionManager.SessionState.Expired -> {
+                // Navigate to PIN entry for session unlock
+                navController.navigate(Screen.PinEntry.route) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        inclusive = true
+                    }
+                }
+            }
+            is SessionManager.SessionState.LoggedOut -> {
+                // Navigate to login
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        inclusive = true
+                    }
+                }
+            }
+            else -> {}
+        }
+    }
+    
+    // Record user activity on navigation changes
+    LaunchedEffect(currentDestination) {
+        if (!Screen.isAuthScreen(currentDestination?.route)) {
+            sessionManager.recordActivity()
+        }
+    }
+    
+    // Determine if we should show bottom nav (only for main screens when authenticated)
+    val showBottomNav = isAuthenticated && Screen.bottomNavItems.any { screen ->
         currentDestination?.hierarchy?.any { it.route == screen.route } == true
     }
     
@@ -94,7 +154,8 @@ fun MomoTerminalApp() {
         ) { paddingValues ->
             NavGraph(
                 navController = navController,
-                modifier = Modifier.padding(paddingValues)
+                modifier = Modifier.padding(paddingValues),
+                isAuthenticated = isAuthenticated
             )
         }
     }

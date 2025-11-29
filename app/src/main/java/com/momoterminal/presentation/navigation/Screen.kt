@@ -19,6 +19,22 @@ sealed class Screen(
     val selectedIcon: ImageVector? = null,
     val unselectedIcon: ImageVector? = null
 ) {
+    // Authentication screens
+    data object Login : Screen(
+        route = "login",
+        title = "Login"
+    )
+    
+    data object Register : Screen(
+        route = "register",
+        title = "Register"
+    )
+    
+    data object PinEntry : Screen(
+        route = "pin_entry",
+        title = "Enter PIN"
+    )
+    
     // Bottom navigation screens
     data object Home : Screen(
         route = "home",
@@ -63,11 +79,19 @@ sealed class Screen(
         val bottomNavItems = listOf(Home, Terminal, Transactions, Settings)
         
         /**
+         * Authentication screens.
+         */
+        val authScreens = listOf(Login, Register, PinEntry)
+        
+        /**
          * Get screen from route.
          */
         fun fromRoute(route: String?): Screen? {
             return when {
                 route == null -> null
+                route == Login.route -> Login
+                route == Register.route -> Register
+                route == PinEntry.route -> PinEntry
                 route == Home.route -> Home
                 route == Terminal.route -> Terminal
                 route == Transactions.route -> Transactions
@@ -75,6 +99,13 @@ sealed class Screen(
                 route.startsWith("transaction/") -> TransactionDetail
                 else -> null
             }
+        }
+        
+        /**
+         * Check if a route is an authentication screen.
+         */
+        fun isAuthScreen(route: String?): Boolean {
+            return route in listOf(Login.route, Register.route, PinEntry.route)
         }
     }
 }
