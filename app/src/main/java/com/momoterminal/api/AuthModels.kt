@@ -36,6 +36,7 @@ data class RefreshRequest(
 
 /**
  * Request body for OTP operations (legacy - kept for backwards compatibility).
+ * Request body for OTP operations (legacy - kept for backward compatibility).
  */
 data class OtpRequest(
     @SerializedName("phone_number")
@@ -46,6 +47,7 @@ data class OtpRequest(
 
 /**
  * Request body for sending OTP via WhatsApp.
+ * Request body for sending WhatsApp OTP.
  */
 data class SendOtpRequest(
     @SerializedName("phone_number")
@@ -58,12 +60,27 @@ data class SendOtpRequest(
 
 /**
  * Request body for verifying OTP.
+ * Request body for verifying OTP code.
  */
 data class VerifyOtpRequest(
     @SerializedName("phone_number")
     val phoneNumber: String,
     @SerializedName("otp_code")
     val otpCode: String
+)
+
+/**
+ * Response for OTP send operations.
+ */
+data class OtpSendResponse(
+    @SerializedName("success")
+    val success: Boolean,
+    @SerializedName("message_id")
+    val messageId: String? = null,
+    @SerializedName("expires_in_seconds")
+    val expiresInSeconds: Int = 300,
+    @SerializedName("retry_after_seconds")
+    val retryAfterSeconds: Int? = null
 )
 
 /**
@@ -94,6 +111,7 @@ data class OtpResponse(
     val expiresAt: Long? = null,
     @SerializedName("expires_in_seconds")
     val expiresInSeconds: Int = 300,
+    val expiresInSeconds: Int? = null,
     @SerializedName("retry_after_seconds")
     val retryAfterSeconds: Int? = null
 )

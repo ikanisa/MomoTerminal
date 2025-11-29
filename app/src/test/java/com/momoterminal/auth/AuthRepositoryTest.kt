@@ -46,7 +46,7 @@ class AuthRepositoryTest {
     }
 
     @Test
-    fun `login success saves tokens and starts session`() = runTest {
+    fun `login success with Supabase saves tokens and starts session`() = runTest {
         // Given
         val sessionData = SessionData(
             accessToken = "test_access_token",
@@ -56,18 +56,23 @@ class AuthRepositoryTest {
             user = SupabaseUser(
                 id = "user123",
                 phone = "+250788123456"
+                phone = "+250788767816"
             )
         )
         coEvery { supabaseAuthService.verifyOtp(any(), any()) } returns SupabaseAuthResult.Success(sessionData)
 
         // When & Then
         authRepository.login("+250788123456", "123456").test {
+        authRepository.login("+250788767816", "123456").test {
             // First emission should be Loading
             assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
             
             // Second emission should be Success
             val result = awaitItem()
             assertTrue(result is AuthRepository.AuthResult.Success)
+            val authResponse = (result as AuthRepository.AuthResult.Success).data
+            assertEquals("test_access_token", authResponse.accessToken)
+            assertEquals("user123", authResponse.user.id)
             
             awaitComplete()
         }
@@ -75,22 +80,31 @@ class AuthRepositoryTest {
         // Verify tokens were saved
         verify { tokenManager.saveTokens("test_access_token", "test_refresh_token", 3600L) }
         verify { tokenManager.saveUserInfo("user123", "+250788123456") }
+        verify { tokenManager.saveUserInfo("user123", "+250788767816") }
         verify { sessionManager.startSession() }
     }
 
     @Test
-    fun `login failure returns error`() = runTest {
+    fun `login failure with Supabase returns error`() = runTest {
         // Given
         coEvery { supabaseAuthService.verifyOtp(any(), any()) } returns SupabaseAuthResult.Error("Invalid OTP")
 
         // When & Then
         authRepository.login("+250788123456", "wrong_otp").test {
+        coEvery { supabaseAuthService.verifyOtp(any(), any()) } returns SupabaseAuthResult.Error(
+            message = "Invalid OTP code",
+            code = "OTP_VERIFICATION_FAILED"
+        )
+
+        // When & Then
+        authRepository.login("+250788767816", "wrong_otp").test {
             // First emission should be Loading
             assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
             
             // Second emission should be Error
             val result = awaitItem()
             assertTrue(result is AuthRepository.AuthResult.Error)
+            assertEquals("Invalid OTP code", (result as AuthRepository.AuthResult.Error).message)
             
             awaitComplete()
         }
@@ -103,6 +117,7 @@ class AuthRepositoryTest {
 
         // When & Then
         authRepository.login("+250788123456", "123456").test {
+        authRepository.login("+250788767816", "123456").test {
             // First emission should be Loading
             assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
             
@@ -187,6 +202,7 @@ class AuthRepositoryTest {
 
         // When & Then
         authRepository.verifyOtp("+250788123456", "123456").test {
+        authRepository.verifyOtp("+250788767816", "123456").test {
             assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
             
             val result = awaitItem()
@@ -198,16 +214,39 @@ class AuthRepositoryTest {
     }
 
     @Test
-    fun `requestOtp success returns success`() = runTest {
+    fun `requestOtp success via Supabase returns success`() = runTest {
         // Given
         coEvery { supabaseAuthService.sendWhatsAppOtp(any()) } returns SupabaseAuthResult.Success(Unit)
 
         // When & Then
         authRepository.requestOtp("+250788123456").test {
+        authRepository.requestOtp("+250788767816").test {
             assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
             
             val result = awaitItem()
             assertTrue(result is AuthRepository.AuthResult.Success)
+            val response = (result as AuthRepository.AuthResult.Success).data
+            assertTrue(response.success)
+            
+            awaitComplete()
+        }
+    }
+    
+    @Test
+    fun `requestOtp failure via Supabase returns error`() = runTest {
+        // Given
+        coEvery { supabaseAuthService.sendWhatsAppOtp(any()) } returns SupabaseAuthResult.Error(
+            message = "Rate limit exceeded",
+            code = "rate_limit_exceeded"
+        )
+
+        // When & Then
+        authRepository.requestOtp("+250788767816").test {
+            assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
+            
+            val result = awaitItem()
+            assertTrue(result is AuthRepository.AuthResult.Error)
+            assertEquals("Rate limit exceeded", (result as AuthRepository.AuthResult.Error).message)
             
             awaitComplete()
         }
@@ -224,6 +263,7 @@ class AuthRepositoryTest {
             user = User(
                 id = "user123",
                 phoneNumber = "+250788123456"
+                phoneNumber = "+250788767816"
             )
         )
         every { tokenManager.getRefreshToken() } returns refreshToken
@@ -265,5 +305,31 @@ class AuthRepositoryTest {
 
         // Then
         assertFalse(result)
+    }
+    
+    @Test
+    fun `no hardcoded dev bypass exists`() = runTest {
+        // This test verifies that there is no hardcoded bypass in the login flow
+        // The dev bypass was a security vulnerability that has been removed
+        
+        // Given - Mock Supabase to fail (simulating invalid OTP)
+        coEvery { supabaseAuthService.verifyOtp(any(), any()) } returns SupabaseAuthResult.Error(
+            message = "Invalid OTP",
+            code = "OTP_VERIFICATION_FAILED"
+        )
+
+        // When - Try the previously hardcoded credentials
+        authRepository.login("0788767816", "123456").test {
+            assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
+            
+            // Should get an error, not success (no bypass)
+            val result = awaitItem()
+            assertTrue(result is AuthRepository.AuthResult.Error)
+            
+            awaitComplete()
+        }
+        
+        // Verify no tokens were saved (bypass didn't work)
+        verify(exactly = 0) { tokenManager.saveTokens(any(), any(), any()) }
     }
 }

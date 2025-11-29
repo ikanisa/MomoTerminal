@@ -5,6 +5,8 @@ import com.momoterminal.di.ApplicationScope
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,6 +43,10 @@ class SessionManager @Inject constructor(
 
     private var lastActivityTime: Long = 0L
     private var sessionTimeoutJob: Job? = null
+    
+    // Use SupervisorJob to prevent child failures from cancelling the scope
+    // This scope is tied to the singleton lifecycle
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     companion object {
         // Default session timeout: 15 minutes

@@ -163,6 +163,12 @@ fun RegisterScreen(
                             phoneNumber = uiState.formattedPhoneNumber.ifBlank { uiState.phoneNumber },
                             resendCountdown = uiState.otpResendCountdown,
                             otpExpiresAt = uiState.otpExpiresAt
+                            onChangePhoneNumber = viewModel::changePhoneNumber,
+                            phoneNumber = uiState.phoneNumber,
+                            formattedPhoneNumber = uiState.formattedPhoneNumber,
+                            otpExpiryCountdown = uiState.otpExpiryCountdown,
+                            resendCountdown = uiState.resendCountdown,
+                            canResendOtp = uiState.canResendOtp
                         )
                     }
                     AuthViewModel.RegistrationStep.PIN_CREATION -> {
@@ -365,6 +371,12 @@ private fun OtpVerificationStep(
     phoneNumber: String,
     resendCountdown: Int = 0,
     otpExpiresAt: Long = 0L
+    onChangePhoneNumber: () -> Unit,
+    phoneNumber: String,
+    formattedPhoneNumber: String,
+    otpExpiryCountdown: Int,
+    resendCountdown: Int,
+    canResendOtp: Boolean
 ) {
     // Calculate remaining time for OTP expiry
     var remainingSeconds by remember { mutableStateOf(0) }
@@ -430,9 +442,53 @@ private fun OtpVerificationStep(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error
             )
+        // Phone number display with change option
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = formattedPhoneNumber.ifEmpty { phoneNumber },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium
+            )
+            TextButton(
+                onClick = onChangePhoneNumber,
+                enabled = !isLoading
+            ) {
+                Text(
+                    text = "Change",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // OTP expiry timer
+        if (otpExpiryCountdown > 0) {
+            val minutes = otpExpiryCountdown / 60
+            val seconds = otpExpiryCountdown % 60
+            Text(
+                text = "Code expires in ${minutes}:${seconds.toString().padStart(2, '0')}",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (otpExpiryCountdown <= 60) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        } else {
+            Text(
+                text = "Code expired",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         com.momoterminal.presentation.components.OtpInputField(
             value = otpCode,
@@ -452,6 +508,26 @@ private fun OtpVerificationStep(
                 else 
                     "Didn't receive the code? Resend"
             )
+        // Resend button with countdown
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (canResendOtp) {
+                TextButton(
+                    onClick = onResendOtp,
+                    enabled = !isLoading
+                ) {
+                    Text("Didn't receive the code? Resend")
+                }
+            } else {
+                Text(
+                    text = "Resend code in ${resendCountdown}s",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -462,6 +538,7 @@ private fun OtpVerificationStep(
                 .fillMaxWidth()
                 .height(56.dp),
             enabled = !isLoading && otpCode.length == 6 && remainingSeconds > 0,
+            enabled = !isLoading && otpCode.length == 6 && otpExpiryCountdown > 0,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MomoYellow,
                 contentColor = MaterialTheme.colorScheme.onPrimary

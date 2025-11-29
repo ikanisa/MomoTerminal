@@ -22,7 +22,8 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val biometricHelper: BiometricHelper,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val phoneNumberValidator: PhoneNumberValidator
 ) : ViewModel() {
 
     /**
@@ -48,6 +49,13 @@ class AuthViewModel @Inject constructor(
         val otpExpiresAt: Long = 0L,
         val canResendOtpAt: Long = 0L,
         val otpResendCountdown: Int = 0
+        // OTP timer fields
+        val otpExpiresAt: Long = 0L,
+        val otpExpiryCountdown: Int = 0,
+        val canResendOtpAt: Long = 0L,
+        val resendCountdown: Int = 0,
+        val canResendOtp: Boolean = false,
+        val phoneNumberError: String? = null
     )
 
     /**
@@ -80,12 +88,16 @@ class AuthViewModel @Inject constructor(
     val events: StateFlow<AuthEvent?> = _events.asStateFlow()
     
     private var resendCountdownJob: Job? = null
+    private var otpExpiryCountdownJob: Job? = null
 
     companion object {
         const val MAX_PIN_ATTEMPTS = 3
         const val PIN_LENGTH = 6
         const val OTP_RESEND_COOLDOWN_SECONDS = 60
         const val OTP_EXPIRY_SECONDS = 300 // 5 minutes
+        const val OTP_LENGTH = 6
+        const val OTP_EXPIRY_SECONDS = 300 // 5 minutes
+        const val RESEND_COOLDOWN_SECONDS = 60 // 60 seconds
     }
 
     init {
@@ -108,8 +120,22 @@ class AuthViewModel @Inject constructor(
 
     // Input update functions
     fun updatePhoneNumber(phone: String) {
+        val validationResult = phoneNumberValidator.validate(phone)
+        val formattedNumber = when (validationResult) {
+            is PhoneNumberValidator.ValidationResult.Valid -> validationResult.formattedNumber
+            is PhoneNumberValidator.ValidationResult.Invalid -> ""
+        }
+        val phoneError = if (phone.isNotBlank() && formattedNumber.isEmpty()) {
+            when (validationResult) {
+                is PhoneNumberValidator.ValidationResult.Invalid -> validationResult.reason
+                else -> null
+            }
+        } else null
+        
         _uiState.value = _uiState.value.copy(
             phoneNumber = phone,
+            formattedPhoneNumber = formattedNumber,
+            phoneNumberError = phoneError,
             error = null
         )
     }
@@ -140,7 +166,7 @@ class AuthViewModel @Inject constructor(
     }
 
     fun updateOtpCode(otp: String) {
-        if (otp.length <= 6 && otp.all { it.isDigit() }) {
+        if (otp.length <= OTP_LENGTH && otp.all { it.isDigit() }) {
             _uiState.value = _uiState.value.copy(
                 otpCode = otp,
                 error = null
@@ -164,7 +190,13 @@ class AuthViewModel @Inject constructor(
             return
         }
         
-        if (state.otpCode.length != 6) {
+        // Validate phone number format
+        if (state.formattedPhoneNumber.isEmpty()) {
+            _uiState.value = state.copy(error = "Please enter a valid phone number")
+            return
+        }
+        
+        if (state.otpCode.length != OTP_LENGTH) {
             _uiState.value = state.copy(error = "Please enter the 6-digit OTP code")
             return
         }
@@ -185,6 +217,7 @@ class AuthViewModel @Inject constructor(
 
         viewModelScope.launch {
             authRepository.login(phoneToUse, state.otpCode)
+            authRepository.login(state.formattedPhoneNumber, state.otpCode)
                 .catch { e ->
                     handleLoginFailure(e.message ?: "Login failed")
                 }
@@ -195,6 +228,7 @@ class AuthViewModel @Inject constructor(
                         }
                         is AuthRepository.AuthResult.Success -> {
                             resendCountdownJob?.cancel()
+                            stopCountdownTimers()
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
                                 isAuthenticated = true,
@@ -230,7 +264,8 @@ class AuthViewModel @Inject constructor(
      * Includes phone validation and rate limiting.
      */
     fun requestOtp() {
-        val phoneNumber = _uiState.value.phoneNumber
+        val state = _uiState.value
+        val phoneNumber = state.phoneNumber
         
         // Validate phone number
         val validationResult = PhoneNumberValidator.validate(phoneNumber)
@@ -248,6 +283,20 @@ class AuthViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(
                 error = "Please wait $remainingSeconds seconds before requesting another OTP"
             )
+        if (phoneNumber.isBlank()) {
+            _uiState.value = state.copy(error = "Please enter your phone number")
+            return
+        }
+        
+        // Validate phone number format
+        if (state.formattedPhoneNumber.isEmpty()) {
+            _uiState.value = state.copy(error = state.phoneNumberError ?: "Please enter a valid phone number")
+            return
+        }
+        
+        // Check if resend is allowed
+        if (!state.canResendOtp && state.isOtpSent) {
+            _uiState.value = state.copy(error = "Please wait ${state.resendCountdown} seconds before resending")
             return
         }
         
@@ -255,6 +304,7 @@ class AuthViewModel @Inject constructor(
 
         viewModelScope.launch {
             authRepository.requestOtp(formattedPhone)
+            authRepository.requestOtp(state.formattedPhoneNumber)
                 .catch { e ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -279,6 +329,15 @@ class AuthViewModel @Inject constructor(
                                 canResendOtpAt = now + (OTP_RESEND_COOLDOWN_SECONDS * 1000L),
                                 registrationStep = RegistrationStep.OTP_VERIFICATION
                             )
+                                registrationStep = RegistrationStep.OTP_VERIFICATION,
+                                otpExpiresAt = now + (OTP_EXPIRY_SECONDS * 1000L),
+                                otpExpiryCountdown = OTP_EXPIRY_SECONDS,
+                                canResendOtpAt = now + (RESEND_COOLDOWN_SECONDS * 1000L),
+                                resendCountdown = RESEND_COOLDOWN_SECONDS,
+                                canResendOtp = false,
+                                otpCode = "" // Clear any existing OTP code
+                            )
+                            startOtpExpiryCountdown()
                             startResendCountdown()
                         }
                         is AuthRepository.AuthResult.Error -> {
@@ -294,6 +353,25 @@ class AuthViewModel @Inject constructor(
     
     /**
      * Starts the countdown timer for OTP resend button.
+     * Start the OTP expiry countdown timer.
+     */
+    private fun startOtpExpiryCountdown() {
+        otpExpiryCountdownJob?.cancel()
+        otpExpiryCountdownJob = viewModelScope.launch {
+            while (_uiState.value.otpExpiryCountdown > 0) {
+                delay(1000L)
+                val newCountdown = _uiState.value.otpExpiryCountdown - 1
+                _uiState.value = _uiState.value.copy(otpExpiryCountdown = newCountdown)
+            }
+            // OTP has expired
+            _uiState.value = _uiState.value.copy(
+                error = "OTP has expired. Please request a new one."
+            )
+        }
+    }
+    
+    /**
+     * Start the resend cooldown timer.
      */
     private fun startResendCountdown() {
         resendCountdownJob?.cancel()
@@ -325,6 +403,41 @@ class AuthViewModel @Inject constructor(
         if (expiresAt <= 0) return 0
         val remaining = (expiresAt - System.currentTimeMillis()) / 1000
         return maxOf(0, remaining.toInt())
+            while (_uiState.value.resendCountdown > 0) {
+                delay(1000L)
+                val newCountdown = _uiState.value.resendCountdown - 1
+                _uiState.value = _uiState.value.copy(
+                    resendCountdown = newCountdown,
+                    canResendOtp = newCountdown <= 0
+                )
+            }
+        }
+    }
+    
+    /**
+     * Stop all countdown timers.
+     */
+    private fun stopCountdownTimers() {
+        resendCountdownJob?.cancel()
+        otpExpiryCountdownJob?.cancel()
+    }
+    
+    /**
+     * Go back to phone entry step and allow changing phone number.
+     */
+    fun changePhoneNumber() {
+        stopCountdownTimers()
+        _uiState.value = _uiState.value.copy(
+            registrationStep = RegistrationStep.PHONE_ENTRY,
+            isOtpSent = false,
+            otpCode = "",
+            otpExpiresAt = 0L,
+            otpExpiryCountdown = 0,
+            canResendOtpAt = 0L,
+            resendCountdown = 0,
+            canResendOtp = false,
+            error = null
+        )
     }
 
     /**
@@ -333,13 +446,19 @@ class AuthViewModel @Inject constructor(
     fun verifyOtp() {
         val state = _uiState.value
         
-        if (state.otpCode.length != 6) {
+        if (state.otpCode.length != OTP_LENGTH) {
             _uiState.value = state.copy(error = "Please enter the 6-digit OTP")
+            return
+        }
+        
+        // Check if OTP has expired
+        if (state.otpExpiryCountdown <= 0) {
+            _uiState.value = state.copy(error = "OTP has expired. Please request a new one.")
             return
         }
 
         viewModelScope.launch {
-            authRepository.verifyOtp(state.phoneNumber, state.otpCode)
+            authRepository.verifyOtp(state.formattedPhoneNumber, state.otpCode)
                 .catch { e ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -352,6 +471,7 @@ class AuthViewModel @Inject constructor(
                             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
                         }
                         is AuthRepository.AuthResult.Success -> {
+                            stopCountdownTimers()
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
                                 isOtpVerified = true,
@@ -399,7 +519,7 @@ class AuthViewModel @Inject constructor(
 
         viewModelScope.launch {
             authRepository.register(
-                phoneNumber = state.phoneNumber,
+                phoneNumber = state.formattedPhoneNumber,
                 pin = state.pin,
                 merchantName = state.merchantName,
                 acceptedTerms = state.acceptedTerms
@@ -461,7 +581,23 @@ class AuthViewModel @Inject constructor(
             RegistrationStep.MERCHANT_INFO -> RegistrationStep.PIN_CREATION
             RegistrationStep.TERMS_ACCEPTANCE -> RegistrationStep.MERCHANT_INFO
         }
-        _uiState.value = _uiState.value.copy(registrationStep = previousStep)
+        
+        // Stop timers if going back to phone entry
+        if (previousStep == RegistrationStep.PHONE_ENTRY) {
+            stopCountdownTimers()
+            _uiState.value = _uiState.value.copy(
+                registrationStep = previousStep,
+                isOtpSent = false,
+                otpCode = "",
+                otpExpiresAt = 0L,
+                otpExpiryCountdown = 0,
+                canResendOtpAt = 0L,
+                resendCountdown = 0,
+                canResendOtp = false
+            )
+        } else {
+            _uiState.value = _uiState.value.copy(registrationStep = previousStep)
+        }
     }
 
     /**
@@ -495,6 +631,7 @@ class AuthViewModel @Inject constructor(
      * Logout the user.
      */
     fun logout() {
+        stopCountdownTimers()
         authRepository.logout()
         _uiState.value = AuthUiState(isBiometricAvailable = biometricHelper.isBiometricAvailable())
         _events.value = AuthEvent.NavigateToLogin
@@ -518,6 +655,12 @@ class AuthViewModel @Inject constructor(
      * Reset to initial state.
      */
     fun resetState() {
+        stopCountdownTimers()
         _uiState.value = AuthUiState(isBiometricAvailable = biometricHelper.isBiometricAvailable())
+    }
+    
+    override fun onCleared() {
+        super.onCleared()
+        stopCountdownTimers()
     }
 }
