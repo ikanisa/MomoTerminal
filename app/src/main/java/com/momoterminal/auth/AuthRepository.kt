@@ -1,5 +1,6 @@
 package com.momoterminal.auth
 
+import com.momoterminal.BuildConfig
 import com.momoterminal.api.AuthApiService
 import com.momoterminal.api.AuthResponse
 import com.momoterminal.api.LoginRequest
@@ -7,6 +8,7 @@ import com.momoterminal.api.OtpRequest
 import com.momoterminal.api.OtpResponse
 import com.momoterminal.api.RefreshRequest
 import com.momoterminal.api.RegisterRequest
+import com.momoterminal.api.User
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import timber.log.Timber
@@ -39,6 +41,44 @@ class AuthRepository @Inject constructor(
         emit(AuthResult.Loading)
         
         try {
+            // DEV ONLY: Hardcoded login bypass for development
+            if (BuildConfig.DEBUG && phoneNumber == "0788767816" && pin == "123456") {
+                Timber.d("Using hardcoded dev login")
+                
+                // Create mock auth response
+                val mockAuthResponse = AuthResponse(
+                    accessToken = "dev_access_token_${System.currentTimeMillis()}",
+                    refreshToken = "dev_refresh_token_${System.currentTimeMillis()}",
+                    expiresIn = 3600,
+                    user = User(
+                        id = "dev_user_001",
+                        phoneNumber = phoneNumber,
+                        merchantName = "Dev Merchant",
+                        isVerified = true
+                    )
+                )
+                
+                // Save tokens
+                tokenManager.saveTokens(
+                    accessToken = mockAuthResponse.accessToken,
+                    refreshToken = mockAuthResponse.refreshToken,
+                    expiresInSeconds = mockAuthResponse.expiresIn
+                )
+                
+                // Save user info
+                tokenManager.saveUserInfo(
+                    userId = mockAuthResponse.user.id,
+                    phoneNumber = mockAuthResponse.user.phoneNumber
+                )
+                
+                // Start session
+                sessionManager.startSession()
+                
+                Timber.d("Dev login successful for user: ${mockAuthResponse.user.id}")
+                emit(AuthResult.Success(mockAuthResponse))
+                return@flow
+            }
+            
             val request = LoginRequest(
                 phoneNumber = phoneNumber,
                 pin = pin
