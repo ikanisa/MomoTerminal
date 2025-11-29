@@ -82,9 +82,12 @@ class SyncWorker @AssistedInject constructor(
                     }
                     is PaymentResult.Error -> {
                         Log.w(TAG, "Supabase sync failed for ${txn.id}: ${supabaseResult.message}")
-                        hasErrors = true
                         // Try webhook fallback
-                        syncToWebhook(txn, appConfig)
+                        val webhookSuccess = syncToWebhook(txn, appConfig)
+                        if (!webhookSuccess) {
+                            Log.e(TAG, "Both Supabase and webhook sync failed for ${txn.id}")
+                            hasErrors = true
+                        }
                     }
                 }
                 
@@ -100,21 +103,22 @@ class SyncWorker @AssistedInject constructor(
     
     /**
      * Fallback: Sync transaction to webhook URL if Supabase sync fails.
+     * @return true if sync was successful, false otherwise
      */
     private suspend fun syncToWebhook(
         txn: com.momoterminal.data.local.entity.TransactionEntity,
         appConfig: AppConfig
-    ) {
+    ): Boolean {
         val gatewayUrl = appConfig.getGatewayUrl()
         val apiSecret = appConfig.getApiSecret()
         
-        // If not configured, skip webhook
+        // If not configured, skip webhook (not considered a failure)
         if (gatewayUrl.isBlank()) {
             Log.w(TAG, "Gateway URL not configured, skipping webhook sync")
-            return
+            return false
         }
         
-        try {
+        return try {
             // Construct JSON payload (using amountInPesewas for precision)
             val json = JSONObject().apply {
                 put("sender", txn.sender)
@@ -139,13 +143,16 @@ class SyncWorker @AssistedInject constructor(
                 if (response.isSuccessful) {
                     transactionDao.updateStatus(txn.id, "SENT")
                     Log.d(TAG, "Transaction ${txn.id} synced to webhook successfully")
+                    true
                 } else {
                     Log.w(TAG, "Webhook sync failed for ${txn.id}: ${response.code}")
+                    false
                 }
             }
             
         } catch (e: Exception) {
             Log.e(TAG, "Webhook sync failed for ${txn.id}", e)
+            false
         }
     }
 }

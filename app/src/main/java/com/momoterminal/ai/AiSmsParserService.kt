@@ -121,8 +121,8 @@ SMS Body: $body
         return try {
             val json = JSONObject(jsonString)
             
-            val amountInPesewas = json.optLong("amount_in_pesewas", 0)
-            if (amountInPesewas <= 0) {
+            val amountInPesewas = json.optLong("amount_in_pesewas", -1)
+            if (amountInPesewas < 0) {
                 Timber.w("No valid amount found in AI response")
                 return null
             }
@@ -135,7 +135,7 @@ SMS Body: $body
                 transactionId = json.optString("transaction_id").takeIf { it.isNotBlank() },
                 transactionType = json.optString("transaction_type", "UNKNOWN"),
                 provider = json.optString("provider", "UNKNOWN"),
-                balanceInPesewas = json.optLong("balance_in_pesewas", 0).takeIf { it > 0 },
+                balanceInPesewas = json.optLong("balance_in_pesewas", -1).takeIf { it >= 0 },
                 rawMessage = rawMessage,
                 parsedBy = "gemini"
             )
