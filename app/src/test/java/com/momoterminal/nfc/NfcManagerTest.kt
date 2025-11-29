@@ -17,6 +17,9 @@ import io.mockk.every
 
 /**
  * Unit tests for NfcManager.
+ * 
+ * Note: Amounts are stored in pesewas (smallest currency unit) to avoid
+ * floating-point precision errors. 1 GHS = 100 pesewas.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class NfcManagerTest {
@@ -41,7 +44,7 @@ class NfcManagerTest {
     fun `NfcPaymentData isValid returns true for valid data`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amount = "50",
+            amountInPesewas = 5000L, // 50 GHS
             currency = "GHS",
             provider = NfcPaymentData.Provider.MTN
         )
@@ -53,19 +56,7 @@ class NfcManagerTest {
     fun `NfcPaymentData isValid returns false for empty merchant phone`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "",
-            amount = "50",
-            currency = "GHS",
-            provider = NfcPaymentData.Provider.MTN
-        )
-        
-        assertThat(paymentData.isValid()).isFalse()
-    }
-
-    @Test
-    fun `NfcPaymentData isValid returns false for empty amount`() {
-        val paymentData = NfcPaymentData(
-            merchantPhone = "0244123456",
-            amount = "",
+            amountInPesewas = 5000L,
             currency = "GHS",
             provider = NfcPaymentData.Provider.MTN
         )
@@ -77,7 +68,7 @@ class NfcManagerTest {
     fun `NfcPaymentData isValid returns false for zero amount`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amount = "0",
+            amountInPesewas = 0L,
             currency = "GHS",
             provider = NfcPaymentData.Provider.MTN
         )
@@ -89,7 +80,7 @@ class NfcManagerTest {
     fun `NfcPaymentData isValid returns false for negative amount`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amount = "-50",
+            amountInPesewas = -5000L,
             currency = "GHS",
             provider = NfcPaymentData.Provider.MTN
         )
@@ -101,7 +92,7 @@ class NfcManagerTest {
     fun `NfcPaymentData toPaymentUri generates correct URI format`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amount = "50.00",
+            amountInPesewas = 5000L, // 50.00 GHS
             currency = "GHS",
             provider = NfcPaymentData.Provider.MTN
         )
@@ -118,7 +109,7 @@ class NfcManagerTest {
     fun `NfcPaymentData toUssdString generates correct MTN USSD`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amount = "50.00",
+            amountInPesewas = 5000L, // 50.00 GHS
             currency = "GHS",
             provider = NfcPaymentData.Provider.MTN
         )
@@ -134,7 +125,7 @@ class NfcManagerTest {
     fun `NfcPaymentData toUssdString generates correct Vodafone USSD`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0201234567",
-            amount = "100.00",
+            amountInPesewas = 10000L, // 100.00 GHS
             currency = "GHS",
             provider = NfcPaymentData.Provider.VODAFONE
         )
@@ -148,7 +139,7 @@ class NfcManagerTest {
     fun `NfcPaymentData toUssdString generates correct AirtelTigo USSD`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0271234567",
-            amount = "75.00",
+            amountInPesewas = 7500L, // 75.00 GHS
             currency = "GHS",
             provider = NfcPaymentData.Provider.AIRTEL_TIGO
         )
@@ -162,7 +153,7 @@ class NfcManagerTest {
     fun `NfcPaymentData default currency is GHS`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amount = "50"
+            amountInPesewas = 5000L
         )
         
         assertThat(paymentData.currency).isEqualTo("GHS")
@@ -172,7 +163,7 @@ class NfcManagerTest {
     fun `NfcPaymentData default provider is MTN`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amount = "50"
+            amountInPesewas = 5000L
         )
         
         assertThat(paymentData.provider).isEqualTo(NfcPaymentData.Provider.MTN)
@@ -184,7 +175,7 @@ class NfcManagerTest {
         
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amount = "50"
+            amountInPesewas = 5000L
         )
         
         val afterTime = System.currentTimeMillis()
@@ -202,7 +193,7 @@ class NfcManagerTest {
     fun `NfcState Active contains payment data`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amount = "50",
+            amountInPesewas = 5000L,
             currency = "GHS",
             provider = NfcPaymentData.Provider.MTN
         )
@@ -242,7 +233,7 @@ class NfcManagerTest {
     fun `NfcPaymentData with reference includes it in URI`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amount = "50",
+            amountInPesewas = 5000L,
             reference = "REF123"
         )
         
@@ -254,12 +245,28 @@ class NfcManagerTest {
     fun `NfcPaymentData without reference omits it from URI`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amount = "50",
+            amountInPesewas = 5000L,
             reference = null
         )
         
         val uri = paymentData.toPaymentUri()
         assertThat(uri).doesNotContain("ref=")
+    }
+    
+    @Test
+    fun `NfcPaymentData getDisplayAmount converts pesewas to GHS`() {
+        val paymentData = NfcPaymentData(
+            merchantPhone = "0244123456",
+            amountInPesewas = 12345L
+        )
+        
+        assertThat(paymentData.getDisplayAmount()).isWithin(0.001).of(123.45)
+    }
+    
+    @Test
+    fun `NfcPaymentData toPesewas converts GHS to pesewas`() {
+        assertThat(NfcPaymentData.toPesewas(50.00)).isEqualTo(5000L)
+        assertThat(NfcPaymentData.toPesewas(123.45)).isEqualTo(12345L)
     }
 }
 

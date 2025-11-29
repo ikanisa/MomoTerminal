@@ -4,6 +4,9 @@ import com.google.gson.annotations.SerializedName
 
 /**
  * Data Transfer Object for transaction data sent to the server.
+ * 
+ * Note: Amount is stored in pesewas (smallest currency unit) to avoid
+ * floating-point precision errors. 1 GHS = 100 pesewas.
  */
 data class TransactionDto(
     @SerializedName("id")
@@ -15,8 +18,8 @@ data class TransactionDto(
     @SerializedName("body")
     val body: String? = null,
     
-    @SerializedName("amount")
-    val amount: Double? = null,
+    @SerializedName("amount_in_pesewas")
+    val amountInPesewas: Long? = null,
     
     @SerializedName("currency")
     val currency: String = "GHS",

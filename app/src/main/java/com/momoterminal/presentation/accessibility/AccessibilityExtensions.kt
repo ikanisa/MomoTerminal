@@ -44,13 +44,12 @@ fun Modifier.accessibleClickable(
     .clickable(onClick = onClick)
 
 /**
- * Format amount for screen reader in a speakable format.
- * E.g., "GHS 100.50" becomes "100 cedis and 50 pesewas"
+ * Format amount in pesewas for screen reader in a speakable format.
+ * E.g., 10050 pesewas becomes "100 cedis and 50 pesewas"
  */
-fun formatAmountForScreenReader(amount: Double, currencyCode: String = "GHS"): String {
-    // Use rounding to avoid floating-point precision issues
-    val wholePart = amount.toLong()
-    val decimalPart = kotlin.math.round((amount - wholePart) * 100).toInt()
+fun formatAmountInPesewasForScreenReader(amountInPesewas: Long, currencyCode: String = "GHS"): String {
+    val wholePart = amountInPesewas / 100
+    val decimalPart = (amountInPesewas % 100).toInt()
     
     return when (currencyCode.uppercase()) {
         "GHS" -> {
@@ -68,6 +67,7 @@ fun formatAmountForScreenReader(amount: Double, currencyCode: String = "GHS"): S
             }
         }
         else -> {
+            val amount = amountInPesewas / 100.0
             val format = NumberFormat.getCurrencyInstance(Locale.getDefault())
             try {
                 format.currency = Currency.getInstance(currencyCode)
@@ -77,6 +77,18 @@ fun formatAmountForScreenReader(amount: Double, currencyCode: String = "GHS"): S
             format.format(amount)
         }
     }
+}
+
+/**
+ * Format amount for screen reader in a speakable format.
+ * E.g., "GHS 100.50" becomes "100 cedis and 50 pesewas"
+ * 
+ * @deprecated Use formatAmountInPesewasForScreenReader for Long amounts
+ */
+fun formatAmountForScreenReader(amount: Double, currencyCode: String = "GHS"): String {
+    // Convert to pesewas to avoid floating-point precision issues
+    val amountInPesewas = (amount * 100).toLong()
+    return formatAmountInPesewasForScreenReader(amountInPesewas, currencyCode)
 }
 
 /**
@@ -126,7 +138,26 @@ fun formatSyncStatusForScreenReader(status: String): String {
 }
 
 /**
- * Format transaction description for screen reader.
+ * Format transaction description for screen reader using pesewas.
+ */
+@Composable
+fun formatTransactionForScreenReader(
+    amountInPesewas: Long?,
+    currencyCode: String,
+    sender: String,
+    timestamp: Long,
+    status: String
+): String {
+    val amountStr = amountInPesewas?.let { formatAmountInPesewasForScreenReader(it, currencyCode) } ?: "unknown amount"
+    val timeStr = formatRelativeTimeForScreenReader(timestamp)
+    val statusStr = formatSyncStatusForScreenReader(status)
+    
+    return "Transaction from $sender, $amountStr, $timeStr, $statusStr"
+}
+
+/**
+ * Format transaction description for screen reader (Double version for backward compatibility).
+ * @deprecated Use the Long/pesewas version instead
  */
 @Composable
 fun formatTransactionForScreenReader(
@@ -136,9 +167,6 @@ fun formatTransactionForScreenReader(
     timestamp: Long,
     status: String
 ): String {
-    val amountStr = amount?.let { formatAmountForScreenReader(it, currencyCode) } ?: "unknown amount"
-    val timeStr = formatRelativeTimeForScreenReader(timestamp)
-    val statusStr = formatSyncStatusForScreenReader(status)
-    
-    return "Transaction from $sender, $amountStr, $timeStr, $statusStr"
+    val amountInPesewas = amount?.let { (it * 100).toLong() }
+    return formatTransactionForScreenReader(amountInPesewas, currencyCode, sender, timestamp, status)
 }

@@ -6,24 +6,40 @@ import java.util.regex.Pattern
 /**
  * Parser for Mobile Money SMS messages.
  * Supports MTN, Vodafone, and AirtelTigo providers in Ghana.
+ * 
+ * Note: All monetary amounts are stored in pesewas (smallest currency unit)
+ * to avoid floating-point precision errors. 1 GHS = 100 pesewas.
  */
 object SmsParser {
     private const val TAG = "SmsParser"
     
     /**
      * Parsed transaction data from SMS.
+     * 
+     * @property amountInPesewas Amount in pesewas (1 GHS = 100 pesewas) to avoid floating-point errors
+     * @property balanceInPesewas Balance in pesewas, if available
      */
     data class ParsedTransaction(
         val provider: String,
         val transactionType: TransactionType,
-        val amount: Double,
+        val amountInPesewas: Long,
         val currency: String,
         val senderOrRecipient: String?,
         val transactionId: String?,
-        val balance: Double?,
+        val balanceInPesewas: Long?,
         val timestamp: Long = System.currentTimeMillis(),
         val rawMessage: String
-    )
+    ) {
+        /**
+         * Get the amount as a Double for display purposes.
+         */
+        fun getDisplayAmount(): Double = amountInPesewas / 100.0
+        
+        /**
+         * Get the balance as a Double for display purposes.
+         */
+        fun getDisplayBalance(): Double? = balanceInPesewas?.let { it / 100.0 }
+    }
     
     /**
      * Transaction types that can be parsed from SMS.
@@ -139,24 +155,24 @@ object SmsParser {
      * Parse MTN MoMo SMS.
      */
     private fun parseMtnSms(body: String): ParsedTransaction? {
-        val (type, amount, party) = parseTransactionDetails(
+        val (type, amountInPesewas, party) = parseTransactionDetails(
             body,
             MTN_RECEIVED_PATTERN,
             MTN_SENT_PATTERN,
             MTN_PAYMENT_PATTERN
         ) ?: return null
         
-        val balance = extractBalance(body, MTN_BALANCE_PATTERN)
+        val balanceInPesewas = extractBalance(body, MTN_BALANCE_PATTERN)
         val transactionId = extractTransactionId(body, MTN_TRANS_ID_PATTERN)
         
         return ParsedTransaction(
             provider = "MTN",
             transactionType = type,
-            amount = amount,
+            amountInPesewas = amountInPesewas,
             currency = "GHS",
             senderOrRecipient = party,
             transactionId = transactionId,
-            balance = balance,
+            balanceInPesewas = balanceInPesewas,
             rawMessage = body
         )
     }
@@ -165,24 +181,24 @@ object SmsParser {
      * Parse Vodafone Cash SMS.
      */
     private fun parseVodafoneSms(body: String): ParsedTransaction? {
-        val (type, amount, party) = parseTransactionDetails(
+        val (type, amountInPesewas, party) = parseTransactionDetails(
             body,
             VODAFONE_RECEIVED_PATTERN,
             VODAFONE_SENT_PATTERN,
             null
         ) ?: return null
         
-        val balance = extractBalance(body, VODAFONE_BALANCE_PATTERN)
+        val balanceInPesewas = extractBalance(body, VODAFONE_BALANCE_PATTERN)
         val transactionId = extractTransactionId(body, VODAFONE_REF_PATTERN)
         
         return ParsedTransaction(
             provider = "VODAFONE",
             transactionType = type,
-            amount = amount,
+            amountInPesewas = amountInPesewas,
             currency = "GHS",
             senderOrRecipient = party,
             transactionId = transactionId,
-            balance = balance,
+            balanceInPesewas = balanceInPesewas,
             rawMessage = body
         )
     }
@@ -191,23 +207,23 @@ object SmsParser {
      * Parse AirtelTigo Money SMS.
      */
     private fun parseAirtelTigoSms(body: String): ParsedTransaction? {
-        val (type, amount, party) = parseTransactionDetails(
+        val (type, amountInPesewas, party) = parseTransactionDetails(
             body,
             AIRTELTIGO_RECEIVED_PATTERN,
             AIRTELTIGO_SENT_PATTERN,
             null
         ) ?: return null
         
-        val balance = extractBalance(body, AIRTELTIGO_BALANCE_PATTERN)
+        val balanceInPesewas = extractBalance(body, AIRTELTIGO_BALANCE_PATTERN)
         
         return ParsedTransaction(
             provider = "AIRTELTIGO",
             transactionType = type,
-            amount = amount,
+            amountInPesewas = amountInPesewas,
             currency = "GHS",
             senderOrRecipient = party,
             transactionId = null,
-            balance = balance,
+            balanceInPesewas = balanceInPesewas,
             rawMessage = body
         )
     }
@@ -219,7 +235,7 @@ object SmsParser {
         val amountMatcher = AMOUNT_PATTERN.matcher(body)
         if (!amountMatcher.find()) return null
         
-        val amount = parseAmount(amountMatcher.group(1) ?: return null)
+        val amountInPesewas = parseAmountToPesewas(amountMatcher.group(1) ?: return null)
         val type = when {
             body.contains("received", ignoreCase = true) -> TransactionType.RECEIVED
             body.contains("sent", ignoreCase = true) -> TransactionType.SENT
@@ -230,44 +246,45 @@ object SmsParser {
         return ParsedTransaction(
             provider = "UNKNOWN",
             transactionType = type,
-            amount = amount,
+            amountInPesewas = amountInPesewas,
             currency = "GHS",
             senderOrRecipient = null,
             transactionId = null,
-            balance = null,
+            balanceInPesewas = null,
             rawMessage = body
         )
     }
     
     /**
      * Parse transaction details from patterns.
+     * Returns amount in pesewas (smallest currency unit).
      */
     private fun parseTransactionDetails(
         body: String,
         receivedPattern: Pattern,
         sentPattern: Pattern,
         paymentPattern: Pattern?
-    ): Triple<TransactionType, Double, String?>? {
+    ): Triple<TransactionType, Long, String?>? {
         var matcher = receivedPattern.matcher(body)
         if (matcher.find()) {
-            val amount = parseAmount(matcher.group(1) ?: return null)
+            val amountInPesewas = parseAmountToPesewas(matcher.group(1) ?: return null)
             val party = matcher.group(2)?.trim()
-            return Triple(TransactionType.RECEIVED, amount, party)
+            return Triple(TransactionType.RECEIVED, amountInPesewas, party)
         }
         
         matcher = sentPattern.matcher(body)
         if (matcher.find()) {
-            val amount = parseAmount(matcher.group(1) ?: return null)
+            val amountInPesewas = parseAmountToPesewas(matcher.group(1) ?: return null)
             val party = matcher.group(2)?.trim()
-            return Triple(TransactionType.SENT, amount, party)
+            return Triple(TransactionType.SENT, amountInPesewas, party)
         }
         
         paymentPattern?.let {
             matcher = it.matcher(body)
             if (matcher.find()) {
-                val amount = parseAmount(matcher.group(1) ?: return null)
+                val amountInPesewas = parseAmountToPesewas(matcher.group(1) ?: return null)
                 val party = matcher.group(2)?.trim()
-                return Triple(TransactionType.PAYMENT, amount, party)
+                return Triple(TransactionType.PAYMENT, amountInPesewas, party)
             }
         }
         
@@ -275,12 +292,12 @@ object SmsParser {
     }
     
     /**
-     * Extract balance from message.
+     * Extract balance from message in pesewas.
      */
-    private fun extractBalance(body: String, pattern: Pattern): Double? {
+    private fun extractBalance(body: String, pattern: Pattern): Long? {
         val matcher = pattern.matcher(body)
         return if (matcher.find()) {
-            parseAmount(matcher.group(1) ?: return null)
+            parseAmountToPesewas(matcher.group(1) ?: return null)
         } else null
     }
     
@@ -295,10 +312,13 @@ object SmsParser {
     }
     
     /**
-     * Parse amount string to Double.
+     * Parse amount string to pesewas (Long).
+     * Converts decimal amount to smallest currency unit.
+     * 1 GHS = 100 pesewas.
      */
-    private fun parseAmount(amountStr: String): Double {
-        return amountStr.replace(",", "").toDoubleOrNull() ?: 0.0
+    private fun parseAmountToPesewas(amountStr: String): Long {
+        val amount = amountStr.replace(",", "").toDoubleOrNull() ?: 0.0
+        return (amount * 100).toLong()
     }
     
     /**

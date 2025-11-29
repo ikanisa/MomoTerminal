@@ -58,7 +58,7 @@ fun TransactionCard(
     modifier: Modifier = Modifier
 ) {
     val accessibilityDescription = formatTransactionForScreenReader(
-        amount = transaction.amount,
+        amountInPesewas = transaction.amountInPesewas,
         currencyCode = transaction.currency,
         sender = transaction.sender,
         timestamp = transaction.timestamp,
@@ -192,8 +192,8 @@ fun TransactionCard(
             Column(
                 horizontalAlignment = Alignment.End
             ) {
-                // Amount
-                transaction.amount?.let { amount ->
+                // Amount - use getDisplayAmount() to convert from pesewas
+                transaction.getDisplayAmount()?.let { amount ->
                     Text(
                         text = amount.toCurrency(transaction.currency),
                         style = MaterialTheme.typography.titleMedium,

@@ -112,7 +112,6 @@ fun Long.toDateString(pattern: String = "dd MMM yyyy, HH:mm"): String {
  */
 private val CURRENCY_LOCALES = mapOf(
     "GHS" to Locale("en", "GH"),  // Ghana Cedi
-    "RWF" to Locale("rw", "RW"),  // Rwandan Franc
     "KES" to Locale("en", "KE"),  // Kenyan Shilling
     "UGX" to Locale("en", "UG"),  // Ugandan Shilling
     "TZS" to Locale("en", "TZ"),  // Tanzanian Shilling
@@ -140,6 +139,43 @@ fun Double.toCurrency(currencyCode: String = "GHS"): String {
 fun Double.formatAmount(): String {
     return String.format(Locale.getDefault(), "%.2f", this)
 }
+
+// Long Extensions (Currency in Pesewas)
+
+/**
+ * Format amount in pesewas as currency.
+ * Converts from pesewas (smallest unit) to main currency unit.
+ * 1 GHS = 100 pesewas.
+ */
+fun Long.pesewaToCurrency(currencyCode: String = "GHS"): String {
+    val amountInMainUnit = this / 100.0
+    val locale = CURRENCY_LOCALES[currencyCode] ?: Locale.getDefault()
+    
+    return try {
+        NumberFormat.getCurrencyInstance(locale).format(amountInMainUnit)
+    } catch (e: Exception) {
+        "$currencyCode ${String.format(Locale.getDefault(), "%.2f", amountInMainUnit)}"
+    }
+}
+
+/**
+ * Format amount in pesewas with two decimal places.
+ * Converts from pesewas (smallest unit) to main currency unit.
+ */
+fun Long.pesewaToFormatAmount(): String {
+    val amountInMainUnit = this / 100.0
+    return String.format(Locale.getDefault(), "%.2f", amountInMainUnit)
+}
+
+/**
+ * Convert pesewas to main currency unit (Double).
+ */
+fun Long.pesewaToMain(): Double = this / 100.0
+
+/**
+ * Convert main currency unit (Double) to pesewas.
+ */
+fun Double.toPesewas(): Long = (this * 100).toLong()
 
 // SharedPreferences Extensions
 

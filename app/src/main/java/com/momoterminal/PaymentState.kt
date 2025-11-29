@@ -8,14 +8,17 @@ import java.util.Locale
 /**
  * Singleton object to manage shared payment state across the application.
  * Handles payment URIs, webhook configuration, and logging.
+ * 
+ * Note: For monetary precision, amounts should be stored in pesewas (smallest currency unit).
+ * 1 GHS = 100 pesewas.
  */
 object PaymentState {
     
     // Current payment URI for NFC broadcasting
     var currentPaymentUri: String? = null
     
-    // Current payment amount for NFC broadcasting
-    var currentAmount: String? = null
+    // Current payment amount for NFC broadcasting (in pesewas)
+    var currentAmountInPesewas: Long? = null
     
     // LiveData for SMS log updates
     val smsLog: MutableLiveData<String> = MutableLiveData("")
@@ -26,21 +29,23 @@ object PaymentState {
     /**
      * Generate a USSD string for Mobile Money payment.
      * @param merchant The merchant phone number
-     * @param amount The payment amount
+     * @param amountInPesewas The payment amount in pesewas
      * @return USSD dial string
      */
-    fun generateMomoUssd(merchant: String, amount: String): String {
-        return "tel:*182*1*1*${merchant}*${amount}#"
+    fun generateMomoUssd(merchant: String, amountInPesewas: Long): String {
+        val formattedAmount = "%.2f".format(amountInPesewas / 100.0)
+        return "tel:*182*1*1*${merchant}*${formattedAmount}#"
     }
     
     /**
      * Generate a payment URI for NFC transmission.
      * @param merchant The merchant phone number
-     * @param amount The payment amount
+     * @param amountInPesewas The payment amount in pesewas
      * @return Payment URI string
      */
-    fun generatePaymentUri(merchant: String, amount: String): String {
-        return "momo://pay?to=$merchant&amount=$amount&currency=RWF"
+    fun generatePaymentUri(merchant: String, amountInPesewas: Long): String {
+        val formattedAmount = "%.2f".format(amountInPesewas / 100.0)
+        return "momo://pay?to=$merchant&amount=$formattedAmount&currency=GHS"
     }
     
     /**
@@ -59,7 +64,7 @@ object PaymentState {
      */
     fun clearPayment() {
         currentPaymentUri = null
-        currentAmount = null
+        currentAmountInPesewas = null
         statusUpdate.postValue("Payment cancelled")
     }
 }

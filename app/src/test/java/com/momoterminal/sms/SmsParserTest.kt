@@ -7,6 +7,9 @@ import org.junit.runners.Parameterized
 
 /**
  * Parameterized tests for SmsParser covering all providers.
+ * 
+ * Note: Expected amounts are in pesewas (smallest currency unit).
+ * 1 GHS = 100 pesewas.
  */
 @RunWith(Parameterized::class)
 class SmsParserTest(
@@ -15,7 +18,7 @@ class SmsParserTest(
     private val body: String,
     private val expectedProvider: String?,
     private val expectedType: SmsParser.TransactionType?,
-    private val expectedAmount: Double?,
+    private val expectedAmountInPesewas: Long?,
     private val expectedParty: String?,
     private val expectedTransactionId: String?
 ) {
@@ -31,7 +34,7 @@ class SmsParserTest(
             assertThat(result).isNotNull()
             assertThat(result!!.provider).isEqualTo(expectedProvider)
             assertThat(result.transactionType).isEqualTo(expectedType)
-            assertThat(result.amount).isWithin(0.01).of(expectedAmount!!)
+            assertThat(result.amountInPesewas).isEqualTo(expectedAmountInPesewas!!)
             
             if (expectedParty != null) {
                 assertThat(result.senderOrRecipient).isEqualTo(expectedParty)
@@ -47,14 +50,14 @@ class SmsParserTest(
         @JvmStatic
         @Parameterized.Parameters(name = "{0}")
         fun testCases() = listOf(
-            // MTN MoMo - Received
+            // MTN MoMo - Received (amounts in pesewas)
             arrayOf(
                 "MTN received payment",
                 "MTN MoMo",
                 "You have received GHS 50.00 from John Doe. Trans ID: MP123456789",
                 "MTN",
                 SmsParser.TransactionType.RECEIVED,
-                50.00,
+                5000L,
                 "John Doe",
                 "MP123456789"
             ),
@@ -64,7 +67,7 @@ class SmsParserTest(
                 "Received GHS 100.50 from 0244123456. Trans ID: MP999888777. Balance is GHS 500.00",
                 "MTN",
                 SmsParser.TransactionType.RECEIVED,
-                100.50,
+                10050L,
                 "0244123456",
                 "MP999888777"
             ),
@@ -74,7 +77,7 @@ class SmsParserTest(
                 "You have received GHS 1,500.00 from Merchant ABC. Transaction ID: TX12345",
                 "MTN",
                 SmsParser.TransactionType.RECEIVED,
-                1500.00,
+                150000L,
                 "Merchant ABC",
                 "TX12345"
             ),
@@ -85,7 +88,7 @@ class SmsParserTest(
                 "You have sent GHS 200.00 to Jane Smith. Trans ID: MP987654321",
                 "MTN",
                 SmsParser.TransactionType.SENT,
-                200.00,
+                20000L,
                 "Jane Smith",
                 "MP987654321"
             ),
@@ -95,7 +98,7 @@ class SmsParserTest(
                 "Transfer of GHS 75.00 to 0201234567. Transaction ID: TF1234",
                 "MTN",
                 SmsParser.TransactionType.SENT,
-                75.00,
+                7500L,
                 "0201234567",
                 "TF1234"
             ),
@@ -106,7 +109,7 @@ class SmsParserTest(
                 "Payment of GHS 30.00 to ShopRite. Trans ID: PAY123",
                 "MTN",
                 SmsParser.TransactionType.PAYMENT,
-                30.00,
+                3000L,
                 "ShopRite",
                 "PAY123"
             ),
@@ -117,7 +120,7 @@ class SmsParserTest(
                 "Received GHS 80.00 from 0201234567. Ref: VF123456",
                 "VODAFONE",
                 SmsParser.TransactionType.RECEIVED,
-                80.00,
+                8000L,
                 "0201234567",
                 "VF123456"
             ),
@@ -127,7 +130,7 @@ class SmsParserTest(
                 "You have received GHS 250.00 from Customer ABC. Reference: REF999. Available balance GHS 1000.00",
                 "VODAFONE",
                 SmsParser.TransactionType.RECEIVED,
-                250.00,
+                25000L,
                 "Customer ABC",
                 "REF999"
             ),
@@ -138,7 +141,7 @@ class SmsParserTest(
                 "Sent GHS 45.00 to John Doe. Ref No: VF789",
                 "VODAFONE",
                 SmsParser.TransactionType.SENT,
-                45.00,
+                4500L,
                 "John Doe",
                 "VF789"
             ),
@@ -148,7 +151,7 @@ class SmsParserTest(
                 "Transferred GHS 500.00 to 0271234567. Reference: T123",
                 "VODAFONE",
                 SmsParser.TransactionType.SENT,
-                500.00,
+                50000L,
                 "0271234567",
                 "T123"
             ),
@@ -159,7 +162,7 @@ class SmsParserTest(
                 "Credited GHS 60.00 from 0262345678. Trans ID: AT123",
                 "AIRTELTIGO",
                 SmsParser.TransactionType.RECEIVED,
-                60.00,
+                6000L,
                 "0262345678",
                 null
             ),
@@ -169,7 +172,7 @@ class SmsParserTest(
                 "Received GHS 150.00 from Customer XYZ. Bal GHS 800.00",
                 "AIRTELTIGO",
                 SmsParser.TransactionType.RECEIVED,
-                150.00,
+                15000L,
                 "Customer XYZ",
                 null
             ),
@@ -180,7 +183,7 @@ class SmsParserTest(
                 "Debited GHS 35.00 to 0571234567. Balance is GHS 200.00",
                 "AIRTELTIGO",
                 SmsParser.TransactionType.SENT,
-                35.00,
+                3500L,
                 "0571234567",
                 null
             ),
@@ -251,12 +254,13 @@ class SmsParserAdditionalTest {
     }
 
     @Test
-    fun `parseSms extracts balance correctly`() {
+    fun `parseSms extracts balance correctly in pesewas`() {
         val result = SmsParser.parseSms(
             "MTN MoMo",
             "Received GHS 50.00 from John. Balance is GHS 1500.00"
         )
-        assertThat(result?.balance).isWithin(0.01).of(1500.00)
+        assertThat(result?.balanceInPesewas).isEqualTo(150000L)
+        assertThat(result?.getDisplayBalance()).isWithin(0.01).of(1500.00)
     }
 
     @Test
@@ -265,7 +269,8 @@ class SmsParserAdditionalTest {
             "MTN",
             "Received GHS 100 from John. Trans ID: T1"
         )
-        assertThat(result?.amount).isWithin(0.01).of(100.0)
+        assertThat(result?.amountInPesewas).isEqualTo(10000L)
+        assertThat(result?.getDisplayAmount()).isWithin(0.01).of(100.0)
     }
 
     @Test
@@ -274,7 +279,8 @@ class SmsParserAdditionalTest {
             "MTN MoMo",
             "Received GHS 10,000.50 from Merchant. Trans ID: T1"
         )
-        assertThat(result?.amount).isWithin(0.01).of(10000.50)
+        assertThat(result?.amountInPesewas).isEqualTo(1000050L)
+        assertThat(result?.getDisplayAmount()).isWithin(0.01).of(10000.50)
     }
 
     @Test
@@ -292,5 +298,24 @@ class SmsParserAdditionalTest {
         
         assertThat(result?.timestamp).isAtLeast(beforeTime)
         assertThat(result?.timestamp).isAtMost(afterTime)
+    }
+    
+    @Test
+    fun `parseSms converts small amounts correctly to pesewas`() {
+        val result = SmsParser.parseSms(
+            "MTN",
+            "Received GHS 0.50 from John. Trans ID: T1"
+        )
+        assertThat(result?.amountInPesewas).isEqualTo(50L)
+    }
+    
+    @Test
+    fun `getDisplayAmount converts pesewas back to main unit`() {
+        val result = SmsParser.parseSms(
+            "MTN",
+            "Received GHS 123.45 from John. Trans ID: T1"
+        )
+        assertThat(result?.amountInPesewas).isEqualTo(12345L)
+        assertThat(result?.getDisplayAmount()).isWithin(0.001).of(123.45)
     }
 }

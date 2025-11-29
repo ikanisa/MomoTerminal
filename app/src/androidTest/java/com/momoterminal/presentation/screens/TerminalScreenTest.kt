@@ -191,7 +191,7 @@ class TerminalScreenTest {
         nfcState.value = NfcState.Active(
             NfcPaymentData(
                 merchantPhone = "0244123456",
-                amount = "50",
+                amountInPesewas = 5000L, // 50 GHS in pesewas
                 currency = "GHS",
                 provider = NfcPaymentData.Provider.MTN
             )

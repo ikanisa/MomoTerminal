@@ -5,13 +5,16 @@ import java.io.Serializable
 
 /**
  * Data class representing a payment transaction from SMS.
+ * 
+ * Note: Amount is stored in pesewas (smallest currency unit) to avoid
+ * floating-point precision errors. 1 GHS = 100 pesewas.
  */
 data class PaymentTransaction(
     @SerializedName("id")
     val id: String? = null,
 
-    @SerializedName("amount")
-    val amount: Double,
+    @SerializedName("amount_in_pesewas")
+    val amountInPesewas: Long,
 
     @SerializedName("currency")
     val currency: String = "GHS",
@@ -36,7 +39,22 @@ data class PaymentTransaction(
 
     @SerializedName("merchant_code")
     val merchantCode: String? = null
-) : Serializable
+) : Serializable {
+    /**
+     * Get the amount as a Double for display purposes.
+     * Returns the amount in main currency units (e.g., GHS, not pesewas).
+     */
+    fun getDisplayAmount(): Double = amountInPesewas / 100.0
+    
+    companion object {
+        /**
+         * Convert a Double amount to pesewas (Long).
+         * @param amount The amount in main currency units (e.g., GHS)
+         * @return The amount in pesewas
+         */
+        fun toPesewas(amount: Double): Long = (amount * 100).toLong()
+    }
+}
 
 /**
  * Enum for transaction status.
