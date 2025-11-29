@@ -606,7 +606,13 @@ private fun ActionButtons(
     }
 }
 
+// Date formatter cached at top-level to avoid creating new instances on each call
+private val dateFormatter by lazy {
+    java.text.SimpleDateFormat("dd MMM yyyy, HH:mm", java.util.Locale.getDefault())
+}
+
+@Synchronized
 private fun formatDate(timestamp: Long): String {
-    val sdf = java.text.SimpleDateFormat("dd MMM yyyy, HH:mm", java.util.Locale.getDefault())
-    return sdf.format(java.util.Date(timestamp))
+    // SimpleDateFormat is not thread-safe, so we synchronize access
+    return dateFormatter.format(java.util.Date(timestamp))
 }

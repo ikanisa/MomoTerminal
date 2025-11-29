@@ -164,10 +164,12 @@ class CertificatePinnerConfig @Inject constructor() {
      */
     private fun isPlaceholderPin(pin: String): Boolean {
         // Check for the common placeholder patterns
+        // Placeholder pins are defined with single repeated uppercase letters like AAA...=, BBB...=, CCC...=
         return pin == DEFAULT_PRIMARY_PIN ||
                pin == DEFAULT_BACKUP_PIN ||
                pin == DEFAULT_ROOT_CA_PIN ||
-               pin.matches(Regex("sha256/[A-Z]{43}="))
+               // Match any single uppercase letter repeated 43 times (placeholder pattern)
+               pin.matches(Regex("sha256/([A-Z])\\1{42}="))
     }
     
     /**

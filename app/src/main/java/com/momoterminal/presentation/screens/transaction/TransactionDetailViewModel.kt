@@ -24,6 +24,11 @@ class TransactionDetailViewModel @Inject constructor(
     private val syncManager: SyncManager
 ) : ViewModel() {
     
+    companion object {
+        private const val SYNC_START_DELAY_MS = 500L
+        private const val COPIED_MESSAGE_DURATION_MS = 2000L
+    }
+    
     private val transactionId: Long = savedStateHandle.get<Long>("transactionId") ?: 0L
     
     /**
@@ -95,8 +100,8 @@ class TransactionDetailViewModel @Inject constructor(
             try {
                 syncManager.enqueueSyncNow()
                 
-                // Wait a bit for the sync to start
-                kotlinx.coroutines.delay(500)
+                // Wait a bit for the sync to start before reloading
+                kotlinx.coroutines.delay(SYNC_START_DELAY_MS)
                 
                 // Reload to get updated status
                 loadTransaction()
@@ -115,7 +120,7 @@ class TransactionDetailViewModel @Inject constructor(
     fun onTransactionIdCopied() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(showCopiedMessage = true)
-            kotlinx.coroutines.delay(2000)
+            kotlinx.coroutines.delay(COPIED_MESSAGE_DURATION_MS)
             _uiState.value = _uiState.value.copy(showCopiedMessage = false)
         }
     }

@@ -30,10 +30,10 @@
     <exclude domain="sharedpref" path="momo_terminal_prefs.xml" />
     <exclude domain="sharedpref" path="momo_gateway_config.xml" />
     <exclude domain="sharedpref" path="api_credentials.xml" />
-    <exclude domain="sharedpref" path="user_preferences.preferences_pb" />
     
     <!--
         Exclude DataStore files which may contain sensitive preferences.
+        DataStore stores files under files/datastore/ directory with .preferences_pb extension.
     -->
     <exclude domain="file" path="datastore/" />
     
