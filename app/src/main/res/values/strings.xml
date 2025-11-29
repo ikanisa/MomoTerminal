@@ -86,4 +86,11 @@
     <string name="pin_unlock_title">Unlock MomoTerminal</string>
     <string name="pin_confirm_transaction">Confirm Transaction</string>
     <string name="pin_attempts_remaining">Attempts remaining: %d</string>
+    
+    <!-- Capabilities Demo -->
+    <string name="capabilities_demo_title">App Capabilities Demo</string>
+    <string name="capabilities_demo_description">Demonstrates various Android app capabilities</string>
+    <string name="foreground_service_title">Capabilities Demo Service</string>
+    <string name="foreground_service_channel_name">Capabilities Demo Service</string>
+    <string name="foreground_service_channel_description">Notification channel for the capabilities demo foreground service</string>
 </resources>

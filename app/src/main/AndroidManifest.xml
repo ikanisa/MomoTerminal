@@ -2,26 +2,119 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Permissions -->
+    <!-- =================================================================== -->
+    <!-- NETWORK PERMISSIONS                                                  -->
+    <!-- Required for: Network connectivity, API calls, HTTP requests        -->
+    <!-- =================================================================== -->
+    
+    <!-- Full network access - Required to make HTTP requests to public APIs -->
     <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- View network connections - Required to monitor network state (Wi-Fi/Mobile/Offline) -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- =================================================================== -->
+    <!-- SMS PERMISSIONS                                                      -->
+    <!-- Required for: SMS relay functionality                                -->
+    <!-- =================================================================== -->
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
-    <uses-permission android:name="android.permission.NFC" />
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.CALL_PHONE" />
-    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
-    <uses-permission android:name="android.permission.CAMERA" />
 
-    <!-- NFC HCE Feature -->
+    <!-- =================================================================== -->
+    <!-- NFC PERMISSIONS AND FEATURES                                         -->
+    <!-- Required for: NFC payment terminal, tag reading                      -->
+    <!-- =================================================================== -->
+    
+    <!-- Control Near Field Communication - Required to read NFC tags and enable NFC HCE -->
+    <uses-permission android:name="android.permission.NFC" />
+    
+    <!-- NFC HCE Feature - Required for Host Card Emulation (payment terminal) -->
     <uses-feature
         android:name="android.hardware.nfc.hce"
         android:required="true" />
+    
+    <!-- NFC Feature - Marked as optional so app can run on devices without NFC -->
+    <uses-feature
+        android:name="android.hardware.nfc"
+        android:required="false" />
 
-    <!-- Camera Feature -->
+    <!-- =================================================================== -->
+    <!-- VIBRATION PERMISSION                                                 -->
+    <!-- Required for: Haptic feedback on transactions, test vibration       -->
+    <!-- =================================================================== -->
+    
+    <!-- Control vibration - Required to vibrate the device for haptic feedback -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- =================================================================== -->
+    <!-- BIOMETRIC PERMISSIONS                                                -->
+    <!-- Required for: Fingerprint/Face authentication for secure login      -->
+    <!-- =================================================================== -->
+    
+    <!-- Use biometric hardware - Required for AndroidX BiometricPrompt on API 28+ -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    
+    <!-- Use fingerprint hardware - Legacy permission for API 23-27 -->
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+
+    <!-- =================================================================== -->
+    <!-- PHONE PERMISSION                                                     -->
+    <!-- Required for: USSD dial functionality                                -->
+    <!-- =================================================================== -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+
+    <!-- =================================================================== -->
+    <!-- CAMERA PERMISSION AND FEATURE                                        -->
+    <!-- Required for: Barcode scanning                                       -->
+    <!-- =================================================================== -->
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
+
+    <!-- =================================================================== -->
+    <!-- WAKE LOCK PERMISSION                                                 -->
+    <!-- Required for: Preventing phone from sleeping during long operations -->
+    <!-- =================================================================== -->
+    
+    <!-- Prevent phone from sleeping - Required for WakeLock to keep CPU running -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- =================================================================== -->
+    <!-- BOOT COMPLETED PERMISSION                                            -->
+    <!-- Required for: Running app at device startup                          -->
+    <!-- =================================================================== -->
+    
+    <!-- Run at startup - Required to receive BOOT_COMPLETED broadcast -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- =================================================================== -->
+    <!-- FOREGROUND SERVICE PERMISSIONS                                       -->
+    <!-- Required for: Running persistent background services                 -->
+    <!-- =================================================================== -->
+    
+    <!-- Run foreground service - Required for Android 9+ to show persistent notification -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    
+    <!-- Foreground service type for general purpose data sync operations -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <!-- =================================================================== -->
+    <!-- POST NOTIFICATIONS PERMISSION                                        -->
+    <!-- Required for: Showing notifications on Android 13+                   -->
+    <!-- =================================================================== -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- =================================================================== -->
+    <!-- ADVERTISING ID PERMISSION                                            -->
+    <!-- Required for: Fetching Google Advertising ID for analytics           -->
+    <!-- IMPORTANT: Must comply with user consent and privacy laws (GDPR, etc)-->
+    <!-- =================================================================== -->
+    
+    <!-- Google Advertising ID permission - Merged from Play Services -->
+    <uses-permission
+        android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="merge" />
 
     <application
         android:name=".MomoTerminalApp"
@@ -116,6 +209,36 @@
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
+
+        <!-- ================================================================ -->
+        <!-- BOOT COMPLETED RECEIVER                                          -->
+        <!-- Receives BOOT_COMPLETED broadcast when device finishes booting   -->
+        <!-- Used to start background tasks or schedule WorkManager jobs      -->
+        <!-- ================================================================ -->
+        <receiver
+            android:name=".capabilities.BootCompletedReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <!-- Run at startup - listen for device boot completion -->
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <!-- Also handle quick boot on some devices -->
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <!-- ================================================================ -->
+        <!-- FOREGROUND SERVICE                                               -->
+        <!-- Persistent service that shows ongoing notification               -->
+        <!-- Used for long-running background operations with user awareness  -->
+        <!-- ================================================================ -->
+        <service
+            android:name=".capabilities.CapabilitiesForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync">
+            <!-- foregroundServiceType is required for Android 10+ -->
+            <!-- Using dataSync type as this is for demonstration/sync purposes -->
+        </service>
 
         <!-- NFC HCE Service -->
         <service

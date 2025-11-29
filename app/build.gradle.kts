@@ -403,6 +403,12 @@ dependencies {
     implementation(libs.play.review)
     implementation(libs.play.review.ktx)
 
+    // Play Install Referrer API - for tracking install attribution
+    implementation(libs.play.install.referrer)
+
+    // Play Services Ads Identifier - for Advertising ID
+    implementation(libs.play.services.ads.identifier)
+
     // Coil Image Loading
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)

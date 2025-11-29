@@ -14,6 +14,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Link
@@ -34,7 +36,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
@@ -67,6 +68,7 @@ import com.momoterminal.presentation.theme.SuccessGreen
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToCapabilitiesDemo: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -275,6 +277,61 @@ fun SettingsScreen(
                 }
             }
             
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Developer Section - App Capabilities Demo
+            SectionHeader(
+                title = "Developer Options",
+                icon = Icons.Filled.Build
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Capabilities Demo Button
+            Card(
+                onClick = onNavigateToCapabilitiesDemo,
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Build,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    Spacer(modifier = Modifier.width(16.dp))
+                    
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "App Capabilities Demo",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "Test Network, NFC, Biometrics, Services & more",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Open",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            
             Spacer(modifier = Modifier.height(32.dp))
             
             // Save Button
@@ -349,7 +406,8 @@ private fun SectionHeader(
 private fun SettingsScreenPreview() {
     MomoTerminalTheme {
         SettingsScreen(
-            onNavigateBack = {}
+            onNavigateBack = {},
+            onNavigateToCapabilitiesDemo = {}
         )
     }
 }

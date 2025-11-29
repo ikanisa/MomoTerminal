@@ -92,6 +92,12 @@ play-app-update = "2.1.0"
 # Play Review
 play-review = "2.0.1"
 
+# Play Install Referrer API
+play-install-referrer = "2.2"
+
+# Play Services Ads Identifier (for Advertising ID)
+play-services-ads-identifier = "18.1.0"
+
 # Coil Image Loading
 coil = "2.6.0"
 
@@ -255,6 +261,12 @@ play-app-update-ktx = { module = "com.google.android.play:app-update-ktx", versi
 # Play Review
 play-review = { module = "com.google.android.play:review", version.ref = "play-review" }
 play-review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "play-review" }
+
+# Play Install Referrer API
+play-install-referrer = { module = "com.android.installreferrer:installreferrer", version.ref = "play-install-referrer" }
+
+# Play Services Ads Identifier (for Advertising ID)
+play-services-ads-identifier = { module = "com.google.android.gms:play-services-ads-identifier", version.ref = "play-services-ads-identifier" }
 
 # Coil Image Loading
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
