@@ -116,10 +116,10 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun `login fails with invalid PIN length`() = runTest {
+    fun `login fails with invalid OTP length`() = runTest {
         // Given
-        viewModel.updatePhoneNumber("0201234567")
-        viewModel.updatePin("123") // Only 3 digits
+        viewModel.updatePhoneNumber("+250788123456")
+        viewModel.updateOtpCode("123") // Only 3 digits
         testDispatcher.scheduler.advanceUntilIdle()
 
         // When
@@ -127,7 +127,7 @@ class AuthViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Then
-        assertEquals("PIN must be 6 digits", viewModel.uiState.value.error)
+        assertEquals("Please enter the 6-digit OTP code", viewModel.uiState.value.error)
     }
 
     @Test
@@ -137,15 +137,15 @@ class AuthViewModelTest {
             accessToken = "token",
             refreshToken = "refresh",
             expiresIn = 3600,
-            user = User(id = "123", phoneNumber = "0201234567")
+            user = User(id = "123", phoneNumber = "+250788123456")
         )
         coEvery { authRepository.login(any(), any()) } returns flowOf(
             AuthRepository.AuthResult.Loading,
             AuthRepository.AuthResult.Success(authResponse)
         )
 
-        viewModel.updatePhoneNumber("0201234567")
-        viewModel.updatePin("123456")
+        viewModel.updatePhoneNumber("+250788123456")
+        viewModel.updateOtpCode("123456")
         testDispatcher.scheduler.advanceUntilIdle()
 
         // When
@@ -169,8 +169,8 @@ class AuthViewModelTest {
             AuthRepository.AuthResult.Error("Invalid credentials")
         )
 
-        viewModel.updatePhoneNumber("0201234567")
-        viewModel.updatePin("123456")
+        viewModel.updatePhoneNumber("+250788123456")
+        viewModel.updateOtpCode("123456")
         testDispatcher.scheduler.advanceUntilIdle()
 
         // When
@@ -190,8 +190,8 @@ class AuthViewModelTest {
             AuthRepository.AuthResult.Error("Invalid credentials")
         )
 
-        viewModel.updatePhoneNumber("0201234567")
-        viewModel.updatePin("123456")
+        viewModel.updatePhoneNumber("+250788123456")
+        viewModel.updateOtpCode("123456")
         testDispatcher.scheduler.advanceUntilIdle()
 
         // When - fail 3 times
@@ -208,7 +208,7 @@ class AuthViewModelTest {
     @Test
     fun `logout clears state and navigates to login`() = runTest {
         // Given - set up authenticated state
-        viewModel.updatePhoneNumber("0201234567")
+        viewModel.updatePhoneNumber("+250788123456")
         testDispatcher.scheduler.advanceUntilIdle()
 
         // When

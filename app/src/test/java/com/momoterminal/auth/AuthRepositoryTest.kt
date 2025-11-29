@@ -3,9 +3,12 @@ package com.momoterminal.auth
 import app.cash.turbine.test
 import com.momoterminal.api.AuthApiService
 import com.momoterminal.api.AuthResponse
-import com.momoterminal.api.LoginRequest
 import com.momoterminal.api.OtpResponse
 import com.momoterminal.api.User
+import com.momoterminal.supabase.SupabaseAuthService
+import com.momoterminal.supabase.SessionData
+import com.momoterminal.supabase.SupabaseUser
+import com.momoterminal.supabase.AuthResult as SupabaseAuthResult
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -28,63 +31,60 @@ class AuthRepositoryTest {
 
     private lateinit var authRepository: AuthRepository
     private lateinit var authApiService: AuthApiService
+    private lateinit var supabaseAuthService: SupabaseAuthService
     private lateinit var tokenManager: TokenManager
     private lateinit var sessionManager: SessionManager
 
     @Before
     fun setup() {
         authApiService = mockk(relaxed = true)
+        supabaseAuthService = mockk(relaxed = true)
         tokenManager = mockk(relaxed = true)
         sessionManager = mockk(relaxed = true)
         
-        authRepository = AuthRepository(authApiService, tokenManager, sessionManager)
+        authRepository = AuthRepository(authApiService, supabaseAuthService, tokenManager, sessionManager)
     }
 
     @Test
     fun `login success saves tokens and starts session`() = runTest {
         // Given
-        val authResponse = AuthResponse(
+        val sessionData = SessionData(
             accessToken = "test_access_token",
             refreshToken = "test_refresh_token",
             expiresIn = 3600L,
-            user = User(
+            expiresAt = System.currentTimeMillis() / 1000 + 3600,
+            user = SupabaseUser(
                 id = "user123",
-                phoneNumber = "0201234567",
-                merchantName = "Test Merchant",
-                isVerified = true
+                phone = "+250788123456"
             )
         )
-        coEvery { authApiService.login(any()) } returns Response.success(authResponse)
+        coEvery { supabaseAuthService.verifyOtp(any(), any()) } returns SupabaseAuthResult.Success(sessionData)
 
         // When & Then
-        authRepository.login("0201234567", "123456").test {
+        authRepository.login("+250788123456", "123456").test {
             // First emission should be Loading
             assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
             
             // Second emission should be Success
             val result = awaitItem()
             assertTrue(result is AuthRepository.AuthResult.Success)
-            assertEquals(authResponse, (result as AuthRepository.AuthResult.Success).data)
             
             awaitComplete()
         }
 
         // Verify tokens were saved
         verify { tokenManager.saveTokens("test_access_token", "test_refresh_token", 3600L) }
-        verify { tokenManager.saveUserInfo("user123", "0201234567") }
+        verify { tokenManager.saveUserInfo("user123", "+250788123456") }
         verify { sessionManager.startSession() }
     }
 
     @Test
     fun `login failure returns error`() = runTest {
         // Given
-        coEvery { authApiService.login(any()) } returns Response.error(
-            401,
-            "Invalid credentials".toResponseBody()
-        )
+        coEvery { supabaseAuthService.verifyOtp(any(), any()) } returns SupabaseAuthResult.Error("Invalid OTP")
 
         // When & Then
-        authRepository.login("0201234567", "wrong_pin").test {
+        authRepository.login("+250788123456", "wrong_otp").test {
             // First emission should be Loading
             assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
             
@@ -99,10 +99,10 @@ class AuthRepositoryTest {
     @Test
     fun `login network error returns error`() = runTest {
         // Given
-        coEvery { authApiService.login(any()) } throws Exception("Network error")
+        coEvery { supabaseAuthService.verifyOtp(any(), any()) } throws Exception("Network error")
 
         // When & Then
-        authRepository.login("0201234567", "123456").test {
+        authRepository.login("+250788123456", "123456").test {
             // First emission should be Loading
             assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
             
@@ -186,7 +186,7 @@ class AuthRepositoryTest {
         coEvery { authApiService.verifyOtp(any()) } returns Response.success(otpResponse)
 
         // When & Then
-        authRepository.verifyOtp("0201234567", "123456").test {
+        authRepository.verifyOtp("+250788123456", "123456").test {
             assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
             
             val result = awaitItem()
@@ -200,15 +200,10 @@ class AuthRepositoryTest {
     @Test
     fun `requestOtp success returns success`() = runTest {
         // Given
-        val otpResponse = OtpResponse(
-            success = true,
-            message = "OTP sent successfully",
-            expiresAt = System.currentTimeMillis() + 300000
-        )
-        coEvery { authApiService.requestOtp(any()) } returns Response.success(otpResponse)
+        coEvery { supabaseAuthService.sendWhatsAppOtp(any()) } returns SupabaseAuthResult.Success(Unit)
 
         // When & Then
-        authRepository.requestOtp("0201234567").test {
+        authRepository.requestOtp("+250788123456").test {
             assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
             
             val result = awaitItem()
@@ -228,7 +223,7 @@ class AuthRepositoryTest {
             expiresIn = 3600L,
             user = User(
                 id = "user123",
-                phoneNumber = "0201234567"
+                phoneNumber = "+250788123456"
             )
         )
         every { tokenManager.getRefreshToken() } returns refreshToken

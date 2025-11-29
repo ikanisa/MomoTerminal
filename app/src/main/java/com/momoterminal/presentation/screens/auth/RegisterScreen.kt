@@ -157,7 +157,9 @@ fun RegisterScreen(
                             isLoading = uiState.isLoading,
                             onVerifyOtp = viewModel::verifyOtp,
                             onResendOtp = viewModel::requestOtp,
-                            phoneNumber = uiState.phoneNumber
+                            phoneNumber = uiState.formattedPhoneNumber.ifBlank { uiState.phoneNumber },
+                            resendCountdown = uiState.otpResendCountdown,
+                            otpExpiresAt = uiState.otpExpiresAt
                         )
                     }
                     AuthViewModel.RegistrationStep.PIN_CREATION -> {
@@ -357,8 +359,24 @@ private fun OtpVerificationStep(
     isLoading: Boolean,
     onVerifyOtp: () -> Unit,
     onResendOtp: () -> Unit,
-    phoneNumber: String
+    phoneNumber: String,
+    resendCountdown: Int = 0,
+    otpExpiresAt: Long = 0L
 ) {
+    // Calculate remaining time for OTP expiry
+    var remainingSeconds by remember { mutableStateOf(0) }
+    
+    LaunchedEffect(otpExpiresAt) {
+        if (otpExpiresAt > 0) {
+            while (true) {
+                val remaining = ((otpExpiresAt - System.currentTimeMillis()) / 1000).toInt()
+                remainingSeconds = maxOf(0, remaining)
+                if (remainingSeconds <= 0) break
+                kotlinx.coroutines.delay(1000)
+            }
+        }
+    }
+    
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -388,6 +406,28 @@ private fun OtpVerificationStep(
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Medium
         )
+        
+        // OTP Expiry Timer
+        if (remainingSeconds > 0) {
+            Spacer(modifier = Modifier.height(8.dp))
+            val minutes = remainingSeconds / 60
+            val seconds = remainingSeconds % 60
+            Text(
+                text = "Code expires in ${minutes}:${String.format("%02d", seconds)}",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (remainingSeconds < 60) 
+                    MaterialTheme.colorScheme.error 
+                else 
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else if (otpExpiresAt > 0) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Code expired. Please request a new one.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -401,9 +441,14 @@ private fun OtpVerificationStep(
 
         TextButton(
             onClick = onResendOtp,
-            enabled = !isLoading
+            enabled = !isLoading && resendCountdown == 0
         ) {
-            Text("Didn't receive the code? Resend")
+            Text(
+                if (resendCountdown > 0) 
+                    "Resend in ${resendCountdown}s"
+                else 
+                    "Didn't receive the code? Resend"
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -413,7 +458,7 @@ private fun OtpVerificationStep(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            enabled = !isLoading && otpCode.length == 6,
+            enabled = !isLoading && otpCode.length == 6 && remainingSeconds > 0,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MomoYellow,
                 contentColor = MaterialTheme.colorScheme.onPrimary

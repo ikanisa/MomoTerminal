@@ -4,8 +4,10 @@ import android.content.Context
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -22,17 +24,20 @@ class SessionManagerTest {
     private lateinit var sessionManager: SessionManager
     private lateinit var tokenManager: TokenManager
     private lateinit var context: Context
+    private lateinit var applicationScope: CoroutineScope
+    private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setup() {
         context = mockk(relaxed = true)
         tokenManager = mockk(relaxed = true)
+        applicationScope = CoroutineScope(testDispatcher)
         
         // Default: no valid token
         every { tokenManager.hasValidToken() } returns false
         every { tokenManager.isTokenExpired() } returns true
         
-        sessionManager = SessionManager(context, tokenManager)
+        sessionManager = SessionManager(context, tokenManager, applicationScope)
     }
 
     @Test
