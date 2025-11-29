@@ -178,9 +178,11 @@ class MomoHceService : HostApduService() {
                 val providerName = it.getStringExtra(EXTRA_PROVIDER) ?: "MTN"
                 
                 if (amount > 0 && merchantPhone.isNotEmpty()) {
+                    // Convert amount to pesewas (smallest currency unit)
+                    val amountInPesewas = (amount * 100).toLong()
                     currentPaymentData = NfcPaymentData(
                         merchantPhone = merchantPhone,
-                        amount = "%.2f".format(amount),
+                        amountInPesewas = amountInPesewas,
                         provider = NfcPaymentData.Provider.fromString(providerName)
                     )
                     Log.d(TAG, "Payment data set: $currentPaymentData")

@@ -16,6 +16,9 @@ import org.junit.runner.RunWith
 
 /**
  * Instrumented tests for TransactionDao using in-memory database.
+ * 
+ * Note: Amounts are stored in pesewas (smallest currency unit) to avoid
+ * floating-point precision errors. 1 GHS = 100 pesewas.
  */
 @RunWith(AndroidJUnit4::class)
 class TransactionDaoTest {
@@ -46,15 +49,15 @@ class TransactionDaoTest {
         
         assertThat(id).isGreaterThan(0)
         assertThat(retrieved).hasSize(1)
-        assertThat(retrieved[0].amount).isEqualTo(50.0)
+        assertThat(retrieved[0].amountInPesewas).isEqualTo(5000L)
     }
 
     @Test
     fun insertMultipleTransactions() = runTest {
         val transactions = listOf(
-            createTestEntity(0, 50.0),
-            createTestEntity(0, 100.0),
-            createTestEntity(0, 150.0)
+            createTestEntity(0, 5000L),
+            createTestEntity(0, 10000L),
+            createTestEntity(0, 15000L)
         )
         
         transactions.forEach { transactionDao.insert(it) }
@@ -66,7 +69,7 @@ class TransactionDaoTest {
     @Test
     fun getRecentTransactionsLimitsResults() = runTest {
         repeat(20) { i ->
-            transactionDao.insert(createTestEntity(0, i.toDouble()))
+            transactionDao.insert(createTestEntity(0, (i * 100).toLong()))
         }
         
         val retrieved = transactionDao.getRecentTransactions(10).first()
@@ -76,8 +79,8 @@ class TransactionDaoTest {
 
     @Test
     fun getRecentTransactionsOrderedByTimestamp() = runTest {
-        val older = createTestEntity(0, 50.0).copy(timestamp = 1000L)
-        val newer = createTestEntity(0, 100.0).copy(timestamp = 2000L)
+        val older = createTestEntity(0, 5000L).copy(timestamp = 1000L)
+        val newer = createTestEntity(0, 10000L).copy(timestamp = 2000L)
         
         transactionDao.insert(older)
         transactionDao.insert(newer)
@@ -140,13 +143,13 @@ class TransactionDaoTest {
 
     @Test
     fun getByIdReturnsCorrectTransaction() = runTest {
-        val transaction = createTestEntity(0, 99.99)
+        val transaction = createTestEntity(0, 9999L) // 99.99 GHS in pesewas
         val id = transactionDao.insert(transaction)
         
         val retrieved = transactionDao.getById(id)
         
         assertThat(retrieved).isNotNull()
-        assertThat(retrieved?.amount).isEqualTo(99.99)
+        assertThat(retrieved?.amountInPesewas).isEqualTo(9999L)
     }
 
     @Test
@@ -201,16 +204,17 @@ class TransactionDaoTest {
         assertThat(count).isEqualTo(0)
     }
 
-    private fun createTestEntity(id: Long, amount: Double = 50.0): TransactionEntity {
+    private fun createTestEntity(id: Long, amountInPesewas: Long = 5000L): TransactionEntity {
         return TransactionEntity(
             id = id,
-            amount = amount,
-            senderPhone = "0244123456",
-            transactionId = "TX${System.currentTimeMillis()}",
-            provider = "MTN",
+            sender = "MTN MoMo",
+            body = "You have received GHS 50.00 from 0244123456. Trans ID: TX${System.currentTimeMillis()}",
             timestamp = System.currentTimeMillis(),
             status = "PENDING",
-            rawMessage = "Test transaction"
+            amountInPesewas = amountInPesewas,
+            currency = "GHS",
+            transactionId = "TX${System.currentTimeMillis()}",
+            merchantCode = "MERCHANT001"
         )
     }
 }

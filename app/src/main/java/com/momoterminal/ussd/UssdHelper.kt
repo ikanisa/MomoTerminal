@@ -6,7 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.core.content.ContextCompat
-import com.momoterminal.api.NfcPaymentData
+import com.momoterminal.nfc.NfcPaymentData
 
 /**
  * Helper class for generating and launching USSD codes.
@@ -14,6 +14,9 @@ import com.momoterminal.api.NfcPaymentData
  * This utility helps create properly formatted USSD dial strings
  * for various mobile money providers and can launch the phone dialer
  * with the pre-filled USSD code.
+ * 
+ * Note: All monetary amounts are in pesewas (smallest currency unit)
+ * to avoid floating-point precision errors. 1 GHS = 100 pesewas.
  */
 object UssdHelper {
 
@@ -31,11 +34,11 @@ object UssdHelper {
      * 
      * @param provider The mobile money provider
      * @param merchantCode The merchant's code/number
-     * @param amount The payment amount
+     * @param amountInPesewas The payment amount in pesewas (1 GHS = 100 pesewas)
      * @return Formatted USSD dial string
      */
-    fun generateUssdCode(provider: Provider, merchantCode: String, amount: Double): String {
-        val formattedAmount = "%.2f".format(amount)
+    fun generateUssdCode(provider: Provider, merchantCode: String, amountInPesewas: Long): String {
+        val formattedAmount = "%.2f".format(amountInPesewas / 100.0)
         
         return when (provider) {
             Provider.MTN_MOMO -> {
@@ -59,11 +62,11 @@ object UssdHelper {
      * 
      * @param baseCode The base USSD code (e.g., "*170*1*1*")
      * @param merchantCode The merchant's code
-     * @param amount The payment amount
+     * @param amountInPesewas The payment amount in pesewas
      * @return Formatted USSD dial string
      */
-    fun generateCustomUssd(baseCode: String, merchantCode: String, amount: Double): String {
-        val formattedAmount = "%.2f".format(amount)
+    fun generateCustomUssd(baseCode: String, merchantCode: String, amountInPesewas: Long): String {
+        val formattedAmount = "%.2f".format(amountInPesewas / 100.0)
         return "$baseCode$merchantCode*$formattedAmount#"
     }
 
@@ -135,17 +138,26 @@ object UssdHelper {
 
     /**
      * Create NfcPaymentData from provider, merchant code and amount.
+     * 
+     * @param provider The mobile money provider
+     * @param merchantCode The merchant's phone number/code
+     * @param amountInPesewas The payment amount in pesewas
      */
     fun createPaymentData(
         provider: Provider,
         merchantCode: String,
-        amount: Double
+        amountInPesewas: Long
     ): NfcPaymentData {
-        val ussdCode = generateUssdCode(provider, merchantCode, amount)
+        val nfcProvider = when (provider) {
+            Provider.MTN_MOMO -> NfcPaymentData.Provider.MTN
+            Provider.VODAFONE_CASH -> NfcPaymentData.Provider.VODAFONE
+            Provider.AIRTELTIGO_MONEY -> NfcPaymentData.Provider.AIRTEL_TIGO
+        }
+        
         return NfcPaymentData(
-            amount = amount,
-            merchantCode = merchantCode,
-            ussdCode = ussdCode
+            merchantPhone = merchantCode,
+            amountInPesewas = amountInPesewas,
+            provider = nfcProvider
         )
     }
 }
