@@ -1,6 +1,9 @@
 package com.momoterminal.di
 
+import com.momoterminal.auth.WhatsAppOtpService
+import com.momoterminal.auth.WhatsAppOtpServiceImpl
 import com.momoterminal.supabase.SupabaseAuthService
+import com.momoterminal.util.PhoneNumberValidator
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,5 +24,26 @@ object SupabaseModule {
     @Singleton
     fun provideSupabaseAuthService(): SupabaseAuthService {
         return SupabaseAuthService()
+    }
+    
+    /**
+     * Provides PhoneNumberValidator for phone number formatting and validation.
+     */
+    @Provides
+    @Singleton
+    fun providePhoneNumberValidator(): PhoneNumberValidator {
+        return PhoneNumberValidator()
+    }
+    
+    /**
+     * Provides WhatsAppOtpService for WhatsApp OTP operations.
+     */
+    @Provides
+    @Singleton
+    fun provideWhatsAppOtpService(
+        supabaseAuthService: SupabaseAuthService,
+        phoneNumberValidator: PhoneNumberValidator
+    ): WhatsAppOtpService {
+        return WhatsAppOtpServiceImpl(supabaseAuthService, phoneNumberValidator)
     }
 }

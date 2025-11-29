@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.momoterminal.api.AuthResponse
 import com.momoterminal.api.User
 import com.momoterminal.security.BiometricHelper
+import com.momoterminal.util.PhoneNumberValidator
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -33,6 +34,7 @@ class AuthViewModelTest {
     private lateinit var authRepository: AuthRepository
     private lateinit var biometricHelper: BiometricHelper
     private lateinit var sessionManager: SessionManager
+    private lateinit var phoneNumberValidator: PhoneNumberValidator
 
     private val testDispatcher = StandardTestDispatcher()
 
@@ -43,12 +45,13 @@ class AuthViewModelTest {
         authRepository = mockk(relaxed = true)
         biometricHelper = mockk(relaxed = true)
         sessionManager = mockk(relaxed = true)
+        phoneNumberValidator = PhoneNumberValidator() // Use real validator
         
         every { authRepository.isAuthenticated() } returns false
         every { sessionManager.validateSession() } returns false
         every { biometricHelper.isBiometricAvailable() } returns false
         
-        viewModel = AuthViewModel(authRepository, biometricHelper, sessionManager)
+        viewModel = AuthViewModel(authRepository, biometricHelper, sessionManager, phoneNumberValidator)
     }
 
     @After
@@ -68,13 +71,27 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun `updatePhoneNumber updates state`() = runTest {
-        // When
-        viewModel.updatePhoneNumber("0201234567")
+    fun `updatePhoneNumber updates state and formats number`() = runTest {
+        // When - update with a valid Rwanda number
+        viewModel.updatePhoneNumber("0788767816")
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Then
-        assertEquals("0201234567", viewModel.uiState.value.phoneNumber)
+        assertEquals("0788767816", viewModel.uiState.value.phoneNumber)
+        assertEquals("+250788767816", viewModel.uiState.value.formattedPhoneNumber)
+        assertNull(viewModel.uiState.value.phoneNumberError)
+    }
+
+    @Test
+    fun `updatePhoneNumber shows error for invalid number`() = runTest {
+        // When - update with an invalid number
+        viewModel.updatePhoneNumber("abc")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Then
+        assertEquals("abc", viewModel.uiState.value.phoneNumber)
+        assertEquals("", viewModel.uiState.value.formattedPhoneNumber)
+        // Error should be shown for non-empty invalid numbers
     }
 
     @Test
@@ -104,7 +121,7 @@ class AuthViewModelTest {
     @Test
     fun `login fails with empty phone number`() = runTest {
         // Given
-        viewModel.updatePin("123456")
+        viewModel.updateOtpCode("123456")
         testDispatcher.scheduler.advanceUntilIdle()
 
         // When
@@ -116,10 +133,10 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun `login fails with invalid PIN length`() = runTest {
+    fun `login fails with invalid OTP length`() = runTest {
         // Given
-        viewModel.updatePhoneNumber("0201234567")
-        viewModel.updatePin("123") // Only 3 digits
+        viewModel.updatePhoneNumber("0788767816")
+        viewModel.updateOtpCode("123") // Only 3 digits
         testDispatcher.scheduler.advanceUntilIdle()
 
         // When
@@ -127,7 +144,7 @@ class AuthViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Then
-        assertEquals("PIN must be 6 digits", viewModel.uiState.value.error)
+        assertEquals("Please enter the 6-digit OTP code", viewModel.uiState.value.error)
     }
 
     @Test
@@ -137,15 +154,15 @@ class AuthViewModelTest {
             accessToken = "token",
             refreshToken = "refresh",
             expiresIn = 3600,
-            user = User(id = "123", phoneNumber = "0201234567")
+            user = User(id = "123", phoneNumber = "+250788767816")
         )
         coEvery { authRepository.login(any(), any()) } returns flowOf(
             AuthRepository.AuthResult.Loading,
             AuthRepository.AuthResult.Success(authResponse)
         )
 
-        viewModel.updatePhoneNumber("0201234567")
-        viewModel.updatePin("123456")
+        viewModel.updatePhoneNumber("0788767816")
+        viewModel.updateOtpCode("123456")
         testDispatcher.scheduler.advanceUntilIdle()
 
         // When
@@ -166,11 +183,11 @@ class AuthViewModelTest {
         // Given
         coEvery { authRepository.login(any(), any()) } returns flowOf(
             AuthRepository.AuthResult.Loading,
-            AuthRepository.AuthResult.Error("Invalid credentials")
+            AuthRepository.AuthResult.Error("Invalid OTP")
         )
 
-        viewModel.updatePhoneNumber("0201234567")
-        viewModel.updatePin("123456")
+        viewModel.updatePhoneNumber("0788767816")
+        viewModel.updateOtpCode("123456")
         testDispatcher.scheduler.advanceUntilIdle()
 
         // When
@@ -187,11 +204,11 @@ class AuthViewModelTest {
         // Given
         coEvery { authRepository.login(any(), any()) } returns flowOf(
             AuthRepository.AuthResult.Loading,
-            AuthRepository.AuthResult.Error("Invalid credentials")
+            AuthRepository.AuthResult.Error("Invalid OTP")
         )
 
-        viewModel.updatePhoneNumber("0201234567")
-        viewModel.updatePin("123456")
+        viewModel.updatePhoneNumber("0788767816")
+        viewModel.updateOtpCode("123456")
         testDispatcher.scheduler.advanceUntilIdle()
 
         // When - fail 3 times
@@ -208,7 +225,7 @@ class AuthViewModelTest {
     @Test
     fun `logout clears state and navigates to login`() = runTest {
         // Given - set up authenticated state
-        viewModel.updatePhoneNumber("0201234567")
+        viewModel.updatePhoneNumber("0788767816")
         testDispatcher.scheduler.advanceUntilIdle()
 
         // When
@@ -293,7 +310,7 @@ class AuthViewModelTest {
         every { biometricHelper.isBiometricAvailable() } returns true
 
         // When - create new instance
-        val newViewModel = AuthViewModel(authRepository, biometricHelper, sessionManager)
+        val newViewModel = AuthViewModel(authRepository, biometricHelper, sessionManager, phoneNumberValidator)
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Then
@@ -304,7 +321,7 @@ class AuthViewModelTest {
     fun `triggerBiometricAuth emits event when available`() = runTest {
         // Given
         every { biometricHelper.isBiometricAvailable() } returns true
-        val newViewModel = AuthViewModel(authRepository, biometricHelper, sessionManager)
+        val newViewModel = AuthViewModel(authRepository, biometricHelper, sessionManager, phoneNumberValidator)
         testDispatcher.scheduler.advanceUntilIdle()
 
         // When
@@ -330,5 +347,25 @@ class AuthViewModelTest {
         // Then
         verify { sessionManager.startSession() }
         assertTrue(viewModel.uiState.value.isAuthenticated)
+    }
+    
+    @Test
+    fun `changePhoneNumber resets OTP state and goes to phone entry`() = runTest {
+        // Given - simulate having sent OTP
+        viewModel.updatePhoneNumber("0788767816")
+        viewModel.nextRegistrationStep() // Move to OTP step
+        testDispatcher.scheduler.advanceUntilIdle()
+        
+        // When
+        viewModel.changePhoneNumber()
+        testDispatcher.scheduler.advanceUntilIdle()
+        
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals(AuthViewModel.RegistrationStep.PHONE_ENTRY, state.registrationStep)
+        assertFalse(state.isOtpSent)
+        assertEquals("", state.otpCode)
+        assertEquals(0, state.otpExpiryCountdown)
+        assertEquals(0, state.resendCountdown)
     }
 }
