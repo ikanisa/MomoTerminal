@@ -1,5 +1,6 @@
 package com.momoterminal.security
 
+import android.util.Log
 import com.momoterminal.BuildConfig
 import okhttp3.CertificatePinner
 import javax.inject.Inject
@@ -11,33 +12,82 @@ import javax.inject.Singleton
  * Certificate pinning validates that the server's SSL certificate matches
  * known pins, providing an additional layer of security beyond standard
  * certificate chain validation.
+ * 
+ * ## Configuration
+ * 
+ * Certificate pins should be configured at build time via `gradle.properties` or
+ * `local.properties`:
+ * 
+ * ```properties
+ * # In gradle.properties or local.properties (not committed to source control)
+ * CERT_PIN_PRIMARY=sha256/your-primary-pin-base64-here=
+ * CERT_PIN_BACKUP=sha256/your-backup-pin-base64-here=
+ * CERT_PIN_ROOT_CA=sha256/your-root-ca-pin-base64-here=
+ * ```
+ * 
+ * ## Generating Certificate Pins
+ * 
+ * Use the following command to generate a pin from your server's certificate:
+ * 
+ * ```bash
+ * openssl s_client -connect api.momoterminal.com:443 -servername api.momoterminal.com 2>/dev/null | \
+ *   openssl x509 -pubkey -noout | \
+ *   openssl pkey -pubin -outform der | \
+ *   openssl dgst -sha256 -binary | \
+ *   openssl enc -base64
+ * ```
+ * 
+ * You can also use the following to get the full certificate chain and generate pins
+ * for intermediate and root certificates:
+ * 
+ * ```bash
+ * openssl s_client -connect api.momoterminal.com:443 -showcerts 2>/dev/null | \
+ *   openssl x509 -pubkey -noout | \
+ *   openssl pkey -pubin -outform der | \
+ *   openssl dgst -sha256 -binary | \
+ *   openssl enc -base64
+ * ```
+ * 
+ * @see <a href="https://owasp.org/www-community/controls/Certificate_and_Public_Key_Pinning">OWASP Certificate Pinning</a>
  */
 @Singleton
 class CertificatePinnerConfig @Inject constructor() {
 
     companion object {
+        private const val TAG = "CertificatePinnerConfig"
+        
         // API domains to pin
         private const val API_DOMAIN = "api.momoterminal.com"
         private const val BACKUP_API_DOMAIN = "*.momoterminal.com"
         
-        // Production certificate pins (SHA-256)
-        // IMPORTANT: Replace these placeholder pins with actual production certificate pins
-        // before deploying to production. Without real pins, certificate pinning will fail.
-        // 
-        // To generate pins, use:
-        // openssl s_client -connect api.momoterminal.com:443 | \
-        //   openssl x509 -pubkey -noout | \
-        //   openssl pkey -pubin -outform der | \
-        //   openssl dgst -sha256 -binary | \
-        //   openssl enc -base64
-        // 
-        // TODO: Replace with actual certificate pins before production deployment
-        private const val PRIMARY_PIN = "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-        private const val BACKUP_PIN = "sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB="
+        // Placeholder pin pattern for detection
+        private const val PLACEHOLDER_PATTERN = "sha256/[A]{43}="
         
-        // Additional backup pins (root CA pins for certificate rotation)
-        // TODO: Replace with actual root CA pins
-        private const val ROOT_CA_PIN = "sha256/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC="
+        /**
+         * Certificate pins configured via BuildConfig fields.
+         * 
+         * These are set at build time from gradle.properties or local.properties.
+         * If not configured, placeholder values are used which will be detected
+         * and warned about in release builds.
+         * 
+         * Default placeholder pins (MUST be replaced before production):
+         * - PRIMARY_PIN: sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+         * - BACKUP_PIN: sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=
+         * - ROOT_CA_PIN: sha256/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=
+         */
+        private val PRIMARY_PIN: String
+            get() = BuildConfig.CERT_PIN_PRIMARY
+        
+        private val BACKUP_PIN: String
+            get() = BuildConfig.CERT_PIN_BACKUP
+        
+        private val ROOT_CA_PIN: String
+            get() = BuildConfig.CERT_PIN_ROOT_CA
+        
+        // Default placeholder pins - these MUST be replaced before production
+        private const val DEFAULT_PRIMARY_PIN = "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        private const val DEFAULT_BACKUP_PIN = "sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB="
+        private const val DEFAULT_ROOT_CA_PIN = "sha256/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC="
     }
 
     /**
@@ -47,15 +97,87 @@ class CertificatePinnerConfig @Inject constructor() {
      * with local servers and debugging proxies.
      * 
      * In release builds, strict certificate pinning is enforced with multiple
-     * pins to support certificate rotation.
+     * pins to support certificate rotation. If placeholder pins are detected
+     * in release builds, a warning is logged and pinning is still enabled
+     * (which will cause connection failures - this is intentional to prevent
+     * insecure production deployments).
      */
     fun createCertificatePinner(): CertificatePinner {
         return if (BuildConfig.DEBUG) {
             // Disable pinning in debug for development flexibility
             CertificatePinner.Builder().build()
         } else {
+            validatePinsForProduction()
             buildProductionPinner()
         }
+    }
+    
+    /**
+     * Validates that certificate pins have been properly configured for production.
+     * 
+     * @throws SecurityException in release builds if placeholder pins are detected
+     *         and ALLOW_PLACEHOLDER_PINS is not set to true
+     */
+    private fun validatePinsForProduction() {
+        val usingPlaceholderPins = isPlaceholderPin(PRIMARY_PIN) || 
+                                    isPlaceholderPin(BACKUP_PIN) || 
+                                    isPlaceholderPin(ROOT_CA_PIN)
+        
+        if (usingPlaceholderPins) {
+            val message = """
+                |⚠️ SECURITY WARNING: Placeholder certificate pins detected in RELEASE build!
+                |
+                |Certificate pinning is configured with placeholder values. This will cause
+                |all HTTPS connections to fail, which is the expected security behavior.
+                |
+                |To fix this issue, configure real certificate pins in gradle.properties:
+                |
+                |  CERT_PIN_PRIMARY=sha256/<your-primary-pin>=
+                |  CERT_PIN_BACKUP=sha256/<your-backup-pin>=
+                |  CERT_PIN_ROOT_CA=sha256/<your-root-ca-pin>=
+                |
+                |Generate pins using:
+                |  openssl s_client -connect api.momoterminal.com:443 | \
+                |    openssl x509 -pubkey -noout | \
+                |    openssl pkey -pubin -outform der | \
+                |    openssl dgst -sha256 -binary | \
+                |    openssl enc -base64
+            """.trimMargin()
+            
+            Log.e(TAG, message)
+            
+            // Check if placeholder pins are explicitly allowed (for testing only)
+            val allowPlaceholders = BuildConfig.ALLOW_PLACEHOLDER_PINS
+            
+            if (!allowPlaceholders) {
+                throw SecurityException(
+                    "Production build detected with placeholder certificate pins. " +
+                    "Configure CERT_PIN_PRIMARY, CERT_PIN_BACKUP, and CERT_PIN_ROOT_CA " +
+                    "in gradle.properties before releasing to production."
+                )
+            }
+        }
+    }
+    
+    /**
+     * Checks if the given pin is a placeholder value.
+     */
+    private fun isPlaceholderPin(pin: String): Boolean {
+        // Check for the common placeholder patterns
+        return pin == DEFAULT_PRIMARY_PIN ||
+               pin == DEFAULT_BACKUP_PIN ||
+               pin == DEFAULT_ROOT_CA_PIN ||
+               pin.matches(Regex("sha256/[A-Z]{43}="))
+    }
+    
+    /**
+     * Checks if the current configuration is using placeholder pins.
+     * Useful for build-time checks and CI/CD pipelines.
+     */
+    fun isUsingPlaceholderPins(): Boolean {
+        return isPlaceholderPin(PRIMARY_PIN) || 
+               isPlaceholderPin(BACKUP_PIN) || 
+               isPlaceholderPin(ROOT_CA_PIN)
     }
 
     /**
@@ -91,5 +213,19 @@ class CertificatePinnerConfig @Inject constructor() {
      */
     fun getPinnedDomains(): List<String> {
         return listOf(API_DOMAIN, BACKUP_API_DOMAIN)
+    }
+    
+    /**
+     * Returns information about the current pin configuration for debugging.
+     * Only returns masked values for security.
+     */
+    fun getPinConfigInfo(): Map<String, String> {
+        return mapOf(
+            "primary_pin_configured" to (!isPlaceholderPin(PRIMARY_PIN)).toString(),
+            "backup_pin_configured" to (!isPlaceholderPin(BACKUP_PIN)).toString(),
+            "root_ca_pin_configured" to (!isPlaceholderPin(ROOT_CA_PIN)).toString(),
+            "api_domain" to API_DOMAIN,
+            "backup_domain" to BACKUP_API_DOMAIN
+        )
     }
 }

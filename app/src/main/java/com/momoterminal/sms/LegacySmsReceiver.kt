@@ -8,17 +8,22 @@ import android.util.Log
 import com.momoterminal.api.PaymentTransaction
 import com.momoterminal.api.SyncService
 import com.momoterminal.api.TransactionStatus
-import java.util.UUID
 import java.util.regex.Pattern
 
 /**
- * BroadcastReceiver for intercepting incoming SMS messages.
+ * Legacy BroadcastReceiver for intercepting incoming SMS messages.
  * 
- * This receiver listens for incoming SMS, identifies payment confirmations
- * from mobile money providers, and relays them to the PWA database for
- * real-time financial tracking.
+ * @deprecated Use [com.momoterminal.SmsReceiver] instead which uses Hilt DI
+ * and supports webhook dispatching and offline-first database storage.
+ * 
+ * This legacy receiver is kept for reference of the parsing logic but should
+ * not be registered in AndroidManifest.xml.
  */
-class SmsReceiver : BroadcastReceiver() {
+@Deprecated(
+    message = "Use com.momoterminal.SmsReceiver instead which uses Hilt DI and supports webhook dispatching",
+    replaceWith = ReplaceWith("com.momoterminal.SmsReceiver")
+)
+class LegacySmsReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) {
@@ -213,7 +218,7 @@ class SmsReceiver : BroadcastReceiver() {
     )
 
     companion object {
-        private const val TAG = "SmsReceiver"
+        private const val TAG = "LegacySmsReceiver"
         
         const val BROADCAST_PAYMENT_RECEIVED = "com.momoterminal.broadcast.PAYMENT_RECEIVED"
         const val EXTRA_AMOUNT = "extra_amount"

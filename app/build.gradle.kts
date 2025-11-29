@@ -22,6 +22,14 @@ val versionProps = Properties().apply {
     }
 }
 
+// Load local properties for certificate pins and signing config
+val localProps = Properties().apply {
+    val localFile = rootProject.file("local.properties")
+    if (localFile.exists()) {
+        load(localFile.inputStream())
+    }
+}
+
 val versionMajor = versionProps.getProperty("VERSION_MAJOR", "1").toInt()
 val versionMinor = versionProps.getProperty("VERSION_MINOR", "0").toInt()
 val versionPatch = versionProps.getProperty("VERSION_PATCH", "0").toInt()
@@ -33,6 +41,27 @@ val buildNumber = System.getenv("BUILD_NUMBER")?.toIntOrNull()
 val calculatedVersionCode = versionMajor * 10000 + versionMinor * 100 + versionPatch + buildNumber
 val calculatedVersionName = "$versionMajor.$versionMinor.$versionPatch" + 
     if (buildNumber > 0) ".$buildNumber" else ""
+
+// Certificate pin configuration - loaded from gradle.properties or local.properties
+// These are used by CertificatePinnerConfig for SSL pinning
+// To generate pins, run:
+//   openssl s_client -connect api.momoterminal.com:443 | openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64
+val certPinPrimary = localProps.getProperty("CERT_PIN_PRIMARY")
+    ?: project.findProperty("CERT_PIN_PRIMARY")?.toString()
+    ?: "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+
+val certPinBackup = localProps.getProperty("CERT_PIN_BACKUP")
+    ?: project.findProperty("CERT_PIN_BACKUP")?.toString()
+    ?: "sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB="
+
+val certPinRootCa = localProps.getProperty("CERT_PIN_ROOT_CA")
+    ?: project.findProperty("CERT_PIN_ROOT_CA")?.toString()
+    ?: "sha256/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC="
+
+// Allow placeholder pins in release builds (for testing only - NEVER use in production!)
+val allowPlaceholderPins = (localProps.getProperty("ALLOW_PLACEHOLDER_PINS")
+    ?: project.findProperty("ALLOW_PLACEHOLDER_PINS")?.toString()
+    ?: "false").toBoolean()
 
 android {
     namespace = "com.momoterminal"
@@ -49,6 +78,14 @@ android {
 
         // BuildConfig fields for environment configuration
         buildConfigField("String", "BASE_URL", "\"https://api.momoterminal.com/\"")
+        
+        // Certificate pinning configuration
+        // These are loaded from local.properties or gradle.properties at build time
+        // IMPORTANT: Replace placeholder pins with real pins before production deployment!
+        buildConfigField("String", "CERT_PIN_PRIMARY", "\"$certPinPrimary\"")
+        buildConfigField("String", "CERT_PIN_BACKUP", "\"$certPinBackup\"")
+        buildConfigField("String", "CERT_PIN_ROOT_CA", "\"$certPinRootCa\"")
+        buildConfigField("boolean", "ALLOW_PLACEHOLDER_PINS", "$allowPlaceholderPins")
     }
 
     // Release signing configuration

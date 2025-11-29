@@ -14,6 +14,7 @@ import androidx.navigation.navArgument
 import com.momoterminal.presentation.screens.home.HomeScreen
 import com.momoterminal.presentation.screens.settings.SettingsScreen
 import com.momoterminal.presentation.screens.terminal.TerminalScreen
+import com.momoterminal.presentation.screens.transaction.TransactionDetailScreen
 import com.momoterminal.presentation.screens.transactions.TransactionsScreen
 
 /**
@@ -86,8 +87,7 @@ fun NavGraph(
                     navController.popBackStack()
                 },
                 onTransactionClick = { transactionId ->
-                    // Navigate to transaction detail if needed
-                    // navController.navigate(Screen.TransactionDetail.createRoute(transactionId))
+                    navController.navigate(Screen.TransactionDetail.createRoute(transactionId))
                 }
             )
         }
@@ -109,8 +109,12 @@ fun NavGraph(
             )
         ) { backStackEntry ->
             val transactionId = backStackEntry.arguments?.getLong("transactionId") ?: 0L
-            // TransactionDetailScreen(transactionId = transactionId)
-            // TODO: Implement transaction detail screen
+            TransactionDetailScreen(
+                transactionId = transactionId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

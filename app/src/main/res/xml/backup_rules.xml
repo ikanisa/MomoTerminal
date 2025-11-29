@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Backup Rules for Android Auto Backup (pre-Android 12)
+    
+    This file controls which data is included in Android's Auto Backup feature
+    for devices running Android 11 and below. For Android 12+, use data_extraction_rules.xml.
+    
+    For a financial application like MomoTerminal, we exclude sensitive data
+    from cloud backups to protect user privacy and security.
+-->
+<full-backup-content>
+    <!--
+        Include general app preferences that don't contain sensitive data.
+        User will need to reconfigure sensitive settings on new device.
+    -->
+    <include domain="sharedpref" path="." />
+    
+    <!--
+        Exclude the main database containing transaction data.
+        Financial transaction data should not be backed up to cloud.
+    -->
+    <exclude domain="database" path="momo_database" />
+    <exclude domain="database" path="momo_database-shm" />
+    <exclude domain="database" path="momo_database-wal" />
+    
+    <!--
+        Exclude sensitive preferences files.
+        These contain API credentials and other security-sensitive data.
+    -->
+    <exclude domain="sharedpref" path="momo_terminal_prefs.xml" />
+    <exclude domain="sharedpref" path="momo_gateway_config.xml" />
+    <exclude domain="sharedpref" path="api_credentials.xml" />
+    <exclude domain="sharedpref" path="user_preferences.preferences_pb" />
+    
+    <!--
+        Exclude DataStore files which may contain sensitive preferences.
+    -->
+    <exclude domain="file" path="datastore/" />
+    
+    <!--
+        Exclude cache and external storage.
+        These don't need to be backed up.
+    -->
+    <exclude domain="cache" path="." />
+    <exclude domain="external" path="." />
+    
+    <!--
+        Exclude any encrypted data files.
+    -->
+    <exclude domain="file" path="no_backup/" />
+</full-backup-content>

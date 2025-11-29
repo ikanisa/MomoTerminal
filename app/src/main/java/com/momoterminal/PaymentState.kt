@@ -17,10 +17,6 @@ object PaymentState {
     // Current payment amount for NFC broadcasting
     var currentAmount: String? = null
     
-    // Webhook URL for SMS relay (legacy - now uses AppConfig)
-    @Deprecated("Use AppConfig instead")
-    var webhookUrl: String = ""
-    
     // LiveData for SMS log updates
     val smsLog: MutableLiveData<String> = MutableLiveData("")
     
