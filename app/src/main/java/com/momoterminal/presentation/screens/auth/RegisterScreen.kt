@@ -62,6 +62,9 @@ import com.momoterminal.R
 import com.momoterminal.auth.AuthViewModel
 import com.momoterminal.presentation.theme.MomoYellow
 
+/** Timer update interval for OTP expiry countdown in milliseconds */
+private const val OTP_TIMER_UPDATE_INTERVAL_MS = 1000L
+
 /**
  * Registration screen with multi-step flow.
  * Steps: Phone Entry -> OTP Verification -> PIN Creation -> Merchant Info -> Terms Acceptance
@@ -157,6 +160,9 @@ fun RegisterScreen(
                             isLoading = uiState.isLoading,
                             onVerifyOtp = viewModel::verifyOtp,
                             onResendOtp = viewModel::requestOtp,
+                            phoneNumber = uiState.formattedPhoneNumber.ifBlank { uiState.phoneNumber },
+                            resendCountdown = uiState.otpResendCountdown,
+                            otpExpiresAt = uiState.otpExpiresAt
                             onChangePhoneNumber = viewModel::changePhoneNumber,
                             phoneNumber = uiState.phoneNumber,
                             formattedPhoneNumber = uiState.formattedPhoneNumber,
@@ -362,6 +368,9 @@ private fun OtpVerificationStep(
     isLoading: Boolean,
     onVerifyOtp: () -> Unit,
     onResendOtp: () -> Unit,
+    phoneNumber: String,
+    resendCountdown: Int = 0,
+    otpExpiresAt: Long = 0L
     onChangePhoneNumber: () -> Unit,
     phoneNumber: String,
     formattedPhoneNumber: String,
@@ -369,6 +378,20 @@ private fun OtpVerificationStep(
     resendCountdown: Int,
     canResendOtp: Boolean
 ) {
+    // Calculate remaining time for OTP expiry
+    var remainingSeconds by remember { mutableStateOf(0) }
+    
+    LaunchedEffect(otpExpiresAt) {
+        if (otpExpiresAt > 0) {
+            while (kotlinx.coroutines.isActive) {
+                val remaining = ((otpExpiresAt - System.currentTimeMillis()) / 1000).toInt()
+                remainingSeconds = maxOf(0, remaining)
+                if (remainingSeconds <= 0) break
+                kotlinx.coroutines.delay(OTP_TIMER_UPDATE_INTERVAL_MS)
+            }
+        }
+    }
+    
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -392,6 +415,33 @@ private fun OtpVerificationStep(
             )
         }
         
+        Text(
+            text = phoneNumber,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Medium
+        )
+        
+        // OTP Expiry Timer
+        if (remainingSeconds > 0) {
+            Spacer(modifier = Modifier.height(8.dp))
+            val minutes = remainingSeconds / 60
+            val seconds = remainingSeconds % 60
+            Text(
+                text = "Code expires in ${minutes}:${String.format("%02d", seconds)}",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (remainingSeconds < 60) 
+                    MaterialTheme.colorScheme.error 
+                else 
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else if (otpExpiresAt > 0) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Code expired. Please request a new one.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
         // Phone number display with change option
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -448,6 +498,16 @@ private fun OtpVerificationStep(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        TextButton(
+            onClick = onResendOtp,
+            enabled = !isLoading && resendCountdown == 0
+        ) {
+            Text(
+                if (resendCountdown > 0) 
+                    "Resend in ${resendCountdown}s"
+                else 
+                    "Didn't receive the code? Resend"
+            )
         // Resend button with countdown
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -477,6 +537,7 @@ private fun OtpVerificationStep(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
+            enabled = !isLoading && otpCode.length == 6 && remainingSeconds > 0,
             enabled = !isLoading && otpCode.length == 6 && otpExpiryCountdown > 0,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MomoYellow,

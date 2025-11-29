@@ -135,6 +135,7 @@ class AuthViewModelTest {
     @Test
     fun `login fails with invalid OTP length`() = runTest {
         // Given
+        viewModel.updatePhoneNumber("+250788123456")
         viewModel.updatePhoneNumber("0788767816")
         viewModel.updateOtpCode("123") // Only 3 digits
         testDispatcher.scheduler.advanceUntilIdle()
@@ -154,6 +155,7 @@ class AuthViewModelTest {
             accessToken = "token",
             refreshToken = "refresh",
             expiresIn = 3600,
+            user = User(id = "123", phoneNumber = "+250788123456")
             user = User(id = "123", phoneNumber = "+250788767816")
         )
         coEvery { authRepository.login(any(), any()) } returns flowOf(
@@ -161,6 +163,7 @@ class AuthViewModelTest {
             AuthRepository.AuthResult.Success(authResponse)
         )
 
+        viewModel.updatePhoneNumber("+250788123456")
         viewModel.updatePhoneNumber("0788767816")
         viewModel.updateOtpCode("123456")
         testDispatcher.scheduler.advanceUntilIdle()
@@ -186,6 +189,7 @@ class AuthViewModelTest {
             AuthRepository.AuthResult.Error("Invalid OTP")
         )
 
+        viewModel.updatePhoneNumber("+250788123456")
         viewModel.updatePhoneNumber("0788767816")
         viewModel.updateOtpCode("123456")
         testDispatcher.scheduler.advanceUntilIdle()
@@ -207,6 +211,7 @@ class AuthViewModelTest {
             AuthRepository.AuthResult.Error("Invalid OTP")
         )
 
+        viewModel.updatePhoneNumber("+250788123456")
         viewModel.updatePhoneNumber("0788767816")
         viewModel.updateOtpCode("123456")
         testDispatcher.scheduler.advanceUntilIdle()
@@ -225,6 +230,7 @@ class AuthViewModelTest {
     @Test
     fun `logout clears state and navigates to login`() = runTest {
         // Given - set up authenticated state
+        viewModel.updatePhoneNumber("+250788123456")
         viewModel.updatePhoneNumber("0788767816")
         testDispatcher.scheduler.advanceUntilIdle()
 

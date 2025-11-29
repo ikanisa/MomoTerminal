@@ -1,9 +1,9 @@
 package com.momoterminal.auth
 
 import android.content.Context
+import com.momoterminal.di.ApplicationScope
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -22,7 +22,8 @@ import javax.inject.Singleton
 @Singleton
 class SessionManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    @ApplicationScope private val applicationScope: CoroutineScope
 ) {
     /**
      * Session state representing the current user's session status.
@@ -191,7 +192,7 @@ class SessionManager @Inject constructor(
 
     private fun startSessionMonitor() {
         sessionTimeoutJob?.cancel()
-        sessionTimeoutJob = scope.launch {
+        sessionTimeoutJob = applicationScope.launch {
             while (_sessionState.value == SessionState.Active) {
                 delay(SESSION_CHECK_INTERVAL_MS)
                 checkSessionTimeout()

@@ -2,7 +2,6 @@ package com.momoterminal.auth
 
 import com.momoterminal.api.AuthApiService
 import com.momoterminal.api.AuthResponse
-import com.momoterminal.api.LoginRequest
 import com.momoterminal.api.OtpRequest
 import com.momoterminal.api.OtpResponse
 import com.momoterminal.api.RefreshRequest

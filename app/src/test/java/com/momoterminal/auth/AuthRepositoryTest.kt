@@ -3,7 +3,6 @@ package com.momoterminal.auth
 import app.cash.turbine.test
 import com.momoterminal.api.AuthApiService
 import com.momoterminal.api.AuthResponse
-import com.momoterminal.api.LoginRequest
 import com.momoterminal.api.OtpResponse
 import com.momoterminal.api.User
 import com.momoterminal.supabase.SupabaseAuthService
@@ -56,12 +55,14 @@ class AuthRepositoryTest {
             expiresAt = System.currentTimeMillis() / 1000 + 3600,
             user = SupabaseUser(
                 id = "user123",
+                phone = "+250788123456"
                 phone = "+250788767816"
             )
         )
         coEvery { supabaseAuthService.verifyOtp(any(), any()) } returns SupabaseAuthResult.Success(sessionData)
 
         // When & Then
+        authRepository.login("+250788123456", "123456").test {
         authRepository.login("+250788767816", "123456").test {
             // First emission should be Loading
             assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
@@ -78,6 +79,7 @@ class AuthRepositoryTest {
 
         // Verify tokens were saved
         verify { tokenManager.saveTokens("test_access_token", "test_refresh_token", 3600L) }
+        verify { tokenManager.saveUserInfo("user123", "+250788123456") }
         verify { tokenManager.saveUserInfo("user123", "+250788767816") }
         verify { sessionManager.startSession() }
     }
@@ -85,6 +87,10 @@ class AuthRepositoryTest {
     @Test
     fun `login failure with Supabase returns error`() = runTest {
         // Given
+        coEvery { supabaseAuthService.verifyOtp(any(), any()) } returns SupabaseAuthResult.Error("Invalid OTP")
+
+        // When & Then
+        authRepository.login("+250788123456", "wrong_otp").test {
         coEvery { supabaseAuthService.verifyOtp(any(), any()) } returns SupabaseAuthResult.Error(
             message = "Invalid OTP code",
             code = "OTP_VERIFICATION_FAILED"
@@ -110,6 +116,7 @@ class AuthRepositoryTest {
         coEvery { supabaseAuthService.verifyOtp(any(), any()) } throws Exception("Network error")
 
         // When & Then
+        authRepository.login("+250788123456", "123456").test {
         authRepository.login("+250788767816", "123456").test {
             // First emission should be Loading
             assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
@@ -194,6 +201,7 @@ class AuthRepositoryTest {
         coEvery { authApiService.verifyOtp(any()) } returns Response.success(otpResponse)
 
         // When & Then
+        authRepository.verifyOtp("+250788123456", "123456").test {
         authRepository.verifyOtp("+250788767816", "123456").test {
             assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
             
@@ -211,6 +219,7 @@ class AuthRepositoryTest {
         coEvery { supabaseAuthService.sendWhatsAppOtp(any()) } returns SupabaseAuthResult.Success(Unit)
 
         // When & Then
+        authRepository.requestOtp("+250788123456").test {
         authRepository.requestOtp("+250788767816").test {
             assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
             
@@ -253,6 +262,7 @@ class AuthRepositoryTest {
             expiresIn = 3600L,
             user = User(
                 id = "user123",
+                phoneNumber = "+250788123456"
                 phoneNumber = "+250788767816"
             )
         )

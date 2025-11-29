@@ -46,6 +46,9 @@ class AuthViewModel @Inject constructor(
         val registrationStep: RegistrationStep = RegistrationStep.PHONE_ENTRY,
         val pinAttempts: Int = 0,
         val isLockedOut: Boolean = false,
+        val otpExpiresAt: Long = 0L,
+        val canResendOtpAt: Long = 0L,
+        val otpResendCountdown: Int = 0
         // OTP timer fields
         val otpExpiresAt: Long = 0L,
         val otpExpiryCountdown: Int = 0,
@@ -90,6 +93,8 @@ class AuthViewModel @Inject constructor(
     companion object {
         const val MAX_PIN_ATTEMPTS = 3
         const val PIN_LENGTH = 6
+        const val OTP_RESEND_COOLDOWN_SECONDS = 60
+        const val OTP_EXPIRY_SECONDS = 300 // 5 minutes
         const val OTP_LENGTH = 6
         const val OTP_EXPIRY_SECONDS = 300 // 5 minutes
         const val RESEND_COOLDOWN_SECONDS = 60 // 60 seconds
@@ -200,8 +205,18 @@ class AuthViewModel @Inject constructor(
             _uiState.value = state.copy(error = "Too many attempts. Please try again later.")
             return
         }
+        
+        // Check if OTP has expired
+        if (isOtpExpired()) {
+            _uiState.value = state.copy(error = "OTP has expired. Please request a new one.")
+            return
+        }
+        
+        // Use formatted phone number if available
+        val phoneToUse = state.formattedPhoneNumber.ifBlank { state.phoneNumber }
 
         viewModelScope.launch {
+            authRepository.login(phoneToUse, state.otpCode)
             authRepository.login(state.formattedPhoneNumber, state.otpCode)
                 .catch { e ->
                     handleLoginFailure(e.message ?: "Login failed")
@@ -212,6 +227,7 @@ class AuthViewModel @Inject constructor(
                             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
                         }
                         is AuthRepository.AuthResult.Success -> {
+                            resendCountdownJob?.cancel()
                             stopCountdownTimers()
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
@@ -238,17 +254,35 @@ class AuthViewModel @Inject constructor(
             error = if (isLockedOut) "Account locked. Please try again later." else message,
             pinAttempts = newAttempts,
             isLockedOut = isLockedOut,
-            pin = ""
+            pin = "",
+            otpCode = "" // Also clear OTP code on failure
         )
     }
 
     /**
      * Request OTP for phone number verification.
+     * Includes phone validation and rate limiting.
      */
     fun requestOtp() {
         val state = _uiState.value
         val phoneNumber = state.phoneNumber
         
+        // Validate phone number
+        val validationResult = PhoneNumberValidator.validate(phoneNumber)
+        if (!validationResult.isValid) {
+            _uiState.value = _uiState.value.copy(
+                error = validationResult.errorMessage ?: "Please enter a valid phone number"
+            )
+            return
+        }
+        
+        // Check rate limiting
+        val currentTime = System.currentTimeMillis()
+        if (currentTime < _uiState.value.canResendOtpAt) {
+            val remainingSeconds = ((_uiState.value.canResendOtpAt - currentTime) / 1000).toInt()
+            _uiState.value = _uiState.value.copy(
+                error = "Please wait $remainingSeconds seconds before requesting another OTP"
+            )
         if (phoneNumber.isBlank()) {
             _uiState.value = state.copy(error = "Please enter your phone number")
             return
@@ -265,8 +299,11 @@ class AuthViewModel @Inject constructor(
             _uiState.value = state.copy(error = "Please wait ${state.resendCountdown} seconds before resending")
             return
         }
+        
+        val formattedPhone = validationResult.formattedNumber ?: phoneNumber
 
         viewModelScope.launch {
+            authRepository.requestOtp(formattedPhone)
             authRepository.requestOtp(state.formattedPhoneNumber)
                 .catch { e ->
                     _uiState.value = _uiState.value.copy(
@@ -281,10 +318,17 @@ class AuthViewModel @Inject constructor(
                         }
                         is AuthRepository.AuthResult.Success -> {
                             val now = System.currentTimeMillis()
+                            val expiresInSeconds = result.data.expiresInSeconds
+                            
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
                                 isOtpSent = true,
                                 error = null,
+                                formattedPhoneNumber = formattedPhone,
+                                otpExpiresAt = now + (expiresInSeconds * 1000L),
+                                canResendOtpAt = now + (OTP_RESEND_COOLDOWN_SECONDS * 1000L),
+                                registrationStep = RegistrationStep.OTP_VERIFICATION
+                            )
                                 registrationStep = RegistrationStep.OTP_VERIFICATION,
                                 otpExpiresAt = now + (OTP_EXPIRY_SECONDS * 1000L),
                                 otpExpiryCountdown = OTP_EXPIRY_SECONDS,
@@ -308,6 +352,7 @@ class AuthViewModel @Inject constructor(
     }
     
     /**
+     * Starts the countdown timer for OTP resend button.
      * Start the OTP expiry countdown timer.
      */
     private fun startOtpExpiryCountdown() {
@@ -331,6 +376,33 @@ class AuthViewModel @Inject constructor(
     private fun startResendCountdown() {
         resendCountdownJob?.cancel()
         resendCountdownJob = viewModelScope.launch {
+            for (i in OTP_RESEND_COOLDOWN_SECONDS downTo 0) {
+                _uiState.value = _uiState.value.copy(otpResendCountdown = i)
+                if (i > 0) {
+                    delay(1000)
+                }
+            }
+        }
+    }
+    
+    /**
+     * Checks if OTP has expired.
+     * @return true if OTP is expired, false otherwise
+     */
+    fun isOtpExpired(): Boolean {
+        val expiresAt = _uiState.value.otpExpiresAt
+        return expiresAt > 0 && System.currentTimeMillis() > expiresAt
+    }
+    
+    /**
+     * Gets the remaining time for OTP expiry in seconds.
+     * @return remaining seconds, or 0 if expired
+     */
+    fun getOtpRemainingSeconds(): Int {
+        val expiresAt = _uiState.value.otpExpiresAt
+        if (expiresAt <= 0) return 0
+        val remaining = (expiresAt - System.currentTimeMillis()) / 1000
+        return maxOf(0, remaining.toInt())
             while (_uiState.value.resendCountdown > 0) {
                 delay(1000L)
                 val newCountdown = _uiState.value.resendCountdown - 1
