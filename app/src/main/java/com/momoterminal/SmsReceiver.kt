@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
+import com.momoterminal.ai.AiSmsParserService
 import com.momoterminal.config.AppConfig
 import com.momoterminal.data.local.MomoDatabase
 import com.momoterminal.data.local.dao.TransactionDao
@@ -23,6 +24,8 @@ import javax.inject.Inject
  * and saves Mobile Money related messages to the local database.
  * Uses offline-first approach: save immediately, then trigger sync.
  * Also dispatches SMS to configured webhooks for multi-endpoint delivery.
+ * 
+ * Enhanced with AI-powered SMS parsing using Google Gemini for improved accuracy.
  */
 @AndroidEntryPoint
 class SmsReceiver : BroadcastReceiver() {
@@ -35,6 +38,9 @@ class SmsReceiver : BroadcastReceiver() {
     
     @Inject
     lateinit var syncManager: SyncManager
+    
+    @Inject
+    lateinit var aiSmsParserService: AiSmsParserService
     
     companion object {
         private const val TAG = "SmsReceiver"
@@ -77,10 +83,10 @@ class SmsReceiver : BroadcastReceiver() {
                 }
                 
                 if (isMomoMessage) {
-                    // Save to local database immediately (offline-first)
-                    saveToDatabase(context, sender, body, timestamp)
+                    // Parse and save to local database with AI parsing
+                    parseAndSaveToDatabase(context, sender, body, timestamp)
                     
-                    // Trigger sync to upload to configured webhook
+                    // Trigger sync to upload to Supabase payments table
                     syncManager.enqueueSyncNow()
                     
                     // Dispatch to all matching webhooks (multi-webhook relay)
@@ -136,19 +142,37 @@ class SmsReceiver : BroadcastReceiver() {
         }
     }
     
-    private fun saveToDatabase(context: Context, sender: String, body: String, timestamp: Long) {
+    /**
+     * Parse SMS using AI and save to local database.
+     * Uses Gemini AI for intelligent parsing with fallback to regex.
+     */
+    private fun parseAndSaveToDatabase(context: Context, sender: String, body: String, timestamp: Long) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val appConfig = AppConfig(context)
+                
+                // Try AI parsing first, then fallback to basic save
+                val parsedData = try {
+                    aiSmsParserService.parseSmartly(sender, body)
+                } catch (e: Exception) {
+                    Log.w(TAG, "AI parsing failed, saving raw message", e)
+                    null
+                }
+                
                 val transaction = TransactionEntity(
                     sender = sender,
                     body = body,
                     timestamp = timestamp,
                     status = "PENDING",
+                    amount = parsedData?.getDisplayAmount(),
+                    currency = parsedData?.currency ?: "GHS",
+                    transactionId = parsedData?.transactionId,
                     merchantCode = appConfig.getMerchantPhone()
                 )
+                
                 transactionDao.insert(transaction)
-                Log.d(TAG, "Transaction saved to database")
+                Log.d(TAG, "Transaction saved to database (parsed by: ${parsedData?.parsedBy ?: "none"})")
+                
             } catch (e: Exception) {
                 Log.e(TAG, "Error saving to database", e)
             }
