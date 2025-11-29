@@ -169,7 +169,11 @@ cd MomoTerminal
 # Set up required files (see Build Requirements above)
 cp app/google-services.json.sample app/google-services.json
 cp local.properties.sample local.properties
-# Edit both files with your configuration
+
+# IMPORTANT: Edit both files before building!
+# - In local.properties: Set sdk.dir to your Android SDK path
+# - In google-services.json: Replace with your Firebase project configuration
+#   (Download from Firebase Console or update placeholder values)
 
 # Build debug APK
 ./gradlew assembleDebug

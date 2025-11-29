@@ -11,8 +11,8 @@
 
 ## Certificate Pinning Configuration (optional for development)
 # Allow placeholder certificate pins in debug builds
-# Set to true only during development - NEVER use in production!
-ALLOW_PLACEHOLDER_PINS=true
+# WARNING: Set to true only during local development - NEVER deploy to production with this enabled!
+# ALLOW_PLACEHOLDER_PINS=true
 
 # Production certificate pins (required for release builds)
 # Generate pins using:

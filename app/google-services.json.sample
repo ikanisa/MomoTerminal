@@ -24,7 +24,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyA_PLACEHOLDER_KEY_REPLACE_ME"
+          "current_key": "REPLACE_WITH_YOUR_FIREBASE_API_KEY"
         }
       ],
       "services": {
