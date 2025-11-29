@@ -226,7 +226,7 @@ class NfcManagerTest {
         assertThat(NfcErrorCode.INVALID_AMOUNT.description).isNotEmpty()
         assertThat(NfcErrorCode.CONNECTION_LOST.description).isNotEmpty()
         assertThat(NfcErrorCode.TIMEOUT.description).isNotEmpty()
-        assertThat(NfcErrorCode.UNKNOWN.description).isNotEmpty()
+        assertThat(NfcErrorCode.UNKNOWN_ERROR.description).isNotEmpty()
     }
 
     @Test

@@ -228,13 +228,12 @@ class TransactionsViewModelTest {
     private fun createTransactionEntity(id: Long, status: String): TransactionEntity {
         return TransactionEntity(
             id = id,
-            amount = 50.0,
-            senderPhone = "0244123456",
-            transactionId = "TX$id",
-            provider = "MTN",
+            sender = "0244123456",
+            body = "Test message $id",
             timestamp = System.currentTimeMillis(),
             status = status,
-            rawMessage = "Test message $id"
+            amount = 50.0,
+            transactionId = "TX$id"
         )
     }
 }

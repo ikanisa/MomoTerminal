@@ -5,11 +5,13 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.WorkManager
 import com.google.common.truth.Truth.assertThat
+import com.momoterminal.util.NetworkMonitor
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Test
 
@@ -20,17 +22,22 @@ class SyncManagerTest {
 
     private lateinit var context: Context
     private lateinit var workManager: WorkManager
+    private lateinit var networkMonitor: NetworkMonitor
     private lateinit var syncManager: SyncManager
 
     @Before
     fun setup() {
         context = mockk(relaxed = true)
         workManager = mockk(relaxed = true)
+        networkMonitor = mockk(relaxed = true)
+        
+        // Mock NetworkMonitor's networkState flow
+        every { networkMonitor.networkState } returns MutableStateFlow(com.momoterminal.util.NetworkState.Available)
         
         mockkStatic(WorkManager::class)
         every { WorkManager.getInstance(context) } returns workManager
         
-        syncManager = SyncManager(context)
+        syncManager = SyncManager(context, networkMonitor)
     }
 
     @Test
@@ -41,7 +48,7 @@ class SyncManagerTest {
             workManager.enqueueUniqueWork(
                 any<String>(),
                 ExistingWorkPolicy.REPLACE,
-                any()
+                any<androidx.work.OneTimeWorkRequest>()
             )
         }
     }
@@ -54,7 +61,7 @@ class SyncManagerTest {
             workManager.enqueueUniquePeriodicWork(
                 any<String>(),
                 ExistingPeriodicWorkPolicy.KEEP,
-                any()
+                any<androidx.work.PeriodicWorkRequest>()
             )
         }
     }
@@ -72,8 +79,20 @@ class SyncManagerTest {
     fun `SyncManager uses correct work names`() {
         val workNames = mutableListOf<String>()
         
-        every { workManager.enqueueUniqueWork(capture(workNames), any(), any()) } returns mockk()
-        every { workManager.enqueueUniquePeriodicWork(capture(workNames), any(), any()) } returns mockk()
+        every { 
+            workManager.enqueueUniqueWork(
+                capture(workNames), 
+                any<ExistingWorkPolicy>(), 
+                any<androidx.work.OneTimeWorkRequest>()
+            ) 
+        } returns mockk()
+        every { 
+            workManager.enqueueUniquePeriodicWork(
+                capture(workNames), 
+                any<ExistingPeriodicWorkPolicy>(), 
+                any<androidx.work.PeriodicWorkRequest>()
+            ) 
+        } returns mockk()
         
         syncManager.enqueueSyncNow()
         syncManager.schedulePeriodicSync()

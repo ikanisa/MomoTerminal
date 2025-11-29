@@ -5,11 +5,12 @@ import com.momoterminal.api.AuthApiService
 import com.momoterminal.api.AuthResponse
 import com.momoterminal.api.OtpResponse
 import com.momoterminal.api.User
-import com.momoterminal.supabase.SupabaseAuthService
-import com.momoterminal.supabase.SessionData
-import com.momoterminal.supabase.SupabaseUser
 import com.momoterminal.supabase.AuthResult as SupabaseAuthResult
+import com.momoterminal.supabase.SessionData
+import com.momoterminal.supabase.SupabaseAuthService
+import com.momoterminal.supabase.SupabaseUser
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -55,8 +56,15 @@ class AuthRepositoryTest {
             expiresAt = System.currentTimeMillis() / 1000 + 3600,
             user = SupabaseUser(
                 id = "user123",
+<<<<<<< HEAD
                 phone = "+250788123456"
                 phone = "+250788767816"
+=======
+                phone = "0201234567",
+                email = null,
+                createdAt = "2023-01-01",
+                updatedAt = "2023-01-01"
+>>>>>>> 0787b13 (Add OTP testing documentation and update test configurations)
             )
         )
         coEvery { supabaseAuthService.verifyOtp(any(), any()) } returns SupabaseAuthResult.Success(sessionData)
@@ -70,9 +78,15 @@ class AuthRepositoryTest {
             // Second emission should be Success
             val result = awaitItem()
             assertTrue(result is AuthRepository.AuthResult.Success)
+<<<<<<< HEAD
             val authResponse = (result as AuthRepository.AuthResult.Success).data
             assertEquals("test_access_token", authResponse.accessToken)
             assertEquals("user123", authResponse.user.id)
+=======
+            val data = (result as AuthRepository.AuthResult.Success).data
+            assertEquals("test_access_token", data.accessToken)
+            assertEquals("user123", data.user.id)
+>>>>>>> 0787b13 (Add OTP testing documentation and update test configurations)
             
             awaitComplete()
         }
@@ -88,6 +102,7 @@ class AuthRepositoryTest {
     fun `login failure with Supabase returns error`() = runTest {
         // Given
         coEvery { supabaseAuthService.verifyOtp(any(), any()) } returns SupabaseAuthResult.Error("Invalid OTP")
+<<<<<<< HEAD
 
         // When & Then
         authRepository.login("+250788123456", "wrong_otp").test {
@@ -98,12 +113,18 @@ class AuthRepositoryTest {
 
         // When & Then
         authRepository.login("+250788767816", "wrong_otp").test {
+=======
+
+        // When & Then
+        authRepository.login("0201234567", "wrong_otp").test {
+>>>>>>> 0787b13 (Add OTP testing documentation and update test configurations)
             // First emission should be Loading
             assertEquals(AuthRepository.AuthResult.Loading, awaitItem())
             
             // Second emission should be Error
             val result = awaitItem()
             assertTrue(result is AuthRepository.AuthResult.Error)
+<<<<<<< HEAD
             assertEquals("Invalid OTP code", (result as AuthRepository.AuthResult.Error).message)
             
             awaitComplete()
@@ -125,6 +146,9 @@ class AuthRepositoryTest {
             val result = awaitItem()
             assertTrue(result is AuthRepository.AuthResult.Error)
             assertTrue((result as AuthRepository.AuthResult.Error).message.contains("Network error"))
+=======
+            assertEquals("Invalid OTP", (result as AuthRepository.AuthResult.Error).message)
+>>>>>>> 0787b13 (Add OTP testing documentation and update test configurations)
             
             awaitComplete()
         }
@@ -167,8 +191,9 @@ class AuthRepositoryTest {
     }
 
     @Test
-    fun `getAccessToken delegates to tokenManager`() {
+    fun `requestOtp success with Supabase returns success`() = runTest {
         // Given
+<<<<<<< HEAD
         val expectedToken = "test_token"
         every { tokenManager.getAccessToken() } returns expectedToken
 
@@ -216,6 +241,8 @@ class AuthRepositoryTest {
     @Test
     fun `requestOtp success via Supabase returns success`() = runTest {
         // Given
+=======
+>>>>>>> 0787b13 (Add OTP testing documentation and update test configurations)
         coEvery { supabaseAuthService.sendWhatsAppOtp(any()) } returns SupabaseAuthResult.Success(Unit)
 
         // When & Then
@@ -250,6 +277,8 @@ class AuthRepositoryTest {
             
             awaitComplete()
         }
+        
+        coVerify { supabaseAuthService.sendWhatsAppOtp("0201234567") }
     }
 
     @Test
@@ -276,6 +305,7 @@ class AuthRepositoryTest {
         assertTrue(result)
         verify { tokenManager.updateAccessToken("new_access_token", 3600L) }
     }
+<<<<<<< HEAD
 
     @Test
     fun `refreshToken failure logs out user`() = runTest {
@@ -332,4 +362,6 @@ class AuthRepositoryTest {
         // Verify no tokens were saved (bypass didn't work)
         verify(exactly = 0) { tokenManager.saveTokens(any(), any(), any()) }
     }
+=======
+>>>>>>> 0787b13 (Add OTP testing documentation and update test configurations)
 }

@@ -17,13 +17,25 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object SupabaseModule {
     
+    @Provides
+    @Singleton
+    fun provideSupabaseAuth(): io.github.jan.supabase.gotrue.Auth {
+        return com.momoterminal.supabase.SupabaseClientConfig.auth
+    }
+
+    @Provides
+    @Singleton
+    fun provideSupabasePostgrest(): io.github.jan.supabase.postgrest.Postgrest {
+        return com.momoterminal.supabase.SupabaseClientConfig.postgrest
+    }
+
     /**
      * Provides SupabaseAuthService for authentication operations.
      */
     @Provides
     @Singleton
-    fun provideSupabaseAuthService(): SupabaseAuthService {
-        return SupabaseAuthService()
+    fun provideSupabaseAuthService(auth: io.github.jan.supabase.gotrue.Auth): SupabaseAuthService {
+        return SupabaseAuthService(auth)
     }
     
     /**

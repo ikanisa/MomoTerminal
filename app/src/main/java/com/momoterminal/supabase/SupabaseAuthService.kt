@@ -16,10 +16,9 @@ import javax.inject.Singleton
  * Provides WhatsApp OTP authentication, session management, and user operations.
  */
 @Singleton
-class SupabaseAuthService @Inject constructor() {
-    
+class SupabaseAuthService @Inject constructor(
     private val auth: Auth
-        get() = SupabaseClientConfig.auth
+) {
     
     /**
      * Send WhatsApp OTP to the specified phone number.

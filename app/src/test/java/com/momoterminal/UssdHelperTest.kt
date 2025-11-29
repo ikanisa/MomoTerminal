@@ -22,7 +22,7 @@ class UssdHelperTest {
         val ussdCode = UssdHelper.generateUssdCode(
             UssdHelper.Provider.MTN_MOMO,
             merchantCode,
-            amountInPesewas
+            amountInPesewas.toDouble()
         )
         
         assertEquals("*170*1*1*1234567890*50.00#", ussdCode)
@@ -36,7 +36,7 @@ class UssdHelperTest {
         val ussdCode = UssdHelper.generateUssdCode(
             UssdHelper.Provider.VODAFONE_CASH,
             merchantCode,
-            amountInPesewas
+            amountInPesewas.toDouble()
         )
         
         assertEquals("*110*1*0987654321*100.50#", ussdCode)
@@ -50,7 +50,7 @@ class UssdHelperTest {
         val ussdCode = UssdHelper.generateUssdCode(
             UssdHelper.Provider.AIRTELTIGO_MONEY,
             merchantCode,
-            amountInPesewas
+            amountInPesewas.toDouble()
         )
         
         assertEquals("*500*1*5555555555*25.75#", ussdCode)
@@ -62,7 +62,7 @@ class UssdHelperTest {
         val merchantCode = "12345"
         val amountInPesewas = 1000L // 10.00 GHS
         
-        val ussdCode = UssdHelper.generateCustomUssd(baseCode, merchantCode, amountInPesewas)
+        val ussdCode = UssdHelper.generateCustomUssd(baseCode, merchantCode, amountInPesewas.toDouble())
         
         assertEquals("*999*12345*10.00#", ussdCode)
     }
@@ -75,7 +75,7 @@ class UssdHelperTest {
         val ussdCode = UssdHelper.generateUssdCode(
             UssdHelper.Provider.MTN_MOMO,
             merchantCode,
-            amountInPesewas
+            amountInPesewas.toDouble()
         )
         
         assertTrue(ussdCode.contains("5.00"))
@@ -89,7 +89,7 @@ class UssdHelperTest {
         val paymentData = UssdHelper.createPaymentData(
             UssdHelper.Provider.MTN_MOMO,
             merchantCode,
-            amountInPesewas
+            amountInPesewas.toDouble()
         )
         
         assertEquals(7500L, paymentData.amountInPesewas)
@@ -104,21 +104,21 @@ class UssdHelperTest {
         val paymentDataMtn = UssdHelper.createPaymentData(
             UssdHelper.Provider.MTN_MOMO,
             "123",
-            1000L
+            1000.0
         )
         assertEquals(NfcPaymentData.Provider.MTN, paymentDataMtn.provider)
         
         val paymentDataVoda = UssdHelper.createPaymentData(
             UssdHelper.Provider.VODAFONE_CASH,
             "123",
-            1000L
+            1000.0
         )
         assertEquals(NfcPaymentData.Provider.VODAFONE, paymentDataVoda.provider)
         
         val paymentDataAt = UssdHelper.createPaymentData(
             UssdHelper.Provider.AIRTELTIGO_MONEY,
             "123",
-            1000L
+            1000.0
         )
         assertEquals(NfcPaymentData.Provider.AIRTEL_TIGO, paymentDataAt.provider)
     }

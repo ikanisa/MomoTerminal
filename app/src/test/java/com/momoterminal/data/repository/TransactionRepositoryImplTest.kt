@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.momoterminal.data.local.dao.TransactionDao
 import com.momoterminal.data.local.entity.TransactionEntity
 import com.momoterminal.data.remote.api.MomoApiService
-import com.momoterminal.data.remote.dto.SyncResponse
+import com.momoterminal.data.remote.dto.SyncResponseDto
 import com.momoterminal.domain.model.SyncStatus
 import com.momoterminal.domain.model.Transaction
 import com.momoterminal.security.SecureStorage
@@ -125,7 +125,7 @@ class TransactionRepositoryImplTest {
         )
         coEvery { transactionDao.getPendingTransactions() } returns entities
         coEvery { apiService.syncTransaction(any()) } returns Response.success(
-            SyncResponse(success = true, message = "Synced")
+            SyncResponseDto(success = true, message = "Synced")
         )
         
         val result = repository.syncPendingTransactions()
@@ -139,7 +139,7 @@ class TransactionRepositoryImplTest {
         val entities = listOf(createTestEntity(1))
         coEvery { transactionDao.getPendingTransactions() } returns entities
         coEvery { apiService.syncTransaction(any()) } returns Response.success(
-            SyncResponse(success = true, message = "Synced")
+            SyncResponseDto(success = true, message = "Synced")
         )
         
         repository.syncPendingTransactions()
@@ -194,7 +194,7 @@ class TransactionRepositoryImplTest {
             id = 0,
             sender = "0201234567",
             body = "Payment received GHS 50.00",
-            amount = 50.0,
+            amountInPesewas = 5000L, // 50.00 GHS
             currency = "GHS",
             transactionId = "TX123",
             timestamp = System.currentTimeMillis(),
@@ -206,13 +206,12 @@ class TransactionRepositoryImplTest {
     private fun createTestEntity(id: Long): TransactionEntity {
         return TransactionEntity(
             id = id,
-            amount = 50.0,
-            senderPhone = "0201234567",
-            transactionId = "TX$id",
-            provider = "MTN",
+            sender = "0201234567",
+            body = "Payment received",
             timestamp = System.currentTimeMillis(),
             status = "PENDING",
-            rawMessage = "Payment received"
+            amount = 50.0,
+            transactionId = "TX$id"
         )
     }
 }

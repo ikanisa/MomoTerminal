@@ -43,15 +43,15 @@ class ResultTest {
     }
     
     @Test
-    fun `getOrDefault returns data for Success`() {
+    fun `getOrElse returns data for Success`() {
         val result = Result.Success("test")
-        assertEquals("test", result.getOrDefault("default"))
+        assertEquals("test", result.getOrElse("default"))
     }
     
     @Test
-    fun `getOrDefault returns default for Error`() {
-        val result = Result.Error(Exception())
-        assertEquals("default", result.getOrDefault("default"))
+    fun `getOrElse returns default for Error`() {
+        val result: Result<String> = Result.Error(Exception())
+        assertEquals("default", result.getOrElse("default"))
     }
     
     @Test

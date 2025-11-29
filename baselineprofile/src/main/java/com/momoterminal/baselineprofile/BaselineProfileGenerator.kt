@@ -1,5 +1,6 @@
 package com.momoterminal.baselineprofile
 
+import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.benchmark.macro.junit4.BaselineProfileRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
@@ -94,7 +95,7 @@ class BaselineProfileGenerator {
         }
     }
 
-    private fun exerciseTransactionFlow() {
+    private fun MacrobenchmarkScope.exerciseTransactionFlow() {
         // Navigate to transactions if available
         device.findObject(By.text("Transactions"))?.click()
         device.waitForIdle()
@@ -112,7 +113,7 @@ class BaselineProfileGenerator {
         }
     }
 
-    private fun exerciseSettingsFlow() {
+    private fun MacrobenchmarkScope.exerciseSettingsFlow() {
         // Navigate to settings
         device.findObject(By.desc("Settings"))?.click()
             ?: device.findObject(By.text("Settings"))?.click()
@@ -133,7 +134,7 @@ class BaselineProfileGenerator {
         device.waitForIdle()
     }
 
-    private fun exerciseNfcTerminalFlow() {
+    private fun MacrobenchmarkScope.exerciseNfcTerminalFlow() {
         // Navigate to NFC terminal if available
         device.findObject(By.text("NFC Terminal"))?.click()
             ?: device.findObject(By.desc("NFC Terminal"))?.click()
@@ -147,7 +148,7 @@ class BaselineProfileGenerator {
         device.waitForIdle()
     }
 
-    private fun scrollTransactionList() {
+    private fun MacrobenchmarkScope.scrollTransactionList() {
         // Find and scroll any scrollable content
         device.findObject(By.scrollable(true))?.let { list ->
             list.setGestureMargin(device.displayWidth / 5)
