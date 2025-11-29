@@ -42,6 +42,9 @@ timber = "5.0.1"
 supabase = "2.6.1"
 ktor = "2.3.12"
 
+# Google Generative AI (Gemini)
+generativeai = "0.9.0"
+
 # Core Android
 core-ktx = "1.15.0"
 appcompat = "1.7.0"
@@ -238,6 +241,9 @@ supabase-gotrue = { module = "io.github.jan-tennert.supabase:gotrue-kt", version
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-utils = { module = "io.ktor:ktor-utils", version.ref = "ktor" }
+
+# Google Generative AI (Gemini)
+generativeai = { module = "com.google.ai.client.generativeai:generativeai", version.ref = "generativeai" }
 
 # Splash Screen
 androidx-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "splashscreen" }

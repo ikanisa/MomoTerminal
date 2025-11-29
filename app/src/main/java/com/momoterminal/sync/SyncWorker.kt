@@ -6,8 +6,11 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.momoterminal.ai.AiSmsParserService
 import com.momoterminal.config.AppConfig
 import com.momoterminal.data.local.dao.TransactionDao
+import com.momoterminal.supabase.PaymentResult
+import com.momoterminal.supabase.SupabasePaymentRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import okhttp3.MediaType.Companion.toMediaType
@@ -18,14 +21,18 @@ import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 /**
- * WorkManager worker that syncs pending transactions to the configured webhook URL.
- * Takes "PENDING" items from the local database and pushes them to the configured gateway.
+ * WorkManager worker that syncs pending transactions to Supabase payments table
+ * and to the configured webhook URL as secondary notification.
+ * Takes "PENDING" items from the local database and pushes them to Supabase,
+ * then optionally sends to configured gateway webhook.
  */
 @HiltWorker
 class SyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val transactionDao: TransactionDao
+    private val transactionDao: TransactionDao,
+    private val paymentRepository: SupabasePaymentRepository,
+    private val aiSmsParserService: AiSmsParserService
 ) : CoroutineWorker(context, params) {
     
     companion object {
@@ -40,57 +47,105 @@ class SyncWorker @AssistedInject constructor(
     
     override suspend fun doWork(): Result {
         val appConfig = AppConfig(applicationContext)
-        val gatewayUrl = appConfig.getGatewayUrl()
-        val apiSecret = appConfig.getApiSecret()
-        
-        // If not configured, fail
-        if (gatewayUrl.isBlank()) {
-            Log.w(TAG, "Gateway URL not configured, skipping sync")
-            return Result.failure()
-        }
+        val merchantCode = appConfig.getMerchantPhone()
+        val deviceId = Build.MODEL
         
         val pendingTransactions = transactionDao.getPendingTransactions()
         
         Log.d(TAG, "Found ${pendingTransactions.size} pending transactions to sync")
         
+        var hasErrors = false
+        
         for (txn in pendingTransactions) {
             try {
-                // Construct JSON payload (using amountInPesewas for precision)
-                val json = JSONObject().apply {
-                    put("sender", txn.sender)
-                    put("text", txn.body)
-                    put("timestamp", txn.timestamp)
-                    put("device", Build.MODEL)
-                    put("merchant", appConfig.getMerchantPhone())
-                    txn.amountInPesewas?.let { put("amount_in_pesewas", it) }
-                    txn.currency?.let { put("currency", it) }
-                    txn.transactionId?.let { put("transactionId", it) }
+                // Parse transaction using AI for structured data
+                val parsedData = try {
+                    aiSmsParserService.parseSmartly(txn.sender, txn.body)
+                } catch (e: Exception) {
+                    Log.w(TAG, "AI parsing failed for transaction ${txn.id}", e)
+                    null
                 }
                 
-                // POST to gateway
-                val request = Request.Builder()
-                    .url(gatewayUrl)
-                    .post(json.toString().toRequestBody("application/json".toMediaType()))
-                    .addHeader("X-Api-Key", apiSecret)
-                    .addHeader("Content-Type", "application/json")
-                    .build()
+                // Sync to Supabase payments table first
+                val supabaseResult = paymentRepository.syncTransaction(
+                    transaction = txn,
+                    parsedData = parsedData,
+                    deviceId = deviceId,
+                    merchantCode = merchantCode
+                )
                 
-                client.newCall(request).execute().use { response ->
-                    if (response.isSuccessful) {
+                when (supabaseResult) {
+                    is PaymentResult.Success -> {
+                        Log.d(TAG, "Transaction ${txn.id} synced to Supabase")
+                        // Mark as sent in local DB
                         transactionDao.updateStatus(txn.id, "SENT")
-                        Log.d(TAG, "Transaction ${txn.id} synced successfully")
-                    } else {
-                        Log.w(TAG, "Sync failed for ${txn.id}: ${response.code}")
-                        // Leave as PENDING for retry
+                    }
+                    is PaymentResult.Error -> {
+                        Log.w(TAG, "Supabase sync failed for ${txn.id}: ${supabaseResult.message}")
+                        hasErrors = true
+                        // Try webhook fallback
+                        syncToWebhook(txn, appConfig)
                     }
                 }
                 
             } catch (e: Exception) {
                 // Leave as PENDING, will retry
                 Log.e(TAG, "Sync failed for ${txn.id}", e)
+                hasErrors = true
             }
         }
         
-        return Result.success()
+        return if (hasErrors) Result.retry() else Result.success()
+    }
+    
+    /**
+     * Fallback: Sync transaction to webhook URL if Supabase sync fails.
+     */
+    private suspend fun syncToWebhook(
+        txn: com.momoterminal.data.local.entity.TransactionEntity,
+        appConfig: AppConfig
+    ) {
+        val gatewayUrl = appConfig.getGatewayUrl()
+        val apiSecret = appConfig.getApiSecret()
+        
+        // If not configured, skip webhook
+        if (gatewayUrl.isBlank()) {
+            Log.w(TAG, "Gateway URL not configured, skipping webhook sync")
+            return
+        }
+        
+        try {
+            // Construct JSON payload (using amountInPesewas for precision)
+            val json = JSONObject().apply {
+                put("sender", txn.sender)
+                put("text", txn.body)
+                put("timestamp", txn.timestamp)
+                put("device", Build.MODEL)
+                put("merchant", appConfig.getMerchantPhone())
+                txn.amountInPesewas?.let { put("amount_in_pesewas", it) }
+                txn.currency?.let { put("currency", it) }
+                txn.transactionId?.let { put("transactionId", it) }
+            }
+            
+            // POST to gateway
+            val request = Request.Builder()
+                .url(gatewayUrl)
+                .post(json.toString().toRequestBody("application/json".toMediaType()))
+                .addHeader("X-Api-Key", apiSecret)
+                .addHeader("Content-Type", "application/json")
+                .build()
+            
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    transactionDao.updateStatus(txn.id, "SENT")
+                    Log.d(TAG, "Transaction ${txn.id} synced to webhook successfully")
+                } else {
+                    Log.w(TAG, "Webhook sync failed for ${txn.id}: ${response.code}")
+                }
+            }
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Webhook sync failed for ${txn.id}", e)
+        }
     }
 }

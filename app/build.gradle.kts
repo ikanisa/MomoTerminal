@@ -89,6 +89,17 @@ android {
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
         
+        // Gemini AI configuration
+        val geminiApiKey = localProps.getProperty("GEMINI_API_KEY")
+            ?: System.getenv("GEMINI_API_KEY")
+            ?: ""
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
+        
+        // AI parsing feature flag (enabled by default when API key is present)
+        val aiParsingEnabled = localProps.getProperty("AI_PARSING_ENABLED")?.toBoolean()
+            ?: geminiApiKey.isNotBlank()
+        buildConfigField("boolean", "AI_PARSING_ENABLED", "$aiParsingEnabled")
+        
         // Certificate pinning configuration
         // These are loaded from local.properties or gradle.properties at build time
         // IMPORTANT: Replace placeholder pins with real pins before production deployment!
@@ -391,6 +402,9 @@ dependencies {
     implementation(libs.ktor.client.android)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.utils)
+
+    // Google Generative AI (Gemini)
+    implementation(libs.generativeai)
 
     // DataStore
     implementation(libs.datastore.preferences)

@@ -3,11 +3,13 @@ package com.momoterminal.di
 import com.momoterminal.auth.WhatsAppOtpService
 import com.momoterminal.auth.WhatsAppOtpServiceImpl
 import com.momoterminal.supabase.SupabaseAuthService
+import com.momoterminal.supabase.SupabasePaymentRepository
 import com.momoterminal.util.PhoneNumberValidator
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import io.github.jan.supabase.postgrest.Postgrest
 import javax.inject.Singleton
 
 /**
@@ -36,6 +38,15 @@ object SupabaseModule {
     @Singleton
     fun provideSupabaseAuthService(auth: io.github.jan.supabase.gotrue.Auth): SupabaseAuthService {
         return SupabaseAuthService(auth)
+    }
+    
+    /**
+     * Provides SupabasePaymentRepository for payment operations.
+     */
+    @Provides
+    @Singleton
+    fun provideSupabasePaymentRepository(postgrest: Postgrest): SupabasePaymentRepository {
+        return SupabasePaymentRepository(postgrest)
     }
     
     /**
