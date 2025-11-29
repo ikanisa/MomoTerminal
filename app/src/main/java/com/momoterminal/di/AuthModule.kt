@@ -11,6 +11,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -42,9 +43,10 @@ object AuthModule {
     @Singleton
     fun provideSessionManager(
         @dagger.hilt.android.qualifiers.ApplicationContext context: android.content.Context,
-        tokenManager: TokenManager
+        tokenManager: TokenManager,
+        @ApplicationScope applicationScope: CoroutineScope
     ): SessionManager {
-        return SessionManager(context, tokenManager)
+        return SessionManager(context, tokenManager, applicationScope)
     }
 
     /**

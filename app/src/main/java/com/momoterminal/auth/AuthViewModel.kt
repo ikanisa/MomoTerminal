@@ -46,9 +46,6 @@ class AuthViewModel @Inject constructor(
         val registrationStep: RegistrationStep = RegistrationStep.PHONE_ENTRY,
         val pinAttempts: Int = 0,
         val isLockedOut: Boolean = false,
-        val otpExpiresAt: Long = 0L,
-        val canResendOtpAt: Long = 0L,
-        val otpResendCountdown: Int = 0
         // OTP timer fields
         val otpExpiresAt: Long = 0L,
         val otpExpiryCountdown: Int = 0,
@@ -93,11 +90,10 @@ class AuthViewModel @Inject constructor(
     companion object {
         const val MAX_PIN_ATTEMPTS = 3
         const val PIN_LENGTH = 6
-        const val OTP_RESEND_COOLDOWN_SECONDS = 60
-        const val OTP_EXPIRY_SECONDS = 300 // 5 minutes
         const val OTP_LENGTH = 6
         const val OTP_EXPIRY_SECONDS = 300 // 5 minutes
         const val RESEND_COOLDOWN_SECONDS = 60 // 60 seconds
+        const val OTP_TIMER_UPDATE_INTERVAL_MS = 1000L
     }
 
     init {
@@ -121,15 +117,9 @@ class AuthViewModel @Inject constructor(
     // Input update functions
     fun updatePhoneNumber(phone: String) {
         val validationResult = phoneNumberValidator.validate(phone)
-        val formattedNumber = when (validationResult) {
-            is PhoneNumberValidator.ValidationResult.Valid -> validationResult.formattedNumber
-            is PhoneNumberValidator.ValidationResult.Invalid -> ""
-        }
-        val phoneError = if (phone.isNotBlank() && formattedNumber.isEmpty()) {
-            when (validationResult) {
-                is PhoneNumberValidator.ValidationResult.Invalid -> validationResult.reason
-                else -> null
-            }
+        val formattedNumber = validationResult.formattedNumber ?: ""
+        val phoneError = if (phone.isNotBlank() && !validationResult.isValid) {
+            validationResult.errorMessage
         } else null
         
         _uiState.value = _uiState.value.copy(
@@ -283,14 +273,6 @@ class AuthViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(
                 error = "Please wait $remainingSeconds seconds before requesting another OTP"
             )
-        if (phoneNumber.isBlank()) {
-            _uiState.value = state.copy(error = "Please enter your phone number")
-            return
-        }
-        
-        // Validate phone number format
-        if (state.formattedPhoneNumber.isEmpty()) {
-            _uiState.value = state.copy(error = state.phoneNumberError ?: "Please enter a valid phone number")
             return
         }
         
@@ -304,7 +286,6 @@ class AuthViewModel @Inject constructor(
 
         viewModelScope.launch {
             authRepository.requestOtp(formattedPhone)
-            authRepository.requestOtp(state.formattedPhoneNumber)
                 .catch { e ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -318,17 +299,12 @@ class AuthViewModel @Inject constructor(
                         }
                         is AuthRepository.AuthResult.Success -> {
                             val now = System.currentTimeMillis()
-                            val expiresInSeconds = result.data.expiresInSeconds
                             
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
                                 isOtpSent = true,
                                 error = null,
                                 formattedPhoneNumber = formattedPhone,
-                                otpExpiresAt = now + (expiresInSeconds * 1000L),
-                                canResendOtpAt = now + (OTP_RESEND_COOLDOWN_SECONDS * 1000L),
-                                registrationStep = RegistrationStep.OTP_VERIFICATION
-                            )
                                 registrationStep = RegistrationStep.OTP_VERIFICATION,
                                 otpExpiresAt = now + (OTP_EXPIRY_SECONDS * 1000L),
                                 otpExpiryCountdown = OTP_EXPIRY_SECONDS,
@@ -376,8 +352,11 @@ class AuthViewModel @Inject constructor(
     private fun startResendCountdown() {
         resendCountdownJob?.cancel()
         resendCountdownJob = viewModelScope.launch {
-            for (i in OTP_RESEND_COOLDOWN_SECONDS downTo 0) {
-                _uiState.value = _uiState.value.copy(otpResendCountdown = i)
+            for (i in RESEND_COOLDOWN_SECONDS downTo 0) {
+                _uiState.value = _uiState.value.copy(
+                    resendCountdown = i,
+                    canResendOtp = i == 0
+                )
                 if (i > 0) {
                     delay(1000)
                 }
@@ -403,15 +382,6 @@ class AuthViewModel @Inject constructor(
         if (expiresAt <= 0) return 0
         val remaining = (expiresAt - System.currentTimeMillis()) / 1000
         return maxOf(0, remaining.toInt())
-            while (_uiState.value.resendCountdown > 0) {
-                delay(1000L)
-                val newCountdown = _uiState.value.resendCountdown - 1
-                _uiState.value = _uiState.value.copy(
-                    resendCountdown = newCountdown,
-                    canResendOtp = newCountdown <= 0
-                )
-            }
-        }
     }
     
     /**

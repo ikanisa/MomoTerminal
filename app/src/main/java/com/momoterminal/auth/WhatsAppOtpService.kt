@@ -182,12 +182,12 @@ class WhatsAppOtpServiceImpl @Inject constructor(
     }
     
     override fun formatPhoneNumber(phoneNumber: String): String? {
-        return when (val result = phoneNumberValidator.validate(phoneNumber)) {
-            is PhoneNumberValidator.ValidationResult.Valid -> result.formattedNumber
-            is PhoneNumberValidator.ValidationResult.Invalid -> {
-                Timber.w("Invalid phone number: ${result.reason}")
-                null
-            }
+        val result = phoneNumberValidator.validate(phoneNumber)
+        return if (result.isValid) {
+            result.formattedNumber
+        } else {
+            Timber.w("Invalid phone number: ${result.errorMessage}")
+            null
         }
     }
     

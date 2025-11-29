@@ -54,8 +54,8 @@ object SupabaseModule {
      */
     @Provides
     @Singleton
-    fun providePhoneNumberValidator(): PhoneNumberValidator {
-        return PhoneNumberValidator()
+    fun providePhoneNumberValidator(): com.momoterminal.util.PhoneNumberValidator {
+        return com.momoterminal.util.PhoneNumberValidator
     }
     
     /**

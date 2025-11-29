@@ -6,11 +6,23 @@ package com.momoterminal.util
  */
 object PhoneNumberValidator {
     
+    // Constants
+    private const val RWANDA_COUNTRY_CODE = "+250"
+    private const val MIN_PHONE_LENGTH = 9
+    private const val MAX_PHONE_LENGTH = 15
+    
+    // Rwanda phone prefixes (after country code)
+    private val RWANDA_MOBILE_PREFIXES = listOf("78", "79", "72", "73")
+    
     // Valid phone number pattern: +<country_code><number> (9-15 digits total)
     private val PHONE_PATTERN = Regex("^\\+?[1-9]\\d{9,14}$")
     
     // Rwanda phone number pattern (starts with 250 followed by 9 digits)
     private val RWANDA_PATTERN = Regex("^(\\+?250)?[0-9]{9}$")
+    
+    // E.164 format pattern
+    private val E164_PATTERN = Regex("^\\+[1-9]\\d{1,14}$")
+    private val DIGITS_ONLY_PATTERN = Regex("^\\d+$")
     
     /**
      * Validation result containing status and any error message.
@@ -77,16 +89,6 @@ object PhoneNumberValidator {
     }
     
     /**
-     * Cleans the phone number by removing all non-numeric characters except '+'.
-     *
-     * @param phoneNumber The phone number to clean
-     * @return Cleaned phone number
-     */
-    fun cleanPhoneNumber(phoneNumber: String): String {
-        return phoneNumber.replace(Regex("[^0-9+]"), "")
-    }
-    
-    /**
      * Formats a phone number for WhatsApp (E.164 format).
      * Ensures the number starts with '+'.
      *
@@ -141,38 +143,6 @@ object PhoneNumberValidator {
             cleaned.substring(cleaned.length - visibleEnd)
         
         return masked
-import javax.inject.Inject
-import javax.inject.Singleton
-
-/**
- * Utility class for validating and formatting phone numbers.
- * Supports Rwanda (+250) and other international formats.
- */
-@Singleton
-class PhoneNumberValidator @Inject constructor() {
-    
-    companion object {
-        // Rwanda country code
-        private const val RWANDA_COUNTRY_CODE = "+250"
-        
-        // Phone number length constraints
-        private const val MIN_PHONE_LENGTH = 9
-        private const val MAX_PHONE_LENGTH = 15
-        
-        // Rwanda phone prefixes (after country code)
-        private val RWANDA_MOBILE_PREFIXES = listOf("78", "79", "72", "73")
-        
-        // Regex patterns
-        private val E164_PATTERN = Regex("^\\+[1-9]\\d{1,14}$")
-        private val DIGITS_ONLY_PATTERN = Regex("^\\d+$")
-    }
-    
-    /**
-     * Validation result for phone numbers.
-     */
-    sealed class ValidationResult {
-        data class Valid(val formattedNumber: String) : ValidationResult()
-        data class Invalid(val reason: String) : ValidationResult()
     }
     
     /**
@@ -188,12 +158,12 @@ class PhoneNumberValidator @Inject constructor() {
         val cleaned = cleanPhoneNumber(phoneNumber)
         
         if (cleaned.isBlank()) {
-            return ValidationResult.Invalid("Phone number cannot be empty")
+            return ValidationResult(isValid = false, errorMessage = "Phone number cannot be empty")
         }
         
         // Check minimum length before processing
         if (cleaned.length < MIN_PHONE_LENGTH) {
-            return ValidationResult.Invalid("Phone number is too short")
+            return ValidationResult(isValid = false, errorMessage = "Phone number is too short")
         }
         
         // Check if it starts with +
@@ -201,7 +171,7 @@ class PhoneNumberValidator @Inject constructor() {
             cleaned.startsWith("+") -> {
                 // Already has country code, validate format
                 if (!E164_PATTERN.matches(cleaned)) {
-                    return ValidationResult.Invalid("Invalid phone number format")
+                    return ValidationResult(isValid = false, errorMessage = "Invalid phone number format")
                 }
                 cleaned
             }
@@ -209,7 +179,7 @@ class PhoneNumberValidator @Inject constructor() {
                 // International format with 00 prefix
                 val withPlus = "+" + cleaned.substring(2)
                 if (!E164_PATTERN.matches(withPlus)) {
-                    return ValidationResult.Invalid("Invalid phone number format")
+                    return ValidationResult(isValid = false, errorMessage = "Invalid phone number format")
                 }
                 withPlus
             }
@@ -218,7 +188,7 @@ class PhoneNumberValidator @Inject constructor() {
                 val withoutLeadingZero = cleaned.substring(1)
                 val withCountryCode = defaultCountryCode + withoutLeadingZero
                 if (!E164_PATTERN.matches(withCountryCode)) {
-                    return ValidationResult.Invalid("Invalid phone number format")
+                    return ValidationResult(isValid = false, errorMessage = "Invalid phone number format")
                 }
                 withCountryCode
             }
@@ -226,21 +196,21 @@ class PhoneNumberValidator @Inject constructor() {
                 // Plain digits, add country code
                 val withCountryCode = defaultCountryCode + cleaned
                 if (!E164_PATTERN.matches(withCountryCode)) {
-                    return ValidationResult.Invalid("Invalid phone number format")
+                    return ValidationResult(isValid = false, errorMessage = "Invalid phone number format")
                 }
                 withCountryCode
             }
             else -> {
-                return ValidationResult.Invalid("Phone number contains invalid characters")
+                return ValidationResult(isValid = false, errorMessage = "Phone number contains invalid characters")
             }
         }
         
         // Validate max length (E164 pattern already validates min length)
         if (formatted.length > MAX_PHONE_LENGTH) {
-            return ValidationResult.Invalid("Phone number is too long")
+            return ValidationResult(isValid = false, errorMessage = "Phone number is too long")
         }
         
-        return ValidationResult.Valid(formatted)
+        return ValidationResult(isValid = true, formattedNumber = formatted)
     }
     
     /**
@@ -252,10 +222,10 @@ class PhoneNumberValidator @Inject constructor() {
     fun validateRwandaNumber(phoneNumber: String): ValidationResult {
         val result = validate(phoneNumber, RWANDA_COUNTRY_CODE)
         
-        if (result is ValidationResult.Valid) {
+        if (result.isValid && result.formattedNumber != null) {
             // Verify it's a Rwanda number
             if (!result.formattedNumber.startsWith(RWANDA_COUNTRY_CODE)) {
-                return ValidationResult.Invalid("Please enter a Rwanda phone number")
+                return ValidationResult(isValid = false, errorMessage = "Please enter a Rwanda phone number")
             }
             
             // Verify it's a valid Rwanda mobile prefix
@@ -263,12 +233,12 @@ class PhoneNumberValidator @Inject constructor() {
             val hasValidPrefix = RWANDA_MOBILE_PREFIXES.any { numberPart.startsWith(it) }
             
             if (!hasValidPrefix) {
-                return ValidationResult.Invalid("Invalid Rwanda mobile number prefix")
+                return ValidationResult(isValid = false, errorMessage = "Invalid Rwanda mobile number prefix")
             }
             
             // Rwanda mobile numbers should be exactly 9 digits after country code
             if (numberPart.length != 9) {
-                return ValidationResult.Invalid("Rwanda mobile numbers must be 9 digits")
+                return ValidationResult(isValid = false, errorMessage = "Rwanda mobile numbers must be 9 digits")
             }
         }
         

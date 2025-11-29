@@ -111,7 +111,6 @@ data class OtpResponse(
     val expiresAt: Long? = null,
     @SerializedName("expires_in_seconds")
     val expiresInSeconds: Int = 300,
-    val expiresInSeconds: Int? = null,
     @SerializedName("retry_after_seconds")
     val retryAfterSeconds: Int? = null
 )
