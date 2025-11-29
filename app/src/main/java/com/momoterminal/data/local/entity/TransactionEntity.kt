@@ -3,6 +3,7 @@ package com.momoterminal.data.local.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlin.math.roundToLong
 
 /**
  * Room Entity representing a transaction stored in the local database.
@@ -60,8 +61,8 @@ data class TransactionEntity(
 ) {
     /**
      * Get amount in pesewas (smallest currency unit) for precise calculations.
-     * 1 GHS = 100 pesewas.
+     * 1 GHS = 100 pesewas. Uses roundToLong() for accurate conversion.
      */
     val amountInPesewas: Long?
-        get() = amount?.let { (it * 100).toLong() }
+        get() = amount?.let { (it * 100).roundToLong() }
 }

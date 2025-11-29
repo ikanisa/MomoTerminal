@@ -315,20 +315,28 @@ private fun extractAmount(body: String): String? {
 
 /**
  * Format timestamp to human-readable string.
+ * Uses pre-created date formatters for better performance in list rendering.
  */
-private fun formatTimestamp(timestamp: Long): String {
-    val date = Date(timestamp)
-    val now = System.currentTimeMillis()
-    val diff = now - timestamp
+private object TimestampFormatter {
+    private val weekDayFormat = SimpleDateFormat("EEE, HH:mm", Locale.getDefault())
+    private val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
     
-    return when {
-        diff < 60_000 -> "Just now"
-        diff < 3_600_000 -> "${diff / 60_000}m ago"
-        diff < 86_400_000 -> "${diff / 3_600_000}h ago"
-        diff < 604_800_000 -> SimpleDateFormat("EEE, HH:mm", Locale.getDefault()).format(date)
-        else -> SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(date)
+    fun format(timestamp: Long): String {
+        val date = Date(timestamp)
+        val now = System.currentTimeMillis()
+        val diff = now - timestamp
+        
+        return when {
+            diff < 60_000 -> "Just now"
+            diff < 3_600_000 -> "${diff / 60_000}m ago"
+            diff < 86_400_000 -> "${diff / 3_600_000}h ago"
+            diff < 604_800_000 -> synchronized(weekDayFormat) { weekDayFormat.format(date) }
+            else -> synchronized(dateFormat) { dateFormat.format(date) }
+        }
     }
 }
+
+private fun formatTimestamp(timestamp: Long): String = TimestampFormatter.format(timestamp)
 
 @Preview(showBackground = true)
 @Composable

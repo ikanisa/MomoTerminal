@@ -6,12 +6,15 @@ import com.momoterminal.data.remote.dto.TransactionDto
 import com.momoterminal.domain.model.SyncStatus
 import com.momoterminal.domain.model.Transaction
 import android.os.Build
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Mapper functions for converting between domain models, entities, and DTOs.
  * 
- * Note: All amount values are in pesewas (smallest currency unit) to avoid
+ * Note: All amount values in domain/DTO are in pesewas (smallest currency unit) to avoid
  * floating-point precision errors. 1 GHS = 100 pesewas.
+ * Entity stores amount as Double for Room compatibility but uses precise conversion.
  */
 object TransactionMapper {
     
@@ -34,13 +37,16 @@ object TransactionMapper {
     
     /**
      * Convert domain Transaction to TransactionEntity.
+     * Uses BigDecimal for precise currency conversion from pesewas to main unit.
      */
     fun domainToEntity(transaction: Transaction): TransactionEntity {
         return TransactionEntity(
             id = transaction.id,
             sender = transaction.sender,
             body = transaction.body,
-            amount = transaction.amountInPesewas?.let { it / 100.0 },
+            amount = transaction.amountInPesewas?.let { pesewas ->
+                BigDecimal(pesewas).divide(BigDecimal(100), 2, RoundingMode.HALF_UP).toDouble()
+            },
             currency = transaction.currency,
             transactionId = transaction.transactionId,
             timestamp = transaction.timestamp,
