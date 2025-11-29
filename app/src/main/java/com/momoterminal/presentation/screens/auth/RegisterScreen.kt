@@ -49,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -57,6 +58,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.momoterminal.R
 import com.momoterminal.auth.AuthViewModel
 import com.momoterminal.presentation.theme.MomoYellow
 
@@ -607,32 +609,22 @@ private fun TermsAcceptanceStep(
             .verticalScroll(rememberScrollState())
     ) {
         Text(
-            text = "Terms & Conditions",
+            text = stringResource(R.string.terms_title),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold
         )
 
         Text(
-            text = "Please review and accept our terms to continue",
+            text = stringResource(R.string.terms_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Terms text placeholder
+        // Terms content from string resources
         Text(
-            text = """
-                By creating an account, you agree to:
-                
-                • Process mobile money transactions through your terminal
-                • Keep your PIN confidential and secure
-                • Comply with all applicable mobile money regulations
-                • Allow transaction data to be synced for reconciliation
-                • Receive notifications about your transactions
-                
-                Your data will be encrypted and stored securely.
-            """.trimIndent(),
+            text = stringResource(R.string.terms_content),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -650,7 +642,7 @@ private fun TermsAcceptanceStep(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "I accept the Terms & Conditions and Privacy Policy",
+                text = stringResource(R.string.terms_accept_checkbox),
                 style = MaterialTheme.typography.bodyMedium
             )
         }

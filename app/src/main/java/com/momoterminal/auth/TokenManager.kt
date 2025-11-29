@@ -22,12 +22,6 @@ class TokenManager @Inject constructor(
     val accessToken: StateFlow<String?> = _accessToken.asStateFlow()
 
     companion object {
-        private const val KEY_ACCESS_TOKEN = "access_token"
-        private const val KEY_REFRESH_TOKEN = "refresh_token"
-        private const val KEY_TOKEN_EXPIRY = "token_expiry"
-        private const val KEY_USER_ID = "user_id"
-        private const val KEY_PHONE_NUMBER = "phone_number"
-        
         // Token refresh buffer (refresh 5 minutes before expiry)
         private const val REFRESH_BUFFER_MS = 5 * 60 * 1000L
     }
@@ -39,7 +33,7 @@ class TokenManager @Inject constructor(
 
     private fun checkExistingToken() {
         val token = secureStorage.getApiToken()
-        val expiry = getTokenExpiry()
+        val expiry = secureStorage.getTokenExpiry()
         
         if (token != null && expiry > System.currentTimeMillis()) {
             _accessToken.value = token
@@ -61,8 +55,8 @@ class TokenManager @Inject constructor(
         val expiryTime = System.currentTimeMillis() + (expiresInSeconds * 1000)
         
         secureStorage.saveApiToken(accessToken)
-        saveRefreshToken(refreshToken)
-        saveTokenExpiry(expiryTime)
+        secureStorage.saveRefreshToken(refreshToken)
+        secureStorage.saveTokenExpiry(expiryTime)
         
         _accessToken.value = accessToken
         _isAuthenticated.value = true
@@ -72,8 +66,8 @@ class TokenManager @Inject constructor(
      * Save user information after successful authentication.
      */
     fun saveUserInfo(userId: String, phoneNumber: String) {
-        saveSecureValue(KEY_USER_ID, userId)
-        saveSecureValue(KEY_PHONE_NUMBER, phoneNumber)
+        secureStorage.saveUserId(userId)
+        secureStorage.saveUserPhoneNumber(phoneNumber)
     }
 
     /**
@@ -87,28 +81,28 @@ class TokenManager @Inject constructor(
      * Get the refresh token.
      */
     fun getRefreshToken(): String? {
-        return getSecureValue(KEY_REFRESH_TOKEN)
+        return secureStorage.getRefreshToken()
     }
 
     /**
      * Get the stored user ID.
      */
     fun getUserId(): String? {
-        return getSecureValue(KEY_USER_ID)
+        return secureStorage.getUserId()
     }
 
     /**
      * Get the stored phone number.
      */
     fun getPhoneNumber(): String? {
-        return getSecureValue(KEY_PHONE_NUMBER)
+        return secureStorage.getUserPhoneNumber()
     }
 
     /**
      * Check if the access token needs to be refreshed.
      */
     fun needsRefresh(): Boolean {
-        val expiry = getTokenExpiry()
+        val expiry = secureStorage.getTokenExpiry()
         val currentTime = System.currentTimeMillis()
         return expiry > 0 && (expiry - REFRESH_BUFFER_MS) < currentTime
     }
@@ -117,7 +111,7 @@ class TokenManager @Inject constructor(
      * Check if the access token has expired.
      */
     fun isTokenExpired(): Boolean {
-        val expiry = getTokenExpiry()
+        val expiry = secureStorage.getTokenExpiry()
         return expiry > 0 && expiry < System.currentTimeMillis()
     }
 
@@ -128,7 +122,7 @@ class TokenManager @Inject constructor(
         val expiryTime = System.currentTimeMillis() + (expiresInSeconds * 1000)
         
         secureStorage.saveApiToken(newToken)
-        saveTokenExpiry(expiryTime)
+        secureStorage.saveTokenExpiry(expiryTime)
         
         _accessToken.value = newToken
     }
@@ -137,7 +131,7 @@ class TokenManager @Inject constructor(
      * Clear all stored tokens and user data (logout).
      */
     fun clearTokens() {
-        secureStorage.clearAll()
+        secureStorage.clearAuthData()
         _accessToken.value = null
         _isAuthenticated.value = false
     }
@@ -148,38 +142,5 @@ class TokenManager @Inject constructor(
     fun hasValidToken(): Boolean {
         val token = getAccessToken()
         return token != null && !isTokenExpired()
-    }
-
-    // Helper methods for secure storage
-    private fun saveRefreshToken(token: String) {
-        saveSecureValue(KEY_REFRESH_TOKEN, token)
-    }
-
-    private fun saveTokenExpiry(expiry: Long) {
-        saveSecureValue(KEY_TOKEN_EXPIRY, expiry.toString())
-    }
-
-    private fun getTokenExpiry(): Long {
-        return getSecureValue(KEY_TOKEN_EXPIRY)?.toLongOrNull() ?: 0L
-    }
-
-    private fun saveSecureValue(key: String, value: String) {
-        // Using SecureStorage's methods - we can extend it if needed
-        when (key) {
-            KEY_REFRESH_TOKEN -> secureStorage.saveApiSecret(value)
-            KEY_TOKEN_EXPIRY -> secureStorage.saveDeviceId(value)
-            KEY_USER_ID -> secureStorage.saveMerchantCode(value)
-            KEY_PHONE_NUMBER -> secureStorage.saveApiEndpoint(value)
-        }
-    }
-
-    private fun getSecureValue(key: String): String? {
-        return when (key) {
-            KEY_REFRESH_TOKEN -> secureStorage.getApiSecret()
-            KEY_TOKEN_EXPIRY -> secureStorage.getDeviceId()
-            KEY_USER_ID -> secureStorage.getMerchantCode()
-            KEY_PHONE_NUMBER -> secureStorage.getApiEndpoint()
-            else -> null
-        }
     }
 }

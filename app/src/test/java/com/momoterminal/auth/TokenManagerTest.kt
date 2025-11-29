@@ -39,6 +39,7 @@ class TokenManagerTest {
 
         // Then
         verify { secureStorage.saveApiToken(accessToken) }
+        verify { secureStorage.saveRefreshToken(refreshToken) }
         assertTrue(tokenManager.isAuthenticated.first())
         assertEquals(accessToken, tokenManager.accessToken.first())
     }
@@ -52,7 +53,7 @@ class TokenManagerTest {
         tokenManager.clearTokens()
 
         // Then
-        verify { secureStorage.clearAll() }
+        verify { secureStorage.clearAuthData() }
         assertFalse(tokenManager.isAuthenticated.first())
         assertNull(tokenManager.accessToken.first())
     }
@@ -73,10 +74,14 @@ class TokenManagerTest {
     fun `hasValidToken returns false when token expired`() {
         // Given
         every { secureStorage.getApiToken() } returns "test_token"
-        every { secureStorage.getDeviceId() } returns "0" // Expiry time in the past
+        // Token expired 1 hour ago
+        every { secureStorage.getTokenExpiry() } returns System.currentTimeMillis() - (60 * 60 * 1000)
+
+        // Create fresh instance
+        val freshTokenManager = TokenManager(secureStorage)
 
         // When
-        val result = tokenManager.hasValidToken()
+        val result = freshTokenManager.hasValidToken()
 
         // Then
         assertFalse(result)
@@ -118,15 +123,15 @@ class TokenManagerTest {
         tokenManager.saveUserInfo(userId, phoneNumber)
 
         // Then
-        verify { secureStorage.saveMerchantCode(userId) }
-        verify { secureStorage.saveApiEndpoint(phoneNumber) }
+        verify { secureStorage.saveUserId(userId) }
+        verify { secureStorage.saveUserPhoneNumber(phoneNumber) }
     }
 
     @Test
     fun `needsRefresh returns true when close to expiry`() {
         // Given - token expires in 2 minutes (less than 5 minute buffer)
         val expiryTime = System.currentTimeMillis() + (2 * 60 * 1000)
-        every { secureStorage.getDeviceId() } returns expiryTime.toString()
+        every { secureStorage.getTokenExpiry() } returns expiryTime
         every { secureStorage.getApiToken() } returns "test_token"
 
         // Create fresh instance to pick up the mocked values
@@ -143,7 +148,7 @@ class TokenManagerTest {
     fun `isTokenExpired returns true when past expiry`() {
         // Given - token expired 1 hour ago
         val expiryTime = System.currentTimeMillis() - (60 * 60 * 1000)
-        every { secureStorage.getDeviceId() } returns expiryTime.toString()
+        every { secureStorage.getTokenExpiry() } returns expiryTime
 
         // Create fresh instance
         val freshTokenManager = TokenManager(secureStorage)
@@ -159,7 +164,7 @@ class TokenManagerTest {
     fun `isTokenExpired returns false when token still valid`() {
         // Given - token expires in 1 hour
         val expiryTime = System.currentTimeMillis() + (60 * 60 * 1000)
-        every { secureStorage.getDeviceId() } returns expiryTime.toString()
+        every { secureStorage.getTokenExpiry() } returns expiryTime
 
         // Create fresh instance
         val freshTokenManager = TokenManager(secureStorage)
@@ -169,5 +174,44 @@ class TokenManagerTest {
 
         // Then
         assertFalse(result)
+    }
+    
+    @Test
+    fun `getRefreshToken returns token from secure storage`() {
+        // Given
+        val expectedToken = "test_refresh_token"
+        every { secureStorage.getRefreshToken() } returns expectedToken
+
+        // When
+        val result = tokenManager.getRefreshToken()
+
+        // Then
+        assertEquals(expectedToken, result)
+    }
+    
+    @Test
+    fun `getUserId returns user ID from secure storage`() {
+        // Given
+        val expectedUserId = "user123"
+        every { secureStorage.getUserId() } returns expectedUserId
+
+        // When
+        val result = tokenManager.getUserId()
+
+        // Then
+        assertEquals(expectedUserId, result)
+    }
+    
+    @Test
+    fun `getPhoneNumber returns phone from secure storage`() {
+        // Given
+        val expectedPhone = "0201234567"
+        every { secureStorage.getUserPhoneNumber() } returns expectedPhone
+
+        // When
+        val result = tokenManager.getPhoneNumber()
+
+        // Then
+        assertEquals(expectedPhone, result)
     }
 }
