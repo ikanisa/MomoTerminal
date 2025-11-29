@@ -1,0 +1,38 @@
+{
+  "_comment": "This is a SAMPLE file. Copy to google-services.json and update with your Firebase configuration.",
+  "_instructions": [
+    "1. Go to https://console.firebase.google.com/",
+    "2. Create a new project or select an existing one",
+    "3. Add an Android app with package name: com.momoterminal",
+    "4. Download the google-services.json file",
+    "5. Replace this file with the downloaded google-services.json",
+    "NOTE: google-services.json is in .gitignore and should NOT be committed"
+  ],
+  "project_info": {
+    "project_number": "123456789",
+    "project_id": "momoterminal-dev",
+    "storage_bucket": "momoterminal-dev.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:123456789:android:abcdef123456",
+        "android_client_info": {
+          "package_name": "com.momoterminal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "REPLACE_WITH_YOUR_FIREBASE_API_KEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
