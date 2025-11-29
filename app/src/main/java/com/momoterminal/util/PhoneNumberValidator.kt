@@ -50,6 +50,11 @@ class PhoneNumberValidator @Inject constructor() {
             return ValidationResult.Invalid("Phone number cannot be empty")
         }
         
+        // Check minimum length before processing
+        if (cleaned.length < MIN_PHONE_LENGTH) {
+            return ValidationResult.Invalid("Phone number is too short")
+        }
+        
         // Check if it starts with +
         val formatted = when {
             cleaned.startsWith("+") -> {
@@ -89,9 +94,9 @@ class PhoneNumberValidator @Inject constructor() {
             }
         }
         
-        // Validate length
-        if (formatted.length < MIN_PHONE_LENGTH || formatted.length > MAX_PHONE_LENGTH) {
-            return ValidationResult.Invalid("Phone number has invalid length")
+        // Validate max length (E164 pattern already validates min length)
+        if (formatted.length > MAX_PHONE_LENGTH) {
+            return ValidationResult.Invalid("Phone number is too long")
         }
         
         return ValidationResult.Valid(formatted)

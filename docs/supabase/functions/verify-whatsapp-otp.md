@@ -242,24 +242,27 @@ serve(async (req) => {
       )
     }
     
-    // Generate session tokens
-    const { data: session, error: sessionError } = await supabase.auth.admin.generateLink({
-      type: 'magiclink',
-      email: `${phone_number.replace('+', '')}@phone.momoterminal.com`,
+    // Generate session tokens using admin API
+    // Note: Supabase's phone auth flow handles session creation internally
+    // This is a simplified example - in production, use Supabase's built-in phone OTP verification
+    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
+      user_id: user.id,
     })
     
-    // For phone auth, we use the admin API to create a session directly
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      phone: phone_number,
-      password: otpRecord.code // Temporary, should use proper session management
-    })
+    if (sessionError || !sessionData.session) {
+      console.error('Error creating session:', sessionError)
+      return new Response(
+        JSON.stringify({ success: false, error: 'session_error', message: 'Failed to create session' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
     
     // Return success with session
     return new Response(
       JSON.stringify({
         success: true,
-        access_token: signInData?.session?.access_token || 'generated_token',
-        refresh_token: signInData?.session?.refresh_token || 'generated_refresh',
+        access_token: sessionData.session.access_token,
+        refresh_token: sessionData.session.refresh_token,
         expires_in: 3600,
         token_type: 'bearer',
         user: {

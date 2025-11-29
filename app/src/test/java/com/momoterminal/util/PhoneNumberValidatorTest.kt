@@ -94,6 +94,7 @@ class PhoneNumberValidatorTest {
     fun `validate returns Invalid for too short number`() {
         val result = validator.validate("+1234")
         assertTrue(result is PhoneNumberValidator.ValidationResult.Invalid)
+        assertTrue((result as PhoneNumberValidator.ValidationResult.Invalid).reason.contains("short"))
     }
 
     @Test
