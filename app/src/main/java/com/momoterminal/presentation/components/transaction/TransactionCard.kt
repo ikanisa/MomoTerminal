@@ -3,7 +3,6 @@ package com.momoterminal.presentation.components.transaction
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,13 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -35,58 +30,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import com.momoterminal.domain.model.Provider
-import com.momoterminal.domain.model.SyncStatus
-import com.momoterminal.domain.model.Transaction
-import com.momoterminal.presentation.accessibility.formatTransactionForScreenReader
-import com.momoterminal.presentation.accessibility.minTouchTarget
-import com.momoterminal.util.toCurrency
-import com.momoterminal.util.toRelativeTime
-
-/**
- * Card component for displaying a single transaction.
- */
-@Composable
-fun TransactionCard(
-    transaction: Transaction,
-    onClick: () -> Unit = {},
-    modifier: Modifier = Modifier
-) {
-    val accessibilityDescription = formatTransactionForScreenReader(
-        amountInPesewas = transaction.amountInPesewas,
-        currencyCode = transaction.currency,
-        sender = transaction.sender,
-        timestamp = transaction.timestamp,
-        status = transaction.status.value
-    )
-    
-    Card(
-        onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .minTouchTarget()
-            .semantics { contentDescription = accessibilityDescription },
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.momoterminal.data.local.entity.TransactionEntity
-import com.momoterminal.presentation.components.status.StatusBadge
-import com.momoterminal.presentation.components.terminal.AmountDisplayCompact
 import com.momoterminal.presentation.theme.MomoTerminalTheme
-import com.momoterminal.presentation.theme.PaymentShapes
 import com.momoterminal.presentation.theme.StatusFailed
 import com.momoterminal.presentation.theme.StatusPending
 import com.momoterminal.presentation.theme.StatusSent
@@ -105,7 +55,6 @@ fun TransactionCard(
 ) {
     val isReceived = transaction.body.contains("received", ignoreCase = true)
     val statusColor = getStatusColor(transaction.status)
-    val statusIcon = getStatusIcon(transaction.status)
     
     // Extract amount from body (simplified parsing)
     val amount = extractAmount(transaction.body)
@@ -113,7 +62,7 @@ fun TransactionCard(
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = PaymentShapes.transactionCard,
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -125,49 +74,10 @@ fun TransactionCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Provider icon/indicator
-            ProviderChip(
-                provider = Provider.fromSender(transaction.sender),
-                modifier = Modifier.size(40.dp)
-            )
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
-            // Transaction details
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                // Sender/Provider name
-                Text(
-                    text = transaction.sender,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                
-                Spacer(modifier = Modifier.height(2.dp))
-                
-                // Transaction ID or body preview
-                Text(
-                    text = transaction.transactionId ?: transaction.body.take(50),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                
-                Spacer(modifier = Modifier.height(4.dp))
-                
-                // Timestamp
-                Text(
-                    text = transaction.timestamp.toRelativeTime(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
             // Transaction direction icon
             Surface(
                 modifier = Modifier.size(40.dp),
-                shape = PaymentShapes.nfcIndicator,
+                shape = CircleShape,
                 color = if (isReceived) {
                     MaterialTheme.colorScheme.tertiaryContainer
                 } else {
@@ -188,17 +98,6 @@ fun TransactionCard(
             
             Spacer(modifier = Modifier.width(12.dp))
             
-            // Amount and sync status
-            Column(
-                horizontalAlignment = Alignment.End
-            ) {
-                // Amount - use getDisplayAmount() to convert from pesewas
-                transaction.getDisplayAmount()?.let { amount ->
-                    Text(
-                        text = amount.toCurrency(transaction.currency),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
             // Transaction details
             Column(
                 modifier = Modifier.weight(1f)
@@ -225,66 +124,63 @@ fun TransactionCard(
                 
                 Spacer(modifier = Modifier.height(4.dp))
                 
-                // Sync status chip
-                SyncStatusChip(status = transaction.status)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = formatTimestamp(transaction.timestamp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    if (amount != null) {
+                        Text(
+                            text = "GHS $amount",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (isReceived) {
+                                MaterialTheme.colorScheme.tertiary
+                            } else {
+                                MaterialTheme.colorScheme.secondary
+                            }
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 /**
- * Chip showing the provider (MTN, Vodafone, etc.).
+ * Status badge showing transaction sync status.
  */
 @Composable
-fun ProviderChip(
-    provider: Provider?,
+fun StatusBadge(
+    status: String,
     modifier: Modifier = Modifier
 ) {
-    val (backgroundColor, textColor) = when (provider) {
-        Provider.MTN -> Pair(Color(0xFFFFCC00), Color.Black)
-        Provider.VODAFONE -> Pair(Color(0xFFE60000), Color.White)
-        Provider.AIRTELTIGO -> Pair(Color(0xFF0066CC), Color.White)
-        null -> Pair(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-    
-    Box(
-        modifier = modifier
-            .clip(CircleShape)
-            .background(backgroundColor),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = provider?.displayName?.take(1) ?: "?",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = textColor
-        )
-    }
-}
-
-/**
- * Chip showing sync status.
- */
-@Composable
-fun SyncStatusChip(
-    status: SyncStatus,
-    modifier: Modifier = Modifier
-) {
-    val (backgroundColor, textColor, text) = when (status) {
-        SyncStatus.PENDING -> Triple(
-            MaterialTheme.colorScheme.tertiaryContainer,
-            MaterialTheme.colorScheme.onTertiaryContainer,
-            "Pending"
-        )
-        SyncStatus.SENT -> Triple(
+    val (backgroundColor, textColor, icon) = when (status.uppercase()) {
+        "SENT" -> Triple(
             MaterialTheme.colorScheme.primaryContainer,
             MaterialTheme.colorScheme.onPrimaryContainer,
-            "Synced"
+            Icons.Filled.CheckCircle
         )
-        SyncStatus.FAILED -> Triple(
+        "PENDING" -> Triple(
+            MaterialTheme.colorScheme.tertiaryContainer,
+            MaterialTheme.colorScheme.onTertiaryContainer,
+            Icons.Filled.Schedule
+        )
+        "FAILED" -> Triple(
             MaterialTheme.colorScheme.errorContainer,
             MaterialTheme.colorScheme.onErrorContainer,
-            "Failed"
+            Icons.Filled.Error
+        )
+        else -> Triple(
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.onSurfaceVariant,
+            Icons.Filled.Schedule
         )
     }
     
@@ -293,12 +189,23 @@ fun SyncStatusChip(
         shape = RoundedCornerShape(4.dp),
         color = backgroundColor
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelSmall,
-            color = textColor,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(12.dp),
+                tint = textColor
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = status.lowercase().replaceFirstChar { it.uppercase() },
+                style = MaterialTheme.typography.labelSmall,
+                color = textColor
+            )
+        }
     }
 }
 
@@ -322,7 +229,7 @@ fun TransactionCardPlaceholder(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Provider placeholder
+            // Icon placeholder
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -359,26 +266,6 @@ fun TransactionCardPlaceholder(
                     .clip(RoundedCornerShape(4.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             )
-        }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = formatTimestamp(transaction.timestamp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    
-                    if (amount != null) {
-                        AmountDisplayCompact(
-                            amount = amount,
-                            isPositive = isReceived
-                        )
-                    }
-                }
-            }
         }
     }
 }

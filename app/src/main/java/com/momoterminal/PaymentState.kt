@@ -20,6 +20,13 @@ object PaymentState {
     // Current payment amount for NFC broadcasting (in pesewas)
     var currentAmountInPesewas: Long? = null
     
+    /**
+     * Get the current amount as a formatted string for NFC broadcasting.
+     * Returns the amount in GHS (e.g., "10.50") or null if not set.
+     */
+    val currentAmount: String?
+        get() = currentAmountInPesewas?.let { "%.2f".format(it / 100.0) }
+    
     // LiveData for SMS log updates
     val smsLog: MutableLiveData<String> = MutableLiveData("")
     
