@@ -14,7 +14,6 @@ import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.view.WindowManager
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators
 import androidx.lifecycle.AndroidViewModel
@@ -272,6 +271,8 @@ class CapabilitiesViewModel @Inject constructor(
      * 
      * Uses VibratorManager on Android 12+ and Vibrator on older versions.
      */
+    // Suppressing MissingPermission because android.permission.VIBRATE is declared
+    // in AndroidManifest.xml and is a normal permission (auto-granted at install time)
     @SuppressLint("MissingPermission")
     fun testVibration() {
         try {
@@ -325,23 +326,32 @@ class CapabilitiesViewModel @Inject constructor(
      * Demonstrates the PREVENT PHONE FROM SLEEPING capability.
      * 
      * IMPORTANT: Always release WakeLocks when no longer needed to preserve battery.
+     * 
+     * Note: For this demo, we acquire with a 10-minute timeout to prevent indefinite
+     * battery drain if the user forgets to release it. In production apps, you should:
+     * - Use the shortest timeout that meets your requirements
+     * - Release the WakeLock as soon as possible
+     * - Consider using WorkManager for background tasks instead
      */
-    @SuppressLint("WakelockTimeout")
     fun acquireWakeLock() {
         if (wakeLock?.isHeld == true) {
             Timber.d("WakeLock already held")
             return
         }
 
+        // Acquire with a 10-minute timeout (600,000 ms) to prevent indefinite battery drain
+        // The WakeLock will automatically release after this timeout if not explicitly released
+        val timeoutMs = 10 * 60 * 1000L // 10 minutes
+        
         wakeLock = powerManager.newWakeLock(
             PowerManager.PARTIAL_WAKE_LOCK,
             "MomoTerminal:CapabilitiesDemoWakeLock"
         ).apply {
-            acquire()
+            acquire(timeoutMs)
         }
 
         _uiState.update { it.copy(wakeLockHeld = true) }
-        Timber.d("WakeLock acquired")
+        Timber.d("WakeLock acquired with ${timeoutMs / 1000}s timeout")
     }
 
     /**
