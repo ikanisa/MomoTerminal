@@ -1,6 +1,7 @@
 package com.momoterminal.supabase
 
 import io.github.jan.supabase.gotrue.Auth
+import io.github.jan.supabase.gotrue.providers.Phone
 import io.github.jan.supabase.gotrue.user.UserInfo
 import io.github.jan.supabase.gotrue.user.UserSession
 import kotlinx.coroutines.Dispatchers
@@ -78,12 +79,23 @@ class SupabaseAuthService @Inject constructor(
                 
                 // Use the session tokens from the Edge Function response
                 if (body.accessToken != null && body.refreshToken != null) {
+                    // Import the session into Supabase client
+                    try {
+                        auth.importSession(
+                            accessToken = body.accessToken,
+                            refreshToken = body.refreshToken
+                        )
+                        Timber.d("Session imported successfully")
+                    } catch (importError: Exception) {
+                        Timber.w(importError, "Failed to import session, but continuing")
+                    }
+                    
                     // Create SessionData from Edge Function response
                     val sessionData = SessionData(
                         accessToken = body.accessToken,
                         refreshToken = body.refreshToken,
-                        expiresIn = body.expiresIn?.toLong() ?: 604800L, // Default 7 days
-                        expiresAt = System.currentTimeMillis() / 1000 + (body.expiresIn?.toLong() ?: 604800L),
+                        expiresIn = body.expiresIn?.toLong() ?: 3600L,
+                        expiresAt = System.currentTimeMillis() / 1000 + (body.expiresIn?.toLong() ?: 3600L),
                         user = SupabaseUser(
                             id = body.userId ?: "",
                             phone = phoneNumber,
@@ -96,18 +108,11 @@ class SupabaseAuthService @Inject constructor(
                     Timber.d("Session created with access token")
                     AuthResult.Success(sessionData)
                 } else {
-                    // Fallback: Try to get session from Supabase
-                    val session = auth.currentSessionOrNull()
-                    if (session != null) {
-                        val sessionData = session.toSessionData()
-                        AuthResult.Success(sessionData)
-                    } else {
-                        Timber.w("No session tokens returned from Edge Function")
-                        AuthResult.Error(
-                            message = "OTP verified but session not created. Please try again.",
-                            code = "NO_SESSION"
-                        )
-                    }
+                    Timber.w("No session tokens returned from Edge Function")
+                    AuthResult.Error(
+                        message = "OTP verified but session not created. Please try again.",
+                        code = "NO_SESSION"
+                    )
                 }
             } else {
                 val errorMessage = response.body()?.error ?: "Invalid OTP code"

@@ -332,24 +332,20 @@ serve(async (req) => {
     // Step 4: Generate session tokens for the user
     console.log(`Generating session for user ${userId}`)
     
-    // Since we can't use createSession (doesn't exist) or generateLink (requires email),
-    // we'll update the user to ensure they're confirmed and return a success response
-    // The client will need to call signInWithOtp on their end to get the session
-    const { data: userData, error: updateError } = await supabase.auth.admin.updateUserById(
-      userId!,
-      {
-        phone_confirm: true,
-        user_metadata: {
-          phone_verified: true,
-          verified_at: new Date().toISOString()
-        }
+    // Use generateLink with 'recovery' type which works for phone-only users
+    // This will generate valid access and refresh tokens
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: 'recovery',
+      email: `${phoneNumber.replace('+', '')}@phone.local`, // Use phone as fake email
+      options: {
+        redirectTo: 'app://callback'
       }
-    )
+    })
 
-    if (updateError) {
-      console.error('User update error:', updateError)
+    if (linkError || !linkData) {
+      console.error('Link generation error:', linkError)
       
-      // Revert OTP verification since update failed
+      // Revert OTP verification since session creation failed
       const { error: revertError } = await supabase
         .from('otp_codes')
         .update({ verified_at: null })
@@ -369,18 +365,22 @@ serve(async (req) => {
       )
     }
 
-    console.log(`User confirmed successfully for ${userId}`)
+    console.log(`Session tokens generated successfully for ${userId}`)
 
-    // Return success - client should use the OTP to sign in and get tokens
-    // We return a temporary token that the client can use
+    // Extract tokens from the hashed_token (this is the access token)
+    const accessToken = linkData.properties?.hashed_token || linkData.properties?.access_token
+    const refreshToken = linkData.properties?.refresh_token
+    const expiresIn = linkData.properties?.expires_in || 3600
+
+    // Return success with session tokens
     const response: VerifyOtpResponse = {
       success: true,
       message: 'OTP verified successfully',
       userId: userId!,
       isNewUser: isNewUser,
-      accessToken: 'verified', // Placeholder - client should call signIn
-      refreshToken: 'verified', // Placeholder - client should call signIn  
-      expiresIn: 3600
+      accessToken: accessToken!,
+      refreshToken: refreshToken!,
+      expiresIn: expiresIn
     }
 
     return new Response(
