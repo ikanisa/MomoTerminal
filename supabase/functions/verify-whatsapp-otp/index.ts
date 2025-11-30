@@ -329,12 +329,11 @@ serve(async (req) => {
       }
     }
 
-    // Step 4: Generate session tokens for the authenticated user
-    console.log(`Creating session for user ${userId}`)
+    // Step 4: Create a real Supabase session using signInWithOtp
+    console.log(`Creating Supabase session for user ${userId}`)
     
-    // Use signInWithPassword with a temporary password approach
-    // OR use the admin update to set phone_confirmed and return user data
-    const { data: userData, error: userError } = await supabase.auth.admin.updateUserById(
+    // First, ensure the user's phone is confirmed
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
       userId!,
       { 
         phone_confirm: true,
@@ -345,22 +344,18 @@ serve(async (req) => {
       }
     )
     
-    if (userError) {
-      console.error('User update error:', userError)
+    if (updateError) {
+      console.error('User update error:', updateError)
     }
     
-    // Create a custom JWT token for this user
-    // Since we can't use createSession, we'll return the user data
-    // and let the client handle session creation
-    const sessionData = {
-      user: userData?.user || { id: userId },
-      access_token: `manual_auth_${userId}_${Date.now()}`, // Placeholder
-      refresh_token: `refresh_${userId}_${Date.now()}`, // Placeholder  
-      expires_in: 3600 * 24 * 7,
-      token_type: 'bearer'
-    }
-    
-    const sessionError = userData ? null : userError
+    // Now use Supabase's signInWithOtp to create a real session
+    // This will generate proper JWT tokens
+    const { data: sessionData, error: sessionError } = await supabase.auth.signInWithOtp({
+      phone: phoneNumber,
+      options: {
+        shouldCreateUser: false // User already exists
+      }
+    })
 
     if (sessionError || !sessionData) {
       console.error('Session creation error:', sessionError)
@@ -385,17 +380,23 @@ serve(async (req) => {
       )
     }
 
-    console.log(`User phone confirmed for ${userId}`)
+    console.log(`Supabase session created for ${userId}`)
 
-    // Return success - client will handle session creation
+    // Extract session information
+    // Note: signInWithOtp returns session data in the response
+    const accessToken = sessionData.session?.access_token
+    const refreshToken = sessionData.session?.refresh_token
+    const expiresIn = sessionData.session?.expires_in || 3600
+
+    // Return success with real session tokens
     const response: VerifyOtpResponse = {
       success: true,
       message: 'OTP verified successfully',
       userId: userId!,
       isNewUser: isNewUser,
-      accessToken: sessionData.access_token,
-      refreshToken: sessionData.refresh_token,
-      expiresIn: sessionData.expires_in
+      accessToken: accessToken!,
+      refreshToken: refreshToken!,
+      expiresIn: expiresIn
     }
 
     return new Response(
