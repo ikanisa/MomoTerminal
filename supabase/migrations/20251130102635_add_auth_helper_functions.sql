@@ -13,14 +13,14 @@ DECLARE
 BEGIN
   -- Normalize phone by removing leading + if present
   normalized_phone := CASE 
-    WHEN phone LIKE '+%' THEN substring(phone from 2)
-    ELSE phone
+    WHEN get_user_id_by_phone.phone LIKE '+%' THEN substring(get_user_id_by_phone.phone from 2)
+    ELSE get_user_id_by_phone.phone
   END;
   
   -- Look up user ID from auth.users by phone (try both formats)
   SELECT id INTO user_uuid
-  FROM auth.users
-  WHERE phone = normalized_phone OR phone = get_user_id_by_phone.phone
+  FROM auth.users u
+  WHERE u.phone = normalized_phone OR u.phone = get_user_id_by_phone.phone
   LIMIT 1;
   
   RETURN user_uuid;

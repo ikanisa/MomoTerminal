@@ -329,16 +329,20 @@ serve(async (req) => {
       }
     }
 
-    // Step 4: Create session for the user
-    console.log(`Creating session for user ${userId}`)
+    // Step 4: Generate access tokens for the user
+    console.log(`Generating session for user ${userId}`)
     
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
-      user_id: userId!,
-      expiresIn: 3600 * 24 * 7 // 7 days
+    // Use the admin API to generate a link which contains the access/refresh tokens
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email: `${userId}@temp.local`, // Temporary email for phone-only auth
+      options: {
+        redirectTo: 'app://callback'
+      }
     })
 
-    if (sessionError) {
-      console.error('Session creation error:', sessionError)
+    if (linkError || !linkData) {
+      console.error('Link generation error:', linkError)
       
       // Revert OTP verification since session creation failed
       const { error: revertError } = await supabase
@@ -360,7 +364,12 @@ serve(async (req) => {
       )
     }
 
-    console.log(`Session created successfully for ${userId}`)
+    console.log(`Session generated successfully for ${userId}`)
+
+    // Extract tokens from the properties
+    const accessToken = linkData.properties?.access_token
+    const refreshToken = linkData.properties?.refresh_token
+    const expiresIn = linkData.properties?.expires_in || 3600
 
     // Return success with session tokens
     const response: VerifyOtpResponse = {
@@ -368,9 +377,9 @@ serve(async (req) => {
       message: 'OTP verified successfully',
       userId: userId!,
       isNewUser: isNewUser,
-      accessToken: sessionData.session.access_token,
-      refreshToken: sessionData.session.refresh_token,
-      expiresIn: sessionData.session.expires_in
+      accessToken: accessToken!,
+      refreshToken: refreshToken!,
+      expiresIn: expiresIn
     }
 
     return new Response(
