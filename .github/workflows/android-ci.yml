@@ -33,9 +33,11 @@ jobs:
 
       - name: Create google-services.json for CI
         run: |
-          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
-          if [ ! -s app/google-services.json ]; then
-            echo '{"project_info":{"project_id":"momoterminal-ci"},"client":[{"client_info":{"mobilesdk_app_id":"1:123456789:android:abcdef","android_client_info":{"package_name":"com.momoterminal"}},"api_key":[{"current_key":"AIza_placeholder"}]}]}' > app/google-services.json
+          if [ -n '${{ secrets.GOOGLE_SERVICES_JSON }}' ]; then
+            echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+          fi
+          if [ ! -s app/google-services.json ] || ! python3 -c "import json; json.load(open('app/google-services.json'))" 2>/dev/null; then
+            echo '{"project_info":{"project_number":"000000000000","project_id":"momoterminal-ci","storage_bucket":"momoterminal-ci.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.momoterminal"}},"oauth_client":[],"api_key":[{"current_key":"AIza_placeholder_key_for_ci_builds"}],"services":{}}],"configuration_version":"1"}' > app/google-services.json
           fi
 
       - name: Run Android Lint
@@ -80,9 +82,11 @@ jobs:
 
       - name: Create google-services.json for CI
         run: |
-          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
-          if [ ! -s app/google-services.json ]; then
-            echo '{"project_info":{"project_id":"momoterminal-ci"},"client":[{"client_info":{"mobilesdk_app_id":"1:123456789:android:abcdef","android_client_info":{"package_name":"com.momoterminal"}},"api_key":[{"current_key":"AIza_placeholder"}]}]}' > app/google-services.json
+          if [ -n '${{ secrets.GOOGLE_SERVICES_JSON }}' ]; then
+            echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+          fi
+          if [ ! -s app/google-services.json ] || ! python3 -c "import json; json.load(open('app/google-services.json'))" 2>/dev/null; then
+            echo '{"project_info":{"project_number":"000000000000","project_id":"momoterminal-ci","storage_bucket":"momoterminal-ci.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.momoterminal"}},"oauth_client":[],"api_key":[{"current_key":"AIza_placeholder_key_for_ci_builds"}],"services":{}}],"configuration_version":"1"}' > app/google-services.json
           fi
 
       - name: Run unit tests
@@ -128,9 +132,11 @@ jobs:
 
       - name: Create google-services.json for CI
         run: |
-          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
-          if [ ! -s app/google-services.json ]; then
-            echo '{"project_info":{"project_id":"momoterminal-ci"},"client":[{"client_info":{"mobilesdk_app_id":"1:123456789:android:abcdef","android_client_info":{"package_name":"com.momoterminal"}},"api_key":[{"current_key":"AIza_placeholder"}]}]}' > app/google-services.json
+          if [ -n '${{ secrets.GOOGLE_SERVICES_JSON }}' ]; then
+            echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+          fi
+          if [ ! -s app/google-services.json ] || ! python3 -c "import json; json.load(open('app/google-services.json'))" 2>/dev/null; then
+            echo '{"project_info":{"project_number":"000000000000","project_id":"momoterminal-ci","storage_bucket":"momoterminal-ci.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.momoterminal"}},"oauth_client":[],"api_key":[{"current_key":"AIza_placeholder_key_for_ci_builds"}],"services":{}}],"configuration_version":"1"}' > app/google-services.json
           fi
 
       - name: AVD cache
@@ -194,9 +200,11 @@ jobs:
 
       - name: Create google-services.json for CI
         run: |
-          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
-          if [ ! -s app/google-services.json ]; then
-            echo '{"project_info":{"project_id":"momoterminal-ci"},"client":[{"client_info":{"mobilesdk_app_id":"1:123456789:android:abcdef","android_client_info":{"package_name":"com.momoterminal"}},"api_key":[{"current_key":"AIza_placeholder"}]}]}' > app/google-services.json
+          if [ -n '${{ secrets.GOOGLE_SERVICES_JSON }}' ]; then
+            echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+          fi
+          if [ ! -s app/google-services.json ] || ! python3 -c "import json; json.load(open('app/google-services.json'))" 2>/dev/null; then
+            echo '{"project_info":{"project_number":"000000000000","project_id":"momoterminal-ci","storage_bucket":"momoterminal-ci.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.momoterminal"}},"oauth_client":[],"api_key":[{"current_key":"AIza_placeholder_key_for_ci_builds"}],"services":{}}],"configuration_version":"1"}' > app/google-services.json
           fi
 
       - name: Build Debug APK
@@ -230,7 +238,13 @@ jobs:
         run: chmod +x gradlew
 
       - name: Create google-services.json
-        run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+        run: |
+          if [ -n '${{ secrets.GOOGLE_SERVICES_JSON }}' ]; then
+            echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+          fi
+          if [ ! -s app/google-services.json ] || ! python3 -c "import json; json.load(open('app/google-services.json'))" 2>/dev/null; then
+            echo '{"project_info":{"project_number":"000000000000","project_id":"momoterminal-ci","storage_bucket":"momoterminal-ci.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.momoterminal"}},"oauth_client":[],"api_key":[{"current_key":"AIza_placeholder_key_for_ci_builds"}],"services":{}}],"configuration_version":"1"}' > app/google-services.json
+          fi
 
       - name: Decode Keystore
         run: |
