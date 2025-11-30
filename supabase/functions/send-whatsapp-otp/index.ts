@@ -31,9 +31,14 @@ serve(async (req) => {
     // Parse request body
     const { phoneNumber }: RequestBody = await req.json()
 
-    if (!phoneNumber) {
+    // Validate phone number format (E.164)
+    const phoneRegex = /^\+[1-9]\d{9,14}$/
+    if (!phoneNumber || !phoneRegex.test(phoneNumber)) {
       return new Response(
-        JSON.stringify({ error: 'Phone number is required' }),
+        JSON.stringify({ 
+          error: 'Invalid phone number format. Must be E.164 format (e.g., +250788767816)',
+          code: 'INVALID_PHONE_FORMAT'
+        }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       )
     }
@@ -59,18 +64,27 @@ serve(async (req) => {
       )
     }
 
-    // Generate 6-digit OTP
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
+    // Generate 6-digit OTP using cryptographically secure random
+    const array = new Uint32Array(1)
+    crypto.getRandomValues(array)
+    const otpCode = String(100000 + (array[0] % 900000)).padStart(6, '0')
+
+    // Hash the OTP for secure storage (SHA-256 with phone number as salt)
+    const encoder = new TextEncoder()
+    const data = encoder.encode(otpCode + phoneNumber)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    const otpHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 
     // Set expiry time (5 minutes from now)
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
 
-    // Save OTP to database
+    // Save hashed OTP to database (never store plaintext)
     const { data: otpData, error: dbError } = await supabase
       .from('otp_codes')
       .insert({
         phone_number: phoneNumber,
-        code: otpCode,
+        code: otpHash, // Store hash instead of plaintext
         template_name: 'momo_terminal',
         channel: 'whatsapp',
         expires_at: expiresAt,
@@ -81,7 +95,13 @@ serve(async (req) => {
 
     if (dbError) {
       console.error('Database error:', dbError)
-      throw new Error('Failed to save OTP')
+      return new Response(
+        JSON.stringify({ 
+          error: 'Unable to process request. Please try again.',
+          code: 'DB_ERROR'
+        }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      )
     }
 
     // Send WhatsApp message using Meta Business API
@@ -135,7 +155,7 @@ serve(async (req) => {
     const whatsappData: WhatsAppMessageResponse = await whatsappResponse.json()
 
     if (!whatsappResponse.ok) {
-      console.error('WhatsApp API error:', whatsappData)
+      console.error('WhatsApp API error:', JSON.stringify(whatsappData))
       
       // Delete the OTP from database since sending failed
       await supabase
@@ -145,8 +165,8 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({ 
-          error: 'Failed to send WhatsApp message',
-          details: whatsappData 
+          error: 'Unable to send OTP. Please try again.',
+          code: 'DELIVERY_FAILED'
         }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       )

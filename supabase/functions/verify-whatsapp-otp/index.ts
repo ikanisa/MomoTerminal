@@ -29,11 +29,25 @@ serve(async (req) => {
     // Parse and validate request
     const { phoneNumber, otpCode }: RequestBody = await req.json()
 
-    if (!phoneNumber || !otpCode) {
+    // Validate phone number format (E.164)
+    const phoneRegex = /^\+[1-9]\d{9,14}$/
+    if (!phoneNumber || !phoneRegex.test(phoneNumber)) {
       return new Response(
         JSON.stringify({ 
-          error: 'Phone number and OTP code are required',
-          code: 'MISSING_PARAMS'
+          error: 'Invalid phone number format',
+          code: 'INVALID_PHONE_FORMAT'
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Validate OTP format (exactly 6 digits)
+    const otpRegex = /^\d{6}$/
+    if (!otpCode || !otpRegex.test(otpCode)) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'OTP must be exactly 6 digits',
+          code: 'INVALID_OTP_FORMAT'
         }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       )
@@ -44,15 +58,23 @@ serve(async (req) => {
 
     console.log(`Verifying OTP for phone: ${phoneNumber}`)
 
-    // Step 1: Find and validate OTP code
-    console.log(`Looking for OTP: ${otpCode} for phone: ${phoneNumber}`)
+    // Hash the provided OTP for comparison
+    const encoder = new TextEncoder()
+    const data = encoder.encode(otpCode + phoneNumber)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    const otpHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+
+    // Step 1: Find and validate OTP code using hash comparison
+    console.log(`Looking for OTP hash for phone: ${phoneNumber}`)
     const { data: otpData, error: fetchError } = await supabase
       .from('otp_codes')
       .select('*')
       .eq('phone_number', phoneNumber)
-      .eq('code', otpCode)
+      .eq('code', otpHash) // Compare hashes instead of plaintext
       .is('verified_at', null)
       .gt('expires_at', new Date().toISOString())
+      .lt('attempts', 5) // Atomic check - must be less than 5
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -62,25 +84,21 @@ serve(async (req) => {
       console.error('OTP fetch error details:', JSON.stringify(fetchError))
       return new Response(
         JSON.stringify({ 
-          error: 'Database error',
-          code: 'DB_ERROR',
-          details: fetchError.message
+          error: 'Unable to verify OTP. Please try again.',
+          code: 'DB_ERROR'
         }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       )
     }
 
     if (!otpData) {
-      console.log(`Invalid OTP: ${otpCode} for ${phoneNumber}`)
+      console.log(`Invalid OTP for ${phoneNumber}`)
       console.log(`Current time: ${new Date().toISOString()}`)
-      // Let's query to see what OTPs exist for debugging
-      const { data: debugOtps } = await supabase
-        .from('otp_codes')
-        .select('code, expires_at, verified_at, attempts')
-        .eq('phone_number', phoneNumber)
-        .order('created_at', { ascending: false })
-        .limit(3)
-      console.log(`Recent OTPs for ${phoneNumber}:`, JSON.stringify(debugOtps))
+      
+      // Increment attempts for all recent OTPs (rate limiting)
+      await supabase.rpc('increment_otp_attempts', { 
+        p_phone_number: phoneNumber 
+      }).catch(e => console.error('Failed to increment attempts:', e))
       
       return new Response(
         JSON.stringify({ 
@@ -91,32 +109,24 @@ serve(async (req) => {
       )
     }
 
-    // Check max attempts
-    if (otpData.attempts >= 5) {
-      console.log(`Max attempts exceeded for ${phoneNumber}`)
-      return new Response(
-        JSON.stringify({ 
-          error: 'Maximum verification attempts exceeded',
-          code: 'MAX_ATTEMPTS'
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Step 2: Mark OTP as verified
-    const { error: updateError } = await supabase
+    // Step 2: Atomically mark OTP as verified and increment attempts
+    // This prevents race conditions
+    const { data: updatedOtp, error: updateError } = await supabase
       .from('otp_codes')
       .update({ 
         verified_at: new Date().toISOString(),
         attempts: otpData.attempts + 1
       })
       .eq('id', otpData.id)
+      .is('verified_at', null) // Ensure it hasn't been verified by another request
+      .select()
+      .maybeSingle()
 
-    if (updateError) {
+    if (updateError || !updatedOtp) {
       console.error('Failed to update OTP:', updateError)
       return new Response(
         JSON.stringify({ 
-          error: 'Failed to verify OTP',
+          error: 'Unable to verify OTP. Please try again.',
           code: 'UPDATE_ERROR'
         }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
@@ -161,25 +171,23 @@ serve(async (req) => {
       if (authError) {
         console.error('Auth user creation error:', authError)
         
-        // If user already exists in auth, try to get them
+        // If user already exists in auth, use getUserByPhone for efficient lookup
         if (authError.message?.includes('already registered')) {
-          console.log('User exists in auth, fetching...')
-          const { data: users, error: listError } = await supabase.auth.admin.listUsers({
-            page: 1,
-            perPage: 1000
-          })
+          console.log('User exists in auth, fetching by phone...')
           
-          if (!listError && users) {
-            const existingUser = users.users.find(u => u.phone === phoneNumber)
-            if (existingUser) {
-              userId = existingUser.id
-              console.log(`Found existing auth user: ${userId}`)
-            } else {
-              throw new Error('User exists but could not be found')
-            }
-          } else {
-            throw new Error(`Failed to create user: ${authError.message}`)
+          // Use direct lookup instead of listing all users
+          const { data: existingAuthUser, error: getUserError } = await supabase.rpc(
+            'get_user_id_by_phone',
+            { phone: phoneNumber }
+          )
+          
+          if (getUserError || !existingAuthUser) {
+            console.error('Failed to get user by phone:', getUserError)
+            throw new Error('User exists but could not be retrieved')
           }
+          
+          userId = existingAuthUser
+          console.log(`Found existing auth user: ${userId}`)
         } else {
           throw new Error(`Failed to create user: ${authError.message}`)
         }
@@ -218,16 +226,21 @@ serve(async (req) => {
 
     if (sessionError) {
       console.error('Session creation error:', sessionError)
-      // Return success anyway - user is verified
+      
+      // Revert OTP verification since session creation failed
+      await supabase
+        .from('otp_codes')
+        .update({ verified_at: null })
+        .eq('id', otpData.id)
+        .catch(e => console.error('Failed to revert OTP:', e))
+      
       return new Response(
         JSON.stringify({
-          success: true,
-          message: 'OTP verified successfully',
-          userId: userId,
-          isNewUser: isNewUser,
+          success: false,
+          error: 'Authentication failed. Please try again.',
           code: 'SESSION_ERROR'
         }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
       )
     }
 
@@ -254,9 +267,8 @@ serve(async (req) => {
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Internal server error',
-        code: 'INTERNAL_ERROR',
-        details: error instanceof Error ? error.stack : String(error)
+        error: 'An unexpected error occurred. Please try again.',
+        code: 'INTERNAL_ERROR'
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     )
