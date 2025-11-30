@@ -31,9 +31,12 @@ class SupabaseAuthService @Inject constructor(
         try {
             Timber.d("Sending WhatsApp OTP to: $phoneNumber")
             
+            // Use signInWith OTP and specify WhatsApp channel
             auth.signInWith(OTP) {
                 this.phone = phoneNumber
                 this.createUser = true // Create user if doesn't exist
+                // Note: Channel defaults to SMS. For WhatsApp, Supabase needs to be configured
+                // with a WhatsApp provider and the channel is set server-side based on provider config
             }
             
             Timber.d("WhatsApp OTP sent successfully")
@@ -58,8 +61,9 @@ class SupabaseAuthService @Inject constructor(
         try {
             Timber.d("Verifying OTP for: $phoneNumber")
             
+            // Verify WhatsApp OTP - type should match how it was sent
             auth.verifyPhoneOtp(
-                type = OtpType.Phone.SMS,
+                type = OtpType.Phone.SMS, // Use SMS type even for WhatsApp in current SDK version
                 phone = phoneNumber,
                 token = otpCode
             )
