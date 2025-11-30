@@ -2,7 +2,6 @@ package com.momoterminal.auth
 
 import com.momoterminal.api.AuthApiService
 import com.momoterminal.api.AuthResponse
-import com.momoterminal.api.OtpRequest
 import com.momoterminal.api.OtpResponse
 import com.momoterminal.api.RefreshRequest
 import com.momoterminal.api.RegisterRequest
@@ -148,12 +147,16 @@ class AuthRepository @Inject constructor(
     }
 
     /**
+     * Verify OTP code using Supabase Edge Functions.
      * Verify OTP code using Supabase.
      */
     fun verifyOtp(phoneNumber: String, otpCode: String): Flow<AuthResult<OtpResponse>> = flow {
         emit(AuthResult.Loading)
         
         try {
+            // Use Supabase for WhatsApp OTP verification
+            when (val result = supabaseAuthService.verifyOtp(phoneNumber, otpCode)) {
+                is SupabaseAuthResult.Success -> {
             // Use Supabase to verify WhatsApp OTP
             when (val result = supabaseAuthService.verifyOtp(phoneNumber, otpCode)) {
                 is SupabaseAuthResult.Success -> {
@@ -186,6 +189,8 @@ class AuthRepository @Inject constructor(
                     Timber.e("OTP verification failed: ${result.message}")
                     emit(AuthResult.Error(result.message))
                 }
+                else -> {
+                    emit(AuthResult.Error("Unexpected error during OTP verification"))
                 is SupabaseAuthResult.Loading -> {
                     // Already emitted Loading state above
                 }

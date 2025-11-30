@@ -30,7 +30,7 @@ import javax.inject.Singleton
  * Use the following command to generate a pin from your server's certificate:
  * 
  * ```bash
- * openssl s_client -connect api.momoterminal.com:443 -servername api.momoterminal.com 2>/dev/null | \
+ * openssl s_client -connect lhbowpbcpwoiparwnwgt.supabase.co:443 -servername lhbowpbcpwoiparwnwgt.supabase.co 2>/dev/null | \
  *   openssl x509 -pubkey -noout | \
  *   openssl pkey -pubin -outform der | \
  *   openssl dgst -sha256 -binary | \
@@ -41,7 +41,7 @@ import javax.inject.Singleton
  * for intermediate and root certificates:
  * 
  * ```bash
- * openssl s_client -connect api.momoterminal.com:443 -showcerts 2>/dev/null | \
+ * openssl s_client -connect lhbowpbcpwoiparwnwgt.supabase.co:443 -showcerts 2>/dev/null | \
  *   openssl x509 -pubkey -noout | \
  *   openssl pkey -pubin -outform der | \
  *   openssl dgst -sha256 -binary | \
@@ -56,9 +56,9 @@ class CertificatePinnerConfig @Inject constructor() {
     companion object {
         private const val TAG = "CertificatePinnerConfig"
         
-        // API domains to pin
-        private const val API_DOMAIN = "api.momoterminal.com"
-        private const val BACKUP_API_DOMAIN = "*.momoterminal.com"
+        // API domains to pin (using Supabase)
+        private const val API_DOMAIN = "lhbowpbcpwoiparwnwgt.supabase.co"
+        private const val BACKUP_API_DOMAIN = "*.supabase.co"
         
         // Placeholder pin pattern for detection
         private const val PLACEHOLDER_PATTERN = "sha256/[A]{43}="
@@ -137,7 +137,7 @@ class CertificatePinnerConfig @Inject constructor() {
                 |  CERT_PIN_ROOT_CA=sha256/<your-root-ca-pin>=
                 |
                 |Generate pins using:
-                |  openssl s_client -connect api.momoterminal.com:443 | \
+                |  openssl s_client -connect lhbowpbcpwoiparwnwgt.supabase.co:443 | \
                 |    openssl x509 -pubkey -noout | \
                 |    openssl pkey -pubin -outform der | \
                 |    openssl dgst -sha256 -binary | \
@@ -207,7 +207,7 @@ class CertificatePinnerConfig @Inject constructor() {
      * Validates if a domain is configured for certificate pinning.
      */
     fun isDomainPinned(domain: String): Boolean {
-        return domain.endsWith("momoterminal.com")
+        return domain.endsWith("supabase.co")
     }
 
     /**
