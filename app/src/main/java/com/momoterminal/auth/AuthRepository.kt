@@ -148,27 +148,47 @@ class AuthRepository @Inject constructor(
     }
 
     /**
-     * Verify OTP code.
+     * Verify OTP code using Supabase.
      */
     fun verifyOtp(phoneNumber: String, otpCode: String): Flow<AuthResult<OtpResponse>> = flow {
         emit(AuthResult.Loading)
         
         try {
-            val request = OtpRequest(
-                phoneNumber = phoneNumber,
-                otpCode = otpCode
-            )
-            
-            val response = authApiService.verifyOtp(request)
-            
-            if (response.isSuccessful && response.body() != null) {
-                val otpResponse = response.body()!!
-                Timber.d("OTP verification successful")
-                emit(AuthResult.Success(otpResponse))
-            } else {
-                val errorMessage = response.errorBody()?.string() ?: "OTP verification failed"
-                Timber.e("OTP verification failed: $errorMessage")
-                emit(AuthResult.Error(errorMessage, response.code()))
+            // Use Supabase to verify WhatsApp OTP
+            when (val result = supabaseAuthService.verifyOtp(phoneNumber, otpCode)) {
+                is SupabaseAuthResult.Success -> {
+                    val sessionData = result.data
+                    
+                    // Save tokens from Supabase session
+                    tokenManager.saveTokens(
+                        accessToken = sessionData.accessToken,
+                        refreshToken = sessionData.refreshToken,
+                        expiresInSeconds = sessionData.expiresIn
+                    )
+                    
+                    // Save user info
+                    tokenManager.saveUserInfo(
+                        userId = sessionData.user.id,
+                        phoneNumber = sessionData.user.phone ?: phoneNumber
+                    )
+                    
+                    // Start session
+                    sessionManager.startSession()
+                    
+                    Timber.d("OTP verification successful")
+                    val otpResponse = OtpResponse(
+                        success = true,
+                        message = "OTP verified successfully"
+                    )
+                    emit(AuthResult.Success(otpResponse))
+                }
+                is SupabaseAuthResult.Error -> {
+                    Timber.e("OTP verification failed: ${result.message}")
+                    emit(AuthResult.Error(result.message))
+                }
+                is SupabaseAuthResult.Loading -> {
+                    // Already emitted Loading state above
+                }
             }
         } catch (e: Exception) {
             Timber.e(e, "OTP verification error")
