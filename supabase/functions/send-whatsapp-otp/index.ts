@@ -175,7 +175,7 @@ serve(async (req) => {
     }
 
     // Log the request for IP-based rate limiting and analytics
-    await supabase
+    const { error: logError } = await supabase
       .from('otp_request_logs')
       .insert({
         phone_number: phoneNumber,
@@ -183,7 +183,10 @@ serve(async (req) => {
         user_agent: req.headers.get('user-agent') || 'unknown',
         request_type: 'send_otp'
       })
-      .catch(e => console.error('Failed to log request:', e))
+    
+    if (logError) {
+      console.error('Failed to log request:', logError)
+    }
 
     // Generate 6-digit OTP using cryptographically secure random
     const array = new Uint32Array(1)

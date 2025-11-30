@@ -152,7 +152,7 @@ serve(async (req) => {
     }
 
     // Log verification attempt for rate limiting and analytics
-    await supabase
+    const { error: logError } = await supabase
       .from('otp_request_logs')
       .insert({
         phone_number: phoneNumber,
@@ -160,7 +160,10 @@ serve(async (req) => {
         user_agent: req.headers.get('user-agent') || 'unknown',
         request_type: 'verify_otp'
       })
-      .catch(e => console.error('Failed to log verification attempt:', e))
+    
+    if (logError) {
+      console.error('Failed to log verification attempt:', logError)
+    }
 
     console.log(`Verifying OTP for phone: ${phoneNumber}`)
 
@@ -202,9 +205,13 @@ serve(async (req) => {
       console.log(`Current time: ${new Date().toISOString()}`)
       
       // Increment attempts for all recent OTPs (rate limiting)
-      await supabase.rpc('increment_otp_attempts', { 
+      const { error: incrementError } = await supabase.rpc('increment_otp_attempts', { 
         p_phone_number: phoneNumber 
-      }).catch(e => console.error('Failed to increment attempts:', e))
+      })
+      
+      if (incrementError) {
+        console.error('Failed to increment attempts:', incrementError)
+      }
       
       return new Response(
         JSON.stringify({ 
@@ -334,11 +341,14 @@ serve(async (req) => {
       console.error('Session creation error:', sessionError)
       
       // Revert OTP verification since session creation failed
-      await supabase
+      const { error: revertError } = await supabase
         .from('otp_codes')
         .update({ verified_at: null })
         .eq('id', otpData.id)
-        .catch(e => console.error('Failed to revert OTP:', e))
+      
+      if (revertError) {
+        console.error('Failed to revert OTP:', revertError)
+      }
       
       return new Response(
         JSON.stringify({
