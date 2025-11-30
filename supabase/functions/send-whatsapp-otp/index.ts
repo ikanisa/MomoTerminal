@@ -41,7 +41,7 @@ serve(async (req) => {
     // Create Supabase client with service role key
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    // Check rate limiting (max 5 OTPs per hour per phone)
+    // Check rate limiting (max 20 OTPs per hour per phone)
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
     const { count: recentOtpCount } = await supabase
       .from('otp_codes')
@@ -49,7 +49,7 @@ serve(async (req) => {
       .eq('phone_number', phoneNumber)
       .gte('created_at', oneHourAgo)
 
-    if (recentOtpCount && recentOtpCount >= 5) {
+    if (recentOtpCount && recentOtpCount >= 20) {
       return new Response(
         JSON.stringify({ 
           error: 'Too many OTP requests. Please try again later.',
