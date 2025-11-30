@@ -303,7 +303,7 @@ private fun PhoneEntryStep(
             value = phoneNumber,
             onValueChange = onPhoneChange,
             label = { Text("Phone Number") },
-            placeholder = { Text("+250788767816") },
+            placeholder = { Text("078XXXXXXX") },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Phone,
@@ -402,20 +402,8 @@ private fun OtpVerificationStep(
             fontWeight = FontWeight.Medium
         )
         
-        // OTP Expiry Timer
-        if (otpExpiryCountdown > 0) {
-            Spacer(modifier = Modifier.height(8.dp))
-            val minutes = otpExpiryCountdown / 60
-            val seconds = otpExpiryCountdown % 60
-            Text(
-                text = "Code expires in ${minutes}:${String.format("%02d", seconds)}",
-                style = MaterialTheme.typography.bodySmall,
-                color = if (otpExpiryCountdown < 60) 
-                    MaterialTheme.colorScheme.error 
-                else 
-                    MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        } else {
+        // OTP Expiry Timer - Removed duplicate display here, kept the one below
+        if (otpExpiryCountdown <= 0) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Code expired. Please request a new one.",
@@ -480,6 +468,10 @@ private fun OtpVerificationStep(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Resend button with countdown
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -491,7 +483,11 @@ private fun OtpVerificationStep(
                     onClick = onResendOtp,
                     enabled = !isLoading
                 ) {
-                    Text("Didn't receive the code? Resend")
+                    Text(
+                        text = "Didn't receive the code? Resend",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             } else {
                 Text(

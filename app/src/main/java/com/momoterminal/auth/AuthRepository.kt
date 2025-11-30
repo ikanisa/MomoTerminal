@@ -88,8 +88,8 @@ class AuthRepository @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e, "Login error")
-            emit(AuthResult.Error(e.message ?: "Network error occurred"))
+            Timber.e(e, "Login error for phone: $phoneNumber")
+            emit(AuthResult.Error(e.message ?: "Network error occurred during login"))
         }
     }
 
@@ -194,8 +194,8 @@ class AuthRepository @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e, "OTP verification error")
-            emit(AuthResult.Error(e.message ?: "Network error occurred"))
+            Timber.e(e, "OTP verification error for phone: $phoneNumber")
+            emit(AuthResult.Error(e.message ?: "Network error occurred during OTP verification"))
         }
     }
 

@@ -160,7 +160,7 @@ fun LoginScreen(
                 value = uiState.phoneNumber,
                 onValueChange = viewModel::updatePhoneNumber,
                 label = { Text("Phone Number") },
-                placeholder = { Text("+250788767816") },
+                placeholder = { Text("078XXXXXXX") },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Phone,
@@ -229,8 +229,9 @@ fun LoginScreen(
                                 color = if (resendCountdown > 0) {
                                     MaterialTheme.colorScheme.onSurfaceVariant
                                 } else {
-                                    MomoYellow
-                                }
+                                    MaterialTheme.colorScheme.primary
+                                },
+                                style = MaterialTheme.typography.labelLarge
                             )
                         }
                     }

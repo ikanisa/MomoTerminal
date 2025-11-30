@@ -207,7 +207,6 @@ class AuthViewModel @Inject constructor(
 
         viewModelScope.launch {
             authRepository.login(phoneToUse, state.otpCode)
-            authRepository.login(state.formattedPhoneNumber, state.otpCode)
                 .catch { e ->
                     handleLoginFailure(e.message ?: "Login failed")
                 }
