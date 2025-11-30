@@ -6,6 +6,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const WHATSAPP_API_URL = "https://graph.facebook.com/v18.0"
 
+// CORS headers for cross-origin requests
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+// Input validation patterns
+const phoneRegex = /^\+[1-9]\d{9,14}$/
+
 interface RequestBody {
   phoneNumber: string
 }
@@ -16,7 +26,28 @@ interface WhatsAppMessageResponse {
   messages: Array<{ id: string }>
 }
 
+// Helper function to generate cryptographically secure OTP
+function generateSecureOTP(): string {
+  const array = new Uint32Array(1)
+  crypto.getRandomValues(array)
+  return String(100000 + (array[0] % 900000)).padStart(6, '0')
+}
+
+// Helper function to hash OTP with SHA-256
+async function hashOTP(otpCode: string, phoneNumber: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(otpCode + phoneNumber)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
 serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
   try {
     // Get environment variables from Supabase secrets
     const WHATSAPP_PHONE_NUMBER_ID = Deno.env.get('WA_PHONE_ID') || Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
@@ -33,44 +64,56 @@ serve(async (req) => {
 
     if (!phoneNumber) {
       return new Response(
-        JSON.stringify({ error: 'Phone number is required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Phone number is required', code: 'MISSING_PHONE' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Validate phone number format
+    if (!phoneRegex.test(phoneNumber)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid phone number format', code: 'INVALID_PHONE' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     // Create Supabase client with service role key
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    // Check rate limiting (max 20 OTPs per hour per phone)
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+    // Check rate limiting (max 5 OTPs per 10 minutes per phone)
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
     const { count: recentOtpCount } = await supabase
       .from('otp_codes')
       .select('*', { count: 'exact', head: true })
       .eq('phone_number', phoneNumber)
-      .gte('created_at', oneHourAgo)
+      .gte('created_at', tenMinutesAgo)
 
-    if (recentOtpCount && recentOtpCount >= 20) {
+    if (recentOtpCount && recentOtpCount >= 5) {
       return new Response(
         JSON.stringify({ 
           error: 'Too many OTP requests. Please try again later.',
-          retryAfter: 3600 
+          code: 'RATE_LIMITED',
+          retryAfter: 600 
         }),
-        { status: 429, headers: { 'Content-Type': 'application/json' } }
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Generate 6-digit OTP
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
+    // Generate cryptographically secure 6-digit OTP
+    const otpCode = generateSecureOTP()
+
+    // Hash OTP before storage (salted with phone number)
+    const hashedOtp = await hashOTP(otpCode, phoneNumber)
 
     // Set expiry time (5 minutes from now)
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
 
-    // Save OTP to database
+    // Save hashed OTP to database
     const { data: otpData, error: dbError } = await supabase
       .from('otp_codes')
       .insert({
         phone_number: phoneNumber,
-        code: otpCode,
+        code: hashedOtp,
         template_name: 'momo_terminal',
         channel: 'whatsapp',
         expires_at: expiresAt,
@@ -135,7 +178,7 @@ serve(async (req) => {
     const whatsappData: WhatsAppMessageResponse = await whatsappResponse.json()
 
     if (!whatsappResponse.ok) {
-      console.error('WhatsApp API error:', whatsappData)
+      console.error('WhatsApp API error:', JSON.stringify(whatsappData))
       
       // Delete the OTP from database since sending failed
       await supabase
@@ -145,10 +188,10 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({ 
-          error: 'Failed to send WhatsApp message',
-          details: whatsappData 
+          error: 'Unable to send OTP. Please try again.',
+          code: 'SEND_FAILED'
         }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -171,7 +214,7 @@ serve(async (req) => {
       }),
       { 
         status: 200, 
-        headers: { 'Content-Type': 'application/json' } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     )
 
@@ -179,9 +222,10 @@ serve(async (req) => {
     console.error('Error:', error)
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Internal server error' 
+        error: 'An error occurred. Please try again.',
+        code: 'INTERNAL_ERROR'
       }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })
