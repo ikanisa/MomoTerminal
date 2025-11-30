@@ -45,6 +45,7 @@ serve(async (req) => {
     console.log(`Verifying OTP for phone: ${phoneNumber}`)
 
     // Step 1: Find and validate OTP code
+    console.log(`Looking for OTP: ${otpCode} for phone: ${phoneNumber}`)
     const { data: otpData, error: fetchError } = await supabase
       .from('otp_codes')
       .select('*')
@@ -58,10 +59,12 @@ serve(async (req) => {
 
     if (fetchError) {
       console.error('OTP fetch error:', fetchError)
+      console.error('OTP fetch error details:', JSON.stringify(fetchError))
       return new Response(
         JSON.stringify({ 
           error: 'Database error',
-          code: 'DB_ERROR'
+          code: 'DB_ERROR',
+          details: fetchError.message
         }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       )
@@ -69,6 +72,16 @@ serve(async (req) => {
 
     if (!otpData) {
       console.log(`Invalid OTP: ${otpCode} for ${phoneNumber}`)
+      console.log(`Current time: ${new Date().toISOString()}`)
+      // Let's query to see what OTPs exist for debugging
+      const { data: debugOtps } = await supabase
+        .from('otp_codes')
+        .select('code, expires_at, verified_at, attempts')
+        .eq('phone_number', phoneNumber)
+        .order('created_at', { ascending: false })
+        .limit(3)
+      console.log(`Recent OTPs for ${phoneNumber}:`, JSON.stringify(debugOtps))
+      
       return new Response(
         JSON.stringify({ 
           error: 'Invalid or expired OTP code',
@@ -238,10 +251,12 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Unexpected error:', error)
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Internal server error',
-        code: 'INTERNAL_ERROR'
+        code: 'INTERNAL_ERROR',
+        details: error instanceof Error ? error.stack : String(error)
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     )
