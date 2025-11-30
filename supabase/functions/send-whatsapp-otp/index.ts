@@ -188,26 +188,33 @@ serve(async (req) => {
       console.error('Failed to log request:', logError)
     }
 
+    // Normalize phone number to ensure consistent format
+    const normalizedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`
+    console.log(`[OTP-SEND] Phone format - Original: "${phoneNumber}", Normalized: "${normalizedPhone}", Length: ${normalizedPhone.length}`)
+
     // Generate 6-digit OTP using cryptographically secure random
     const array = new Uint32Array(1)
     crypto.getRandomValues(array)
     const otpCode = String(100000 + (array[0] % 900000)).padStart(6, '0')
+    console.log(`[OTP-SEND] Generated OTP code (first 2 digits): ${otpCode.substring(0, 2)}****`)
 
     // Hash the OTP for secure storage (SHA-256 with phone number as salt)
     const encoder = new TextEncoder()
-    const data = encoder.encode(otpCode + phoneNumber)
+    const data = encoder.encode(otpCode + normalizedPhone)
     const hashBuffer = await crypto.subtle.digest('SHA-256', data)
     const hashArray = Array.from(new Uint8Array(hashBuffer))
     const otpHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    console.log(`[OTP-SEND] Hash prefix: ${otpHash.substring(0, 10)}... (full length: ${otpHash.length})`)
 
     // Set expiry time (5 minutes from now)
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
+    console.log(`[OTP-SEND] Expiry time: ${expiresAt} (current: ${new Date().toISOString()})`)
 
     // Save hashed OTP to database (never store plaintext)
     const { data: otpData, error: dbError } = await supabase
       .from('otp_codes')
       .insert({
-        phone_number: phoneNumber,
+        phone_number: normalizedPhone, // Use normalized phone
         code: otpHash, // Store hash instead of plaintext
         template_name: 'momo_terminal',
         channel: 'whatsapp',
@@ -218,7 +225,7 @@ serve(async (req) => {
       .single()
 
     if (dbError) {
-      console.error('Database error:', dbError)
+      console.error('[OTP-SEND] Database error:', dbError)
       return new Response(
         JSON.stringify({ 
           error: 'Unable to process request. Please try again.',
@@ -228,12 +235,14 @@ serve(async (req) => {
       )
     }
 
+    console.log(`[OTP-SEND] OTP saved to database with ID: ${otpData.id}`)
+
     // Send WhatsApp message using Meta Business API
     const whatsappUrl = `${WHATSAPP_API_URL}/${WHATSAPP_PHONE_NUMBER_ID}/messages`
     
     const whatsappPayload = {
       messaging_product: "whatsapp",
-      to: phoneNumber,
+      to: normalizedPhone, // Use normalized phone
       type: "template",
       template: {
         name: "momo_terminal",

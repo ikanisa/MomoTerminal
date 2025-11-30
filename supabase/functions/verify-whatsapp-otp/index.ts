@@ -165,32 +165,38 @@ serve(async (req) => {
       console.error('Failed to log verification attempt:', logError)
     }
 
-    console.log(`Verifying OTP for phone: ${phoneNumber}`)
+    // Normalize phone number to match send function
+    const normalizedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`
+    console.log(`[OTP-VERIFY] Phone format - Original: "${phoneNumber}", Normalized: "${normalizedPhone}", Length: ${normalizedPhone.length}`)
+    console.log(`[OTP-VERIFY] OTP code received (first 2 digits): ${otpCode.substring(0, 2)}****`)
 
     // Hash the provided OTP for comparison
     const encoder = new TextEncoder()
-    const data = encoder.encode(otpCode + phoneNumber)
+    const data = encoder.encode(otpCode + normalizedPhone)
     const hashBuffer = await crypto.subtle.digest('SHA-256', data)
     const hashArray = Array.from(new Uint8Array(hashBuffer))
     const otpHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    console.log(`[OTP-VERIFY] Looking for hash prefix: ${otpHash.substring(0, 10)}... (full length: ${otpHash.length})`)
 
     // Step 1: Find and validate OTP code using hash comparison
-    console.log(`Looking for OTP hash for phone: ${phoneNumber}`)
+    const currentTime = new Date().toISOString()
+    console.log(`[OTP-VERIFY] Current time: ${currentTime}`)
+    
     const { data: otpData, error: fetchError } = await supabase
       .from('otp_codes')
       .select('*')
-      .eq('phone_number', phoneNumber)
+      .eq('phone_number', normalizedPhone) // Use normalized phone
       .eq('code', otpHash) // Compare hashes instead of plaintext
       .is('verified_at', null)
-      .gt('expires_at', new Date().toISOString())
+      .gt('expires_at', currentTime)
       .lt('attempts', 5) // Atomic check - must be less than 5
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
 
     if (fetchError) {
-      console.error('OTP fetch error:', fetchError)
-      console.error('OTP fetch error details:', JSON.stringify(fetchError))
+      console.error('[OTP-VERIFY] Database fetch error:', fetchError)
+      console.error('[OTP-VERIFY] Error details:', JSON.stringify(fetchError))
       return new Response(
         JSON.stringify({ 
           error: 'Unable to verify OTP. Please try again.',
@@ -201,26 +207,66 @@ serve(async (req) => {
     }
 
     if (!otpData) {
-      console.log(`Invalid OTP for ${phoneNumber}`)
-      console.log(`Current time: ${new Date().toISOString()}`)
+      console.log(`[OTP-VERIFY] No matching OTP found. Checking all OTPs for this phone...`)
+      
+      // Debug: Check all OTPs for this phone to see why verification failed
+      const { data: allOtps } = await supabase
+        .from('otp_codes')
+        .select('*')
+        .eq('phone_number', normalizedPhone)
+        .order('created_at', { ascending: false })
+        .limit(3)
+      
+      console.log(`[OTP-VERIFY] Found ${allOtps?.length || 0} total OTPs for this phone`)
+      
+      let failureReason = 'INVALID_CODE'
+      let errorMessage = 'Invalid OTP code'
+      
+      if (allOtps && allOtps.length > 0) {
+        allOtps.forEach((otp, index) => {
+          const isExpired = new Date(otp.expires_at) < new Date()
+          const isVerified = !!otp.verified_at
+          const tooManyAttempts = otp.attempts >= 5
+          const hashMatch = otp.code === otpHash
+          
+          console.log(`[OTP-VERIFY] OTP ${index + 1}: hash_match=${hashMatch}, hash_prefix=${otp.code.substring(0,10)}, verified=${isVerified}, expired=${isExpired}, attempts=${otp.attempts}/${5}, expires_at=${otp.expires_at}`)
+          
+          if (hashMatch) {
+            if (isVerified) {
+              failureReason = 'ALREADY_USED'
+              errorMessage = 'This OTP code has already been used. Please request a new one.'
+            } else if (isExpired) {
+              failureReason = 'EXPIRED'
+              errorMessage = 'This OTP code has expired. Please request a new one.'
+            } else if (tooManyAttempts) {
+              failureReason = 'TOO_MANY_ATTEMPTS'
+              errorMessage = 'Too many failed attempts. Please request a new OTP.'
+            }
+          }
+        })
+      }
+      
+      console.log(`[OTP-VERIFY] Verification failed. Reason: ${failureReason}`)
       
       // Increment attempts for all recent OTPs (rate limiting)
       const { error: incrementError } = await supabase.rpc('increment_otp_attempts', { 
-        p_phone_number: phoneNumber 
+        p_phone_number: normalizedPhone 
       })
       
       if (incrementError) {
-        console.error('Failed to increment attempts:', incrementError)
+        console.error('[OTP-VERIFY] Failed to increment attempts:', incrementError)
       }
       
       return new Response(
         JSON.stringify({ 
-          error: 'Invalid or expired OTP code',
-          code: 'INVALID_OTP'
+          error: errorMessage,
+          code: failureReason
         }),
         { status: 400, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
       )
     }
+
+    console.log(`[OTP-VERIFY] OTP found! ID: ${otpData.id}, Created: ${otpData.created_at}, Expires: ${otpData.expires_at}`)
 
     // Step 2: Atomically mark OTP as verified and increment attempts
     // This prevents race conditions
