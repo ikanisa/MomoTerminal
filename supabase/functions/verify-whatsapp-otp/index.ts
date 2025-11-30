@@ -329,21 +329,16 @@ serve(async (req) => {
       }
     }
 
-    // Step 4: Generate session tokens for the user
-    console.log(`Generating session for user ${userId}`)
+    // Step 4: Create session for the user
+    console.log(`Creating session for user ${userId}`)
     
-    // Use generateLink with 'recovery' type which works for phone-only users
-    // This will generate valid access and refresh tokens
-    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-      type: 'recovery',
-      email: `${phoneNumber.replace('+', '')}@phone.local`, // Use phone as fake email
-      options: {
-        redirectTo: 'app://callback'
-      }
+    const { data: sessionData, error: sessionError } = await supabase.auth.admin.createSession({
+      user_id: userId!,
+      expiresIn: 3600 * 24 * 7 // 7 days
     })
 
-    if (linkError || !linkData) {
-      console.error('Link generation error:', linkError)
+    if (sessionError || !sessionData) {
+      console.error('Session creation error:', sessionError)
       
       // Revert OTP verification since session creation failed
       const { error: revertError } = await supabase
@@ -367,10 +362,7 @@ serve(async (req) => {
 
     console.log(`Session tokens generated successfully for ${userId}`)
 
-    // Extract tokens from the hashed_token (this is the access token)
-    const accessToken = linkData.properties?.hashed_token || linkData.properties?.access_token
-    const refreshToken = linkData.properties?.refresh_token
-    const expiresIn = linkData.properties?.expires_in || 3600
+    console.log(`Session created successfully for ${userId}`)
 
     // Return success with session tokens
     const response: VerifyOtpResponse = {
@@ -378,9 +370,9 @@ serve(async (req) => {
       message: 'OTP verified successfully',
       userId: userId!,
       isNewUser: isNewUser,
-      accessToken: accessToken!,
-      refreshToken: refreshToken!,
-      expiresIn: expiresIn
+      accessToken: sessionData.session.access_token,
+      refreshToken: sessionData.session.refresh_token,
+      expiresIn: sessionData.session.expires_in || 3600
     }
 
     return new Response(
