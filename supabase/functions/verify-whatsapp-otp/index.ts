@@ -4,6 +4,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// CORS configuration
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*', // TODO: Restrict to your domain in production
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
+  'Access-Control-Max-Age': '86400',
+}
+
+// Rate limiting for verification attempts
+const VERIFY_RATE_LIMITS = {
+  PER_PHONE_5MIN: 10,    // Max 10 verification attempts per phone per 5 minutes
+  PER_IP_HOUR: 100,      // Max 100 verification attempts per IP per hour
+}
+
 interface RequestBody {
   phoneNumber: string
   otpCode: string
@@ -21,13 +35,32 @@ interface VerifyOtpResponse {
   code?: string
 }
 
+// Helper to extract client IP
+function getClientIP(req: Request): string {
+  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
+    || req.headers.get('x-real-ip')
+    || 'unknown'
+}
+
 serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { 
+      status: 204,
+      headers: CORS_HEADERS 
+    })
+  }
+
   try {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
     // Parse and validate request
     const { phoneNumber, otpCode }: RequestBody = await req.json()
+
+    // Get client IP for rate limiting and security logging
+    const clientIP = getClientIP(req)
+    console.log(`OTP verification from IP: ${clientIP} for phone: ${phoneNumber}`)
 
     // Validate phone number format (E.164)
     const phoneRegex = /^\+[1-9]\d{9,14}$/
@@ -37,7 +70,7 @@ serve(async (req) => {
           error: 'Invalid phone number format',
           code: 'INVALID_PHONE_FORMAT'
         }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -49,12 +82,85 @@ serve(async (req) => {
           error: 'OTP must be exactly 6 digits',
           code: 'INVALID_OTP_FORMAT'
         }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
       )
     }
 
     // Create Supabase client with service role
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    // === VERIFICATION RATE LIMITING ===
+    
+    // 1. Per-phone verification attempts (10 per 5 minutes)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    const { count: recentVerifyCount } = await supabase
+      .from('otp_request_logs')
+      .select('*', { count: 'exact', head: true })
+      .eq('phone_number', phoneNumber)
+      .eq('request_type', 'verify_otp')
+      .gte('created_at', fiveMinutesAgo)
+
+    if (recentVerifyCount && recentVerifyCount >= VERIFY_RATE_LIMITS.PER_PHONE_5MIN) {
+      console.log(`Verification rate limit exceeded for phone ${phoneNumber}`)
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'Too many verification attempts. Please wait before trying again.',
+          code: 'RATE_LIMIT_VERIFY_PHONE',
+          retryAfter: 300
+        }),
+        { 
+          status: 429, 
+          headers: { 
+            ...CORS_HEADERS,
+            'Content-Type': 'application/json',
+            'Retry-After': '300'
+          } 
+        }
+      )
+    }
+
+    // 2. Per-IP verification attempts (100 per hour)
+    if (clientIP !== 'unknown') {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+      const { count: recentIPVerifyCount } = await supabase
+        .from('otp_request_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('ip_address', clientIP)
+        .eq('request_type', 'verify_otp')
+        .gte('created_at', oneHourAgo)
+
+      if (recentIPVerifyCount && recentIPVerifyCount >= VERIFY_RATE_LIMITS.PER_IP_HOUR) {
+        console.log(`Verification rate limit exceeded for IP ${clientIP}`)
+        
+        return new Response(
+          JSON.stringify({ 
+            error: 'Too many verification attempts from this location.',
+            code: 'RATE_LIMIT_VERIFY_IP',
+            retryAfter: 3600
+          }),
+          { 
+            status: 429, 
+            headers: { 
+              ...CORS_HEADERS,
+              'Content-Type': 'application/json',
+              'Retry-After': '3600'
+            } 
+          }
+        )
+      }
+    }
+
+    // Log verification attempt for rate limiting and analytics
+    await supabase
+      .from('otp_request_logs')
+      .insert({
+        phone_number: phoneNumber,
+        ip_address: clientIP,
+        user_agent: req.headers.get('user-agent') || 'unknown',
+        request_type: 'verify_otp'
+      })
+      .catch(e => console.error('Failed to log verification attempt:', e))
 
     console.log(`Verifying OTP for phone: ${phoneNumber}`)
 
@@ -87,7 +193,7 @@ serve(async (req) => {
           error: 'Unable to verify OTP. Please try again.',
           code: 'DB_ERROR'
         }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -105,7 +211,7 @@ serve(async (req) => {
           error: 'Invalid or expired OTP code',
           code: 'INVALID_OTP'
         }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -129,7 +235,7 @@ serve(async (req) => {
           error: 'Unable to verify OTP. Please try again.',
           code: 'UPDATE_ERROR'
         }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -240,7 +346,7 @@ serve(async (req) => {
           error: 'Authentication failed. Please try again.',
           code: 'SESSION_ERROR'
         }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -259,7 +365,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(response),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
@@ -270,7 +376,7 @@ serve(async (req) => {
         error: 'An unexpected error occurred. Please try again.',
         code: 'INTERNAL_ERROR'
       }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
     )
   }
 })

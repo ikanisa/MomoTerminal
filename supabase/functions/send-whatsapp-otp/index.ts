@@ -6,6 +6,21 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const WHATSAPP_API_URL = "https://graph.facebook.com/v18.0"
 
+// CORS configuration
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*', // TODO: Restrict to your domain in production
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
+  'Access-Control-Max-Age': '86400',
+}
+
+// Rate limiting configuration
+const RATE_LIMITS = {
+  PER_PHONE_10MIN: 5,      // Max 5 OTPs per phone per 10 minutes
+  PER_IP_HOUR: 50,         // Max 50 OTPs per IP per hour
+  GLOBAL_MINUTE: 100,      // Max 100 OTPs globally per minute
+}
+
 interface RequestBody {
   phoneNumber: string
 }
@@ -16,7 +31,28 @@ interface WhatsAppMessageResponse {
   messages: Array<{ id: string }>
 }
 
+// Helper to extract client IP
+function getClientIP(req: Request): string {
+  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
+    || req.headers.get('x-real-ip')
+    || 'unknown'
+}
+
+// Calculate exponential backoff delay
+function getBackoffDelay(attempts: number): number {
+  // 1st retry: 1s, 2nd: 2s, 3rd: 4s, 4th: 8s, 5th: 16s
+  return Math.min(Math.pow(2, attempts - 1) * 1000, 60000) // Max 60s
+}
+
 serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { 
+      status: 204,
+      headers: CORS_HEADERS 
+    })
+  }
+
   try {
     // Get environment variables from Supabase secrets
     const WHATSAPP_PHONE_NUMBER_ID = Deno.env.get('WA_PHONE_ID') || Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')
@@ -31,6 +67,10 @@ serve(async (req) => {
     // Parse request body
     const { phoneNumber }: RequestBody = await req.json()
 
+    // Get client IP for rate limiting
+    const clientIP = getClientIP(req)
+    console.log(`OTP request from IP: ${clientIP} for phone: ${phoneNumber}`)
+
     // Validate phone number format (E.164)
     const phoneRegex = /^\+[1-9]\d{9,14}$/
     if (!phoneNumber || !phoneRegex.test(phoneNumber)) {
@@ -39,30 +79,111 @@ serve(async (req) => {
           error: 'Invalid phone number format. Must be E.164 format (e.g., +250788767816)',
           code: 'INVALID_PHONE_FORMAT'
         }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
       )
     }
 
     // Create Supabase client with service role key
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    // Check rate limiting (max 20 OTPs per hour per phone)
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
-    const { count: recentOtpCount } = await supabase
+    // === MULTI-LAYER RATE LIMITING ===
+    
+    // 1. Per-phone rate limit (5 per 10 minutes)
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
+    const { count: recentPhoneOtpCount } = await supabase
       .from('otp_codes')
       .select('*', { count: 'exact', head: true })
       .eq('phone_number', phoneNumber)
-      .gte('created_at', oneHourAgo)
+      .gte('created_at', tenMinutesAgo)
 
-    if (recentOtpCount && recentOtpCount >= 20) {
+    if (recentPhoneOtpCount && recentPhoneOtpCount >= RATE_LIMITS.PER_PHONE_10MIN) {
+      const retryAfter = getBackoffDelay(recentPhoneOtpCount - RATE_LIMITS.PER_PHONE_10MIN + 1)
+      console.log(`Rate limit exceeded for phone ${phoneNumber}: ${recentPhoneOtpCount} requests`)
+      
       return new Response(
         JSON.stringify({ 
-          error: 'Too many OTP requests. Please try again later.',
-          retryAfter: 3600 
+          error: 'Too many OTP requests. Please wait before trying again.',
+          code: 'RATE_LIMIT_PHONE',
+          retryAfter: Math.ceil(retryAfter / 1000)
         }),
-        { status: 429, headers: { 'Content-Type': 'application/json' } }
+        { 
+          status: 429, 
+          headers: { 
+            ...CORS_HEADERS,
+            'Content-Type': 'application/json',
+            'Retry-After': String(Math.ceil(retryAfter / 1000))
+          } 
+        }
       )
     }
+
+    // 2. Per-IP rate limit (50 per hour)
+    if (clientIP !== 'unknown') {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+      const { count: recentIPCount } = await supabase
+        .from('otp_request_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('ip_address', clientIP)
+        .gte('created_at', oneHourAgo)
+
+      if (recentIPCount && recentIPCount >= RATE_LIMITS.PER_IP_HOUR) {
+        console.log(`Rate limit exceeded for IP ${clientIP}: ${recentIPCount} requests`)
+        
+        return new Response(
+          JSON.stringify({ 
+            error: 'Too many requests from this location. Please try again later.',
+            code: 'RATE_LIMIT_IP',
+            retryAfter: 3600
+          }),
+          { 
+            status: 429, 
+            headers: { 
+              ...CORS_HEADERS,
+              'Content-Type': 'application/json',
+              'Retry-After': '3600'
+            } 
+          }
+        )
+      }
+    }
+
+    // 3. Global rate limit (100 per minute - abuse prevention)
+    const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString()
+    const { count: globalRecentCount } = await supabase
+      .from('otp_codes')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', oneMinuteAgo)
+
+    if (globalRecentCount && globalRecentCount >= RATE_LIMITS.GLOBAL_MINUTE) {
+      console.warn(`Global rate limit exceeded: ${globalRecentCount} requests in last minute`)
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'Service temporarily busy. Please try again in a moment.',
+          code: 'RATE_LIMIT_GLOBAL',
+          retryAfter: 60
+        }),
+        { 
+          status: 429, 
+          headers: { 
+            ...CORS_HEADERS,
+            'Content-Type': 'application/json',
+            'Retry-After': '60'
+          } 
+        }
+      )
+    }
+
+    // Log the request for IP-based rate limiting and analytics
+    await supabase
+      .from('otp_request_logs')
+      .insert({
+        phone_number: phoneNumber,
+        ip_address: clientIP,
+        user_agent: req.headers.get('user-agent') || 'unknown',
+        request_type: 'send_otp'
+      })
+      .catch(e => console.error('Failed to log request:', e))
 
     // Generate 6-digit OTP using cryptographically secure random
     const array = new Uint32Array(1)
@@ -100,7 +221,7 @@ serve(async (req) => {
           error: 'Unable to process request. Please try again.',
           code: 'DB_ERROR'
         }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -168,7 +289,7 @@ serve(async (req) => {
           error: 'Unable to send OTP. Please try again.',
           code: 'DELIVERY_FAILED'
         }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -201,7 +322,7 @@ serve(async (req) => {
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Internal server error' 
       }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
     )
   }
 })
