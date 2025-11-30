@@ -77,7 +77,7 @@ android {
         testInstrumentationRunner = "com.momoterminal.HiltTestRunner"
 
         // BuildConfig fields for environment configuration
-        buildConfigField("String", "BASE_URL", "\"https://api.momoterminal.com/\"")
+        buildConfigField("String", "BASE_URL", "\"https://lhbowpbcpwoiparwnwgt.supabase.co/\"")
         
         // Supabase configuration
         val supabaseUrl = localProps.getProperty("SUPABASE_URL")
@@ -146,7 +146,7 @@ android {
             }
             buildConfigField("boolean", "STRICT_MODE_ENABLED", "true")
             buildConfigField("boolean", "LEAK_CANARY_ENABLED", "true")
-            buildConfigField("String", "BASE_URL", "\"https://api.dev.momoterminal.com/\"")
+            buildConfigField("String", "BASE_URL", "\"https://lhbowpbcpwoiparwnwgt.supabase.co/\"")
         }
         release {
             isMinifyEnabled = true

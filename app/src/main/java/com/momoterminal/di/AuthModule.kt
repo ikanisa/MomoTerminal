@@ -63,6 +63,7 @@ object AuthModule {
 
     /**
      * Provides AuthApiService for authentication API calls.
+     * Uses Supabase Edge Functions for authentication.
      */
     @Provides
     @Singleton
@@ -70,7 +71,7 @@ object AuthModule {
         okHttpClient: OkHttpClient
     ): AuthApiService {
         return Retrofit.Builder()
-            .baseUrl("https://api.momoterminal.com/")
+            .baseUrl("https://lhbowpbcpwoiparwnwgt.supabase.co/functions/v1/")
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

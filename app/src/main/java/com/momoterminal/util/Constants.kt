@@ -15,7 +15,7 @@ object Constants {
     const val KEY_IS_CONFIGURED = "is_configured"
     
     // Network
-    const val DEFAULT_BASE_URL = "https://api.momoterminal.com/"
+    const val DEFAULT_BASE_URL = "https://lhbowpbcpwoiparwnwgt.supabase.co/"
     const val DEFAULT_TIMEOUT_SECONDS = 30L
     const val CONNECT_TIMEOUT_SECONDS = 15L
     const val READ_TIMEOUT_SECONDS = 30L

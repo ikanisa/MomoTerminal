@@ -2,7 +2,6 @@ package com.momoterminal.auth
 
 import com.momoterminal.api.AuthApiService
 import com.momoterminal.api.AuthResponse
-import com.momoterminal.api.OtpRequest
 import com.momoterminal.api.OtpResponse
 import com.momoterminal.api.RefreshRequest
 import com.momoterminal.api.RegisterRequest
@@ -148,27 +147,29 @@ class AuthRepository @Inject constructor(
     }
 
     /**
-     * Verify OTP code.
+     * Verify OTP code using Supabase Edge Functions.
      */
     fun verifyOtp(phoneNumber: String, otpCode: String): Flow<AuthResult<OtpResponse>> = flow {
         emit(AuthResult.Loading)
         
         try {
-            val request = OtpRequest(
-                phoneNumber = phoneNumber,
-                otpCode = otpCode
-            )
-            
-            val response = authApiService.verifyOtp(request)
-            
-            if (response.isSuccessful && response.body() != null) {
-                val otpResponse = response.body()!!
-                Timber.d("OTP verification successful")
-                emit(AuthResult.Success(otpResponse))
-            } else {
-                val errorMessage = response.errorBody()?.string() ?: "OTP verification failed"
-                Timber.e("OTP verification failed: $errorMessage")
-                emit(AuthResult.Error(errorMessage, response.code()))
+            // Use Supabase for WhatsApp OTP verification
+            when (val result = supabaseAuthService.verifyOtp(phoneNumber, otpCode)) {
+                is SupabaseAuthResult.Success -> {
+                    Timber.d("OTP verification successful")
+                    val otpResponse = OtpResponse(
+                        success = true,
+                        message = "OTP verified successfully"
+                    )
+                    emit(AuthResult.Success(otpResponse))
+                }
+                is SupabaseAuthResult.Error -> {
+                    Timber.e("OTP verification failed: ${result.message}")
+                    emit(AuthResult.Error(result.message))
+                }
+                else -> {
+                    emit(AuthResult.Error("Unexpected error during OTP verification"))
+                }
             }
         } catch (e: Exception) {
             Timber.e(e, "OTP verification error")

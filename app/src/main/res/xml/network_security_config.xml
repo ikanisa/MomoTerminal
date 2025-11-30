@@ -4,7 +4,7 @@
     
     IMPORTANT: Before deploying to production, replace the placeholder certificate
     pins with actual SHA-256 pins from your SSL certificate chain:
-    1. Get your server's certificate: openssl s_client -connect api.momoterminal.com:443
+    1. Get your server's certificate: openssl s_client -connect lhbowpbcpwoiparwnwgt.supabase.co:443
     2. Extract the public key and generate the pin:
        openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64
     3. Replace the pins below
@@ -17,10 +17,10 @@
         </trust-anchors>
     </base-config>
     
-    <!-- Production domain - Certificate pinning disabled for debug builds -->
+    <!-- Supabase domain - Certificate pinning disabled for debug builds -->
     <!-- Enable pinning in production by uncommenting the pin-set below -->
     <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">api.momoterminal.com</domain>
+        <domain includeSubdomains="true">lhbowpbcpwoiparwnwgt.supabase.co</domain>
         <!-- 
         <pin-set expiration="2026-01-01">
             <pin digest="SHA-256">YOUR_PRIMARY_PIN_HERE</pin>

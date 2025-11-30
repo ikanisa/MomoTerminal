@@ -27,7 +27,7 @@ import javax.inject.Singleton
 object NetworkModule {
 
     private const val DEFAULT_TIMEOUT = 30L
-    private const val DEFAULT_BASE_URL = "https://api.momoterminal.com/"
+    private const val DEFAULT_BASE_URL = "https://lhbowpbcpwoiparwnwgt.supabase.co/"
 
     /**
      * Provides HttpLoggingInterceptor for debugging network calls.
