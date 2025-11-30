@@ -379,7 +379,7 @@ serve(async (req) => {
     console.log(`Creating Supabase session for user ${userId}`)
     
     // First, ensure the user's phone is confirmed
-    const { error: updateError } = await supabase.auth.admin.updateUserById(
+    const { error: userUpdateError } = await supabase.auth.admin.updateUserById(
       userId!,
       { 
         phone_confirm: true,
@@ -390,8 +390,8 @@ serve(async (req) => {
       }
     )
     
-    if (updateError) {
-      console.error('User update error:', updateError)
+    if (userUpdateError) {
+      console.error('User update error:', userUpdateError)
     }
     
     // Now use Supabase's signInWithOtp to create a real session
