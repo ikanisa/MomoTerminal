@@ -82,8 +82,8 @@ class SupabaseAuthService @Inject constructor(
                     val sessionData = SessionData(
                         accessToken = body.accessToken,
                         refreshToken = body.refreshToken,
-                        expiresIn = body.expiresIn ?: 604800, // Default 7 days
-                        expiresAt = System.currentTimeMillis() / 1000 + (body.expiresIn ?: 604800),
+                        expiresIn = body.expiresIn?.toLong() ?: 604800L, // Default 7 days
+                        expiresAt = System.currentTimeMillis() / 1000 + (body.expiresIn?.toLong() ?: 604800L),
                         user = SupabaseUser(
                             id = body.userId ?: "",
                             phone = phoneNumber,

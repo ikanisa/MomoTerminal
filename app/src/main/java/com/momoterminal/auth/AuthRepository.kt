@@ -154,9 +154,6 @@ class AuthRepository @Inject constructor(
         emit(AuthResult.Loading)
         
         try {
-            // Use Supabase for WhatsApp OTP verification
-            when (val result = supabaseAuthService.verifyOtp(phoneNumber, otpCode)) {
-                is SupabaseAuthResult.Success -> {
             // Use Supabase to verify WhatsApp OTP
             when (val result = supabaseAuthService.verifyOtp(phoneNumber, otpCode)) {
                 is SupabaseAuthResult.Success -> {
@@ -189,10 +186,11 @@ class AuthRepository @Inject constructor(
                     Timber.e("OTP verification failed: ${result.message}")
                     emit(AuthResult.Error(result.message))
                 }
-                else -> {
-                    emit(AuthResult.Error("Unexpected error during OTP verification"))
                 is SupabaseAuthResult.Loading -> {
                     // Already emitted Loading state above
+                }
+                else -> {
+                    emit(AuthResult.Error("Unexpected error during OTP verification"))
                 }
             }
         } catch (e: Exception) {
