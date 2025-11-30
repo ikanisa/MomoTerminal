@@ -47,6 +47,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.momoterminal.auth.AuthViewModel
+import com.momoterminal.presentation.components.CountryCodeSelector
 import com.momoterminal.presentation.components.OtpInputField
 import com.momoterminal.presentation.theme.MomoYellow
 import kotlinx.coroutines.delay
@@ -156,33 +157,39 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Phone Number Input
-            OutlinedTextField(
-                value = uiState.phoneNumber,
-                onValueChange = viewModel::updatePhoneNumber,
-                label = { Text("Phone Number") },
-                placeholder = { Text("078XXXXXXX") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Phone,
-                        contentDescription = null
-                    )
-                },
+            // Phone Number Input
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Phone,
-                    imeAction = if (uiState.isOtpSent) ImeAction.Next else ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        if (!uiState.isOtpSent) {
-                            focusManager.clearFocus()
-                            viewModel.requestOtp()
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CountryCodeSelector(
+                    selectedCountryCode = uiState.countryCode,
+                    onCountryCodeSelected = viewModel::updateCountryCode,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+
+                OutlinedTextField(
+                    value = uiState.phoneNumber,
+                    onValueChange = viewModel::updatePhoneNumber,
+                    label = { Text("Phone Number") },
+                    placeholder = { Text("78XXXXXXX") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Phone,
+                        imeAction = if (uiState.isOtpSent) ImeAction.Next else ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (!uiState.isOtpSent) {
+                                focusManager.clearFocus()
+                                viewModel.requestOtp()
+                            }
                         }
-                    }
-                ),
-                enabled = !uiState.isLoading && !uiState.isOtpSent
-            )
+                    ),
+                    enabled = !uiState.isLoading && !uiState.isOtpSent
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 

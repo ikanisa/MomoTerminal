@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.momoterminal.R
 import com.momoterminal.auth.AuthViewModel
+import com.momoterminal.presentation.components.CountryCodeSelector
 import com.momoterminal.presentation.theme.MomoYellow
 
 /** Timer update interval for OTP expiry countdown in milliseconds */
@@ -148,7 +149,9 @@ fun RegisterScreen(
                     AuthViewModel.RegistrationStep.PHONE_ENTRY -> {
                         PhoneEntryStep(
                             phoneNumber = uiState.phoneNumber,
+                            countryCode = uiState.countryCode,
                             onPhoneChange = viewModel::updatePhoneNumber,
+                            onCountryCodeChange = viewModel::updateCountryCode,
                             isLoading = uiState.isLoading,
                             onRequestOtp = viewModel::requestOtp
                         )
@@ -268,7 +271,9 @@ private fun StepIndicator(
 @Composable
 private fun PhoneEntryStep(
     phoneNumber: String,
+    countryCode: String,
     onPhoneChange: (String) -> Unit,
+    onCountryCodeChange: (String) -> Unit,
     isLoading: Boolean,
     onRequestOtp: () -> Unit
 ) {
@@ -299,31 +304,36 @@ private fun PhoneEntryStep(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        OutlinedTextField(
-            value = phoneNumber,
-            onValueChange = onPhoneChange,
-            label = { Text("Phone Number") },
-            placeholder = { Text("078XXXXXXX") },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Phone,
-                    contentDescription = null
-                )
-            },
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Phone,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    focusManager.clearFocus()
-                    onRequestOtp()
-                }
-            ),
-            enabled = !isLoading
-        )
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CountryCodeSelector(
+                selectedCountryCode = countryCode,
+                onCountryCodeSelected = onCountryCodeChange,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+
+            OutlinedTextField(
+                value = phoneNumber,
+                onValueChange = onPhoneChange,
+                label = { Text("Phone Number") },
+                placeholder = { Text("78XXXXXXX") },
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Phone,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus()
+                        onRequestOtp()
+                    }
+                ),
+                enabled = !isLoading
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 

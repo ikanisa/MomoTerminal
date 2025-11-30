@@ -33,6 +33,7 @@ class AuthViewModel @Inject constructor(
         val isLoading: Boolean = false,
         val isAuthenticated: Boolean = false,
         val error: String? = null,
+        val countryCode: String = "+250",
         val phoneNumber: String = "",
         val formattedPhoneNumber: String = "",
         val pin: String = "",
@@ -115,16 +116,34 @@ class AuthViewModel @Inject constructor(
     }
 
     // Input update functions
+    fun updateCountryCode(code: String) {
+        _uiState.value = _uiState.value.copy(countryCode = code)
+        // Re-validate with new code
+        updatePhoneNumber(_uiState.value.phoneNumber)
+    }
+
     fun updatePhoneNumber(phone: String) {
-        val validationResult = phoneNumberValidator.validate(phone)
-        val formattedNumber = validationResult.formattedNumber ?: ""
-        val phoneError = if (phone.isNotBlank() && !validationResult.isValid) {
+        val state = _uiState.value
+        // Remove any non-digit characters from input (except maybe leading + if user typed it, but we want raw digits here)
+        val rawPhone = phone.filter { it.isDigit() }
+        
+        // Combine country code and raw phone for validation/formatting
+        val fullNumber = "${state.countryCode}$rawPhone"
+        
+        // Use the validator (it might need adjustment if it expects full number or not)
+        // Assuming validator handles E.164 format
+        val validationResult = phoneNumberValidator.validate(fullNumber)
+        
+        // We store the raw input in phoneNumber for the UI field
+        // And the fully formatted E.164 in formattedPhoneNumber for API calls
+        
+        val phoneError = if (rawPhone.isNotBlank() && !validationResult.isValid) {
             validationResult.errorMessage
         } else null
         
         _uiState.value = _uiState.value.copy(
-            phoneNumber = phone,
-            formattedPhoneNumber = formattedNumber,
+            phoneNumber = rawPhone,
+            formattedPhoneNumber = if (validationResult.isValid) validationResult.formattedNumber!! else fullNumber,
             phoneNumberError = phoneError,
             error = null
         )

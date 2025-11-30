@@ -9,11 +9,18 @@ SET search_path = public
 AS $$
 DECLARE
   user_uuid uuid;
+  normalized_phone text;
 BEGIN
-  -- Look up user ID from auth.users by phone
+  -- Normalize phone by removing leading + if present
+  normalized_phone := CASE 
+    WHEN phone LIKE '+%' THEN substring(phone from 2)
+    ELSE phone
+  END;
+  
+  -- Look up user ID from auth.users by phone (try both formats)
   SELECT id INTO user_uuid
   FROM auth.users
-  WHERE phone = get_user_id_by_phone.phone
+  WHERE phone = normalized_phone OR phone = get_user_id_by_phone.phone
   LIMIT 1;
   
   RETURN user_uuid;
