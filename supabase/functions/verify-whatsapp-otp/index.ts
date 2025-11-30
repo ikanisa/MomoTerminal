@@ -375,10 +375,10 @@ serve(async (req) => {
       }
     }
 
-    // Step 4: Create a real Supabase session using signInWithOtp
-    console.log(`Creating Supabase session for user ${userId}`)
+    // Step 4: OTP verified successfully
+    console.log(`[OTP-VERIFY] OTP verified successfully for user ${userId}`)
     
-    // First, ensure the user's phone is confirmed
+    // Ensure the user's phone is confirmed
     const { error: userUpdateError } = await supabase.auth.admin.updateUserById(
       userId!,
       { 
@@ -391,59 +391,25 @@ serve(async (req) => {
     )
     
     if (userUpdateError) {
-      console.error('User update error:', userUpdateError)
-    }
-    
-    // Now use Supabase's signInWithOtp to create a real session
-    // This will generate proper JWT tokens
-    const { data: sessionData, error: sessionError } = await supabase.auth.signInWithOtp({
-      phone: phoneNumber,
-      options: {
-        shouldCreateUser: false // User already exists
-      }
-    })
-
-    if (sessionError || !sessionData) {
-      console.error('Session creation error:', sessionError)
-      
-      // Revert OTP verification since session creation failed
-      const { error: revertError } = await supabase
-        .from('otp_codes')
-        .update({ verified_at: null })
-        .eq('id', otpData.id)
-      
-      if (revertError) {
-        console.error('Failed to revert OTP:', revertError)
-      }
-      
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Authentication failed. Please try again.',
-          code: 'SESSION_ERROR'
-        }),
-        { status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
-      )
+      console.error('[OTP-VERIFY] User update error:', userUpdateError)
+    } else {
+      console.log(`[OTP-VERIFY] User phone confirmed successfully`)
     }
 
-    console.log(`Supabase session created for ${userId}`)
-
-    // Extract session information
-    // Note: signInWithOtp returns session data in the response
-    const accessToken = sessionData.session?.access_token
-    const refreshToken = sessionData.session?.refresh_token
-    const expiresIn = sessionData.session?.expires_in || 3600
-
-    // Return success with real session tokens
+    // Return success with user info
+    // Note: We don't create a session here because Supabase phone provider is not enabled
+    // The client will need to handle authentication state differently
     const response: VerifyOtpResponse = {
       success: true,
       message: 'OTP verified successfully',
       userId: userId!,
       isNewUser: isNewUser,
-      accessToken: accessToken!,
-      refreshToken: refreshToken!,
-      expiresIn: expiresIn
+      accessToken: null,
+      refreshToken: null,
+      expiresIn: null
     }
+
+    console.log(`[OTP-VERIFY] Returning success response for user ${userId}`)
 
     return new Response(
       JSON.stringify(response),
@@ -451,8 +417,8 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Unexpected error:', error)
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('[OTP-VERIFY] Unexpected error:', error)
+    console.error('[OTP-VERIFY] Error stack:', error instanceof Error ? error.stack : 'No stack trace')
     return new Response(
       JSON.stringify({ 
         error: 'An unexpected error occurred. Please try again.',
