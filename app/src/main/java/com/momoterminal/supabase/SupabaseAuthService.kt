@@ -1,6 +1,7 @@
 package com.momoterminal.supabase
 
 import io.github.jan.supabase.gotrue.Auth
+import io.github.jan.supabase.gotrue.user.UserInfo
 import io.github.jan.supabase.gotrue.user.UserSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
