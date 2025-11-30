@@ -148,6 +148,7 @@ class AuthRepository @Inject constructor(
 
     /**
      * Verify OTP code using Supabase Edge Functions.
+     * Verify OTP code using Supabase.
      */
     fun verifyOtp(phoneNumber: String, otpCode: String): Flow<AuthResult<OtpResponse>> = flow {
         emit(AuthResult.Loading)
@@ -156,6 +157,27 @@ class AuthRepository @Inject constructor(
             // Use Supabase for WhatsApp OTP verification
             when (val result = supabaseAuthService.verifyOtp(phoneNumber, otpCode)) {
                 is SupabaseAuthResult.Success -> {
+            // Use Supabase to verify WhatsApp OTP
+            when (val result = supabaseAuthService.verifyOtp(phoneNumber, otpCode)) {
+                is SupabaseAuthResult.Success -> {
+                    val sessionData = result.data
+                    
+                    // Save tokens from Supabase session
+                    tokenManager.saveTokens(
+                        accessToken = sessionData.accessToken,
+                        refreshToken = sessionData.refreshToken,
+                        expiresInSeconds = sessionData.expiresIn
+                    )
+                    
+                    // Save user info
+                    tokenManager.saveUserInfo(
+                        userId = sessionData.user.id,
+                        phoneNumber = sessionData.user.phone ?: phoneNumber
+                    )
+                    
+                    // Start session
+                    sessionManager.startSession()
+                    
                     Timber.d("OTP verification successful")
                     val otpResponse = OtpResponse(
                         success = true,
@@ -169,6 +191,8 @@ class AuthRepository @Inject constructor(
                 }
                 else -> {
                     emit(AuthResult.Error("Unexpected error during OTP verification"))
+                is SupabaseAuthResult.Loading -> {
+                    // Already emitted Loading state above
                 }
             }
         } catch (e: Exception) {

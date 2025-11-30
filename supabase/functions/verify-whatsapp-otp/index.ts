@@ -85,21 +85,30 @@ serve(async (req) => {
     let userId = existingProfile?.id
 
     if (!existingProfile) {
-      // Create user in auth.users first (using service role)
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        phone: phoneNumber,
-        phone_confirm: true,
-        user_metadata: {
-          phone_verified: true
+      // Check if user exists in auth.users
+      const { data: existingAuthUsers } = await supabase.auth.admin.listUsers()
+      const existingAuthUser = existingAuthUsers.users.find(u => u.phone === phoneNumber)
+      
+      if (existingAuthUser) {
+        // User exists in auth but not in profiles, use existing ID
+        userId = existingAuthUser.id
+      } else {
+        // Create user in auth.users first (using service role)
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+          phone: phoneNumber,
+          phone_confirm: true,
+          user_metadata: {
+            phone_verified: true
+          }
+        })
+
+        if (authError) {
+          console.error('Failed to create auth user:', authError)
+          throw new Error('Failed to create user')
         }
-      })
 
-      if (authError) {
-        console.error('Failed to create auth user:', authError)
-        throw new Error('Failed to create user')
+        userId = authData.user.id
       }
-
-      userId = authData.user.id
 
       // Create user profile
       const { error: profileError } = await supabase
@@ -115,10 +124,10 @@ serve(async (req) => {
       }
     }
 
-    // Generate session token for the user
+    // Generate session for the user (existing or new)
     const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
-      email: `${phoneNumber.replace('+', '')}@temp.momoterminal.com`, // Temporary email
+      email: `${phoneNumber.replace('+', '')}@temp.momoterminal.com`,
       options: {
         redirectTo: 'momoterminal://auth/callback'
       }
