@@ -2,6 +2,7 @@ package com.momoterminal.di
 
 import com.momoterminal.auth.WhatsAppOtpService
 import com.momoterminal.auth.WhatsAppOtpServiceImpl
+import com.momoterminal.supabase.EdgeFunctionsApi
 import com.momoterminal.supabase.SupabaseAuthService
 import com.momoterminal.supabase.SupabasePaymentRepository
 import com.momoterminal.util.PhoneNumberValidator
@@ -30,14 +31,23 @@ object SupabaseModule {
     fun provideSupabasePostgrest(): io.github.jan.supabase.postgrest.Postgrest {
         return com.momoterminal.supabase.SupabaseClientConfig.postgrest
     }
+    
+    @Provides
+    @Singleton
+    fun provideEdgeFunctionsApi(): EdgeFunctionsApi {
+        return com.momoterminal.supabase.SupabaseClientConfig.edgeFunctionsApi
+    }
 
     /**
      * Provides SupabaseAuthService for authentication operations.
      */
     @Provides
     @Singleton
-    fun provideSupabaseAuthService(auth: io.github.jan.supabase.gotrue.Auth): SupabaseAuthService {
-        return SupabaseAuthService(auth)
+    fun provideSupabaseAuthService(
+        auth: io.github.jan.supabase.gotrue.Auth,
+        edgeFunctionsApi: EdgeFunctionsApi
+    ): SupabaseAuthService {
+        return SupabaseAuthService(auth, edgeFunctionsApi)
     }
     
     /**

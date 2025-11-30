@@ -1,9 +1,6 @@
 package com.momoterminal.supabase
 
 import io.github.jan.supabase.gotrue.Auth
-import io.github.jan.supabase.gotrue.OtpType
-import io.github.jan.supabase.gotrue.providers.builtin.OTP
-import io.github.jan.supabase.gotrue.user.UserInfo
 import io.github.jan.supabase.gotrue.user.UserSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,34 +10,40 @@ import javax.inject.Singleton
 
 /**
  * Service handling Supabase authentication operations.
- * Provides WhatsApp OTP authentication, session management, and user operations.
+ * Provides WhatsApp OTP authentication via custom Edge Functions.
  */
 @Singleton
 class SupabaseAuthService @Inject constructor(
-    private val auth: Auth
+    private val auth: Auth,
+    private val edgeFunctionsApi: EdgeFunctionsApi
 ) {
     
     /**
-     * Send WhatsApp OTP to the specified phone number.
-     * Uses the "momo_terminal" template configured in Supabase.
+     * Send WhatsApp OTP to the specified phone number using custom Edge Function.
+     * Uses the "momo_terminal" template configured in Meta WhatsApp Business.
      *
      * @param phoneNumber Phone number in E.164 format (e.g., +250788767816)
      * @return AuthResult indicating success or failure
      */
     suspend fun sendWhatsAppOtp(phoneNumber: String): AuthResult<Unit> = withContext(Dispatchers.IO) {
         try {
-            Timber.d("Sending WhatsApp OTP to: $phoneNumber")
+            Timber.d("Sending WhatsApp OTP to: $phoneNumber via Edge Function")
             
-            // Use signInWith OTP and specify WhatsApp channel
-            auth.signInWith(OTP) {
-                this.phone = phoneNumber
-                this.createUser = true // Create user if doesn't exist
-                // Note: Channel defaults to SMS. For WhatsApp, Supabase needs to be configured
-                // with a WhatsApp provider and the channel is set server-side based on provider config
+            val response = edgeFunctionsApi.sendWhatsAppOtp(
+                SendOtpRequest(phoneNumber = phoneNumber)
+            )
+            
+            if (response.isSuccessful && response.body()?.success == true) {
+                Timber.d("WhatsApp OTP sent successfully")
+                AuthResult.Success(Unit)
+            } else {
+                val errorMessage = response.body()?.error ?: "Failed to send OTP"
+                Timber.e("Failed to send WhatsApp OTP: $errorMessage")
+                AuthResult.Error(
+                    message = errorMessage,
+                    code = "OTP_SEND_FAILED"
+                )
             }
-            
-            Timber.d("WhatsApp OTP sent successfully")
-            AuthResult.Success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to send WhatsApp OTP")
             AuthResult.Error(
@@ -51,7 +54,7 @@ class SupabaseAuthService @Inject constructor(
     }
     
     /**
-     * Verify OTP code and create/retrieve session.
+     * Verify OTP code using custom Edge Function.
      *
      * @param phoneNumber Phone number in E.164 format
      * @param otpCode 6-digit OTP code
@@ -59,26 +62,38 @@ class SupabaseAuthService @Inject constructor(
      */
     suspend fun verifyOtp(phoneNumber: String, otpCode: String): AuthResult<SessionData> = withContext(Dispatchers.IO) {
         try {
-            Timber.d("Verifying OTP for: $phoneNumber")
+            Timber.d("Verifying OTP for: $phoneNumber via Edge Function")
             
-            // Verify WhatsApp OTP - type should match how it was sent
-            auth.verifyPhoneOtp(
-                type = OtpType.Phone.SMS, // Use SMS type even for WhatsApp in current SDK version
-                phone = phoneNumber,
-                token = otpCode
+            val response = edgeFunctionsApi.verifyWhatsAppOtp(
+                VerifyOtpRequest(
+                    phoneNumber = phoneNumber,
+                    otpCode = otpCode
+                )
             )
             
-            // Get the current session after verification
-            val session = auth.currentSessionOrNull()
-            if (session != null) {
-                val sessionData = session.toSessionData()
-                Timber.d("OTP verified successfully, user: ${sessionData.user.id}")
-                AuthResult.Success(sessionData)
+            if (response.isSuccessful && response.body()?.success == true) {
+                // OTP verified successfully
+                val body = response.body()!!
+                Timber.d("OTP verified successfully, user: ${body.userId}")
+                
+                // Try to get current session
+                val session = auth.currentSessionOrNull()
+                if (session != null) {
+                    val sessionData = session.toSessionData()
+                    AuthResult.Success(sessionData)
+                } else {
+                    // Session will be created after app restart
+                    AuthResult.Error(
+                        message = "OTP verified. Please restart the app to complete login.",
+                        code = "RESTART_REQUIRED"
+                    )
+                }
             } else {
-                Timber.e("OTP verified but no session found")
+                val errorMessage = response.body()?.error ?: "Invalid OTP code"
+                Timber.e("OTP verification failed: $errorMessage")
                 AuthResult.Error(
-                    message = "Authentication failed: No session created",
-                    code = "NO_SESSION"
+                    message = errorMessage,
+                    code = response.body()?.code ?: "OTP_VERIFICATION_FAILED"
                 )
             }
         } catch (e: Exception) {
