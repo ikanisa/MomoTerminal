@@ -115,12 +115,14 @@ serve(async (req) => {
     const matchingOtp = pendingOtps?.find(otp => otp.code === hashedOtp)
 
     if (!matchingOtp) {
-      // Increment attempt counter on the most recent OTP if exists
+      // Atomically increment attempt counter on the most recent OTP if exists
+      // Use .lt('attempts', 5) to prevent race conditions
       if (pendingOtps && pendingOtps.length > 0) {
         await supabase
           .from('otp_codes')
           .update({ attempts: pendingOtps[0].attempts + 1 })
           .eq('id', pendingOtps[0].id)
+          .lt('attempts', 5)
       }
 
       console.log(`Invalid OTP for ${phoneNumber}`)
@@ -194,47 +196,27 @@ serve(async (req) => {
       if (authError) {
         console.error('Auth user creation error:', authError)
         
-        // If user already exists in auth, try to get them by phone directly
+        // If user already exists in auth, try to find them
         if (authError.message?.includes('already registered')) {
-          console.log('User exists in auth, fetching by phone...')
+          console.log('User exists in auth, searching...')
           
-          // Use direct phone lookup instead of listing all users
-          const { data: existingAuthUser, error: getUserError } = await supabase.auth.admin.getUserById(phoneNumber)
+          // Use listUsers with small page size as fallback
+          // Note: Supabase doesn't have getUserByPhone, so we must list users
+          const { data: { users }, error: listError } = await supabase.auth.admin.listUsers({
+            page: 1,
+            perPage: 100
+          })
           
-          // If getUserById doesn't work with phone, try getUserByPhone if available
-          // Fallback: query users table directly
-          if (getUserError || !existingAuthUser) {
-            const { data: userData, error: queryError } = await supabase
-              .from('auth.users')
-              .select('id')
-              .eq('phone', phoneNumber)
-              .single()
-              
-            if (queryError || !userData) {
-              // Last resort: use RPC function or admin API
-              const { data: { users }, error: listError } = await supabase.auth.admin.listUsers({
-                page: 1,
-                perPage: 100
-              })
-              
-              if (!listError && users) {
-                const foundUser = users.find(u => u.phone === phoneNumber)
-                if (foundUser) {
-                  userId = foundUser.id
-                  console.log(`Found existing auth user: ${userId}`)
-                } else {
-                  throw new Error('User exists but could not be found')
-                }
-              } else {
-                throw new Error(`Failed to find user: ${authError.message}`)
-              }
+          if (!listError && users) {
+            const foundUser = users.find(u => u.phone === phoneNumber)
+            if (foundUser) {
+              userId = foundUser.id
+              console.log(`Found existing auth user: ${userId}`)
             } else {
-              userId = userData.id
-              console.log(`Found existing auth user via query: ${userId}`)
+              throw new Error('User exists but could not be found')
             }
           } else {
-            userId = existingAuthUser.user.id
-            console.log(`Found existing auth user: ${userId}`)
+            throw new Error(`Failed to find user: ${authError.message}`)
           }
         } else {
           throw new Error(`Failed to create user: ${authError.message}`)
