@@ -73,21 +73,41 @@ class SupabaseAuthService @Inject constructor(
             )
             
             if (response.isSuccessful && response.body()?.success == true) {
-                // OTP verified successfully
                 val body = response.body()!!
                 Timber.d("OTP verified successfully, user: ${body.userId}")
                 
-                // Try to get current session
-                val session = auth.currentSessionOrNull()
-                if (session != null) {
-                    val sessionData = session.toSessionData()
+                // Use the session tokens from the Edge Function response
+                if (body.accessToken != null && body.refreshToken != null) {
+                    // Create SessionData from Edge Function response
+                    val sessionData = SessionData(
+                        accessToken = body.accessToken,
+                        refreshToken = body.refreshToken,
+                        expiresIn = body.expiresIn ?: 604800, // Default 7 days
+                        expiresAt = System.currentTimeMillis() / 1000 + (body.expiresIn ?: 604800),
+                        user = SupabaseUser(
+                            id = body.userId ?: "",
+                            phone = phoneNumber,
+                            email = null,
+                            createdAt = null,
+                            updatedAt = null
+                        )
+                    )
+                    
+                    Timber.d("Session created with access token")
                     AuthResult.Success(sessionData)
                 } else {
-                    // Session will be created after app restart
-                    AuthResult.Error(
-                        message = "OTP verified. Please restart the app to complete login.",
-                        code = "RESTART_REQUIRED"
-                    )
+                    // Fallback: Try to get session from Supabase
+                    val session = auth.currentSessionOrNull()
+                    if (session != null) {
+                        val sessionData = session.toSessionData()
+                        AuthResult.Success(sessionData)
+                    } else {
+                        Timber.w("No session tokens returned from Edge Function")
+                        AuthResult.Error(
+                            message = "OTP verified but session not created. Please try again.",
+                            code = "NO_SESSION"
+                        )
+                    }
                 }
             } else {
                 val errorMessage = response.body()?.error ?: "Invalid OTP code"

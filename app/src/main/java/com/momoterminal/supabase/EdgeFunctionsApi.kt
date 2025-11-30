@@ -43,7 +43,9 @@ data class VerifyOtpResponse(
     val message: String,
     val userId: String? = null,
     val isNewUser: Boolean? = null,
-    val sessionToken: String? = null,
+    val accessToken: String? = null,
+    val refreshToken: String? = null,
+    val expiresIn: Int? = null,
     val error: String? = null,
     val code: String? = null
 )
