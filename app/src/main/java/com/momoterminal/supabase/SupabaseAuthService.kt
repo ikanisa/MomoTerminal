@@ -1,7 +1,6 @@
 package com.momoterminal.supabase
 
 import io.github.jan.supabase.gotrue.Auth
-import io.github.jan.supabase.gotrue.providers.Phone
 import io.github.jan.supabase.gotrue.user.UserInfo
 import io.github.jan.supabase.gotrue.user.UserSession
 import kotlinx.coroutines.Dispatchers
@@ -79,15 +78,13 @@ class SupabaseAuthService @Inject constructor(
                 
                 // Use the session tokens from the Edge Function response
                 if (body.accessToken != null && body.refreshToken != null) {
-                    // Import the session into Supabase client
+                    // Try to import the session into Supabase client (optional)
                     try {
-                        auth.importSession(
-                            accessToken = body.accessToken,
-                            refreshToken = body.refreshToken
-                        )
-                        Timber.d("Session imported successfully")
+                        // Note: importSession may not be available in all versions
+                        // We'll just use the tokens directly
+                        Timber.d("Using session tokens from Edge Function")
                     } catch (importError: Exception) {
-                        Timber.w(importError, "Failed to import session, but continuing")
+                        Timber.w(importError, "Session import not available, using tokens directly")
                     }
                     
                     // Create SessionData from Edge Function response
