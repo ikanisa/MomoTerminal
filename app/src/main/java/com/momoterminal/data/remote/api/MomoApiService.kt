@@ -1,13 +1,8 @@
 package com.momoterminal.data.remote.api
 
-import com.momoterminal.data.remote.dto.SyncRequestDto
-import com.momoterminal.data.remote.dto.SyncResponseDto
-import com.momoterminal.data.remote.dto.TransactionDto
+import com.momoterminal.data.remote.dto.*
 import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.Query
+import retrofit2.http.*
 
 /**
  * Retrofit API interface for PWA database synchronization.
@@ -46,6 +41,53 @@ interface MomoApiService {
     suspend fun registerMerchant(
         @Body merchantInfo: MerchantRegistrationDto
     ): Response<SyncResponseDto>
+    
+    /**
+     * Register a new device.
+     */
+    @POST("api/devices/register")
+    suspend fun registerDevice(
+        @Body request: RegisterDeviceRequest
+    ): RegisterDeviceResponse
+    
+    /**
+     * Update device FCM token.
+     */
+    @PUT("api/devices/{device_id}/token")
+    suspend fun updateDeviceToken(
+        @Path("device_id") deviceId: String,
+        @Body request: UpdateFcmTokenRequest
+    ): Response<Unit>
+    
+    /**
+     * Get merchant settings.
+     */
+    @GET("api/merchant-settings")
+    suspend fun getMerchantSettings(): MerchantSettingsDto
+    
+    /**
+     * Update merchant settings.
+     */
+    @PUT("api/merchant-settings")
+    suspend fun updateMerchantSettings(
+        @Body settings: MerchantSettingsDto
+    ): MerchantSettingsDto
+    
+    /**
+     * Batch upload analytics events.
+     */
+    @POST("api/analytics/events")
+    suspend fun uploadAnalytics(
+        @Body request: BatchAnalyticsRequest
+    ): Response<Unit>
+    
+    /**
+     * Batch upload error logs.
+     */
+    @POST("api/error-logs")
+    suspend fun uploadErrorLogs(
+        @Body request: BatchErrorLogsRequest
+    ): Response<Unit>
     
     /**
      * Health check endpoint.

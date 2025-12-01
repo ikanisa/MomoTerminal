@@ -6,7 +6,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.flow.first
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -94,6 +96,22 @@ class UserPreferences @Inject constructor(
     }
     
     /**
+     * Save device UUID after registration.
+     */
+    suspend fun saveDeviceUuid(uuid: String) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_DEVICE_UUID] = uuid
+        }
+    }
+    
+    /**
+     * Get device UUID if registered.
+     */
+    suspend fun getDeviceUuid(): String? {
+        return context.dataStore.data.first()[KEY_DEVICE_UUID]
+    }
+    
+    /**
      * Clear all user preferences.
      */
     suspend fun clearAll() {
@@ -109,6 +127,7 @@ class UserPreferences @Inject constructor(
         private val KEY_BIOMETRIC_ENABLED = booleanPreferencesKey("biometric_enabled")
         private val KEY_BIOMETRIC_FOR_TRANSACTIONS = booleanPreferencesKey("biometric_required_for_transactions")
         private val KEY_AUTO_LOCK_TIMEOUT = intPreferencesKey("auto_lock_timeout_minutes")
+        private val KEY_DEVICE_UUID = stringPreferencesKey("device_uuid")
         
         // Default values
         const val DEFAULT_AUTO_LOCK_TIMEOUT = 5 // 5 minutes
