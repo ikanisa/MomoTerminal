@@ -68,6 +68,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.momoterminal.data.local.entity.TransactionEntity
 import com.momoterminal.domain.model.Provider
+import com.momoterminal.presentation.components.MomoButton
+import com.momoterminal.presentation.components.ButtonType
+import com.momoterminal.presentation.components.common.MomoTopAppBar
 import com.momoterminal.util.toRelativeTime
 
 /**
@@ -92,16 +95,10 @@ fun TransactionDetailScreen(
     
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Transaction Details") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
+            MomoTopAppBar(
+                title = "Transaction Details",
+                navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                onNavigationClick = onNavigateBack,
                 actions = {
                     IconButton(
                         onClick = {
@@ -153,9 +150,10 @@ fun TransactionDetailScreen(
                             style = MaterialTheme.typography.titleMedium
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = onNavigateBack) {
-                            Text("Go Back")
-                        }
+                        MomoButton(
+                            text = "Go Back",
+                            onClick = onNavigateBack
+                        )
                     }
                 }
                 
@@ -558,50 +556,30 @@ private fun ActionButtons(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             transactionId?.let { txId ->
-                OutlinedButton(
+                MomoButton(
+                    text = "Copy ID",
                     onClick = { onCopyTransactionId(txId) },
+                    type = ButtonType.OUTLINE,
                     modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ContentCopy,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Copy ID")
-                }
+                )
             }
             
-            FilledTonalButton(
+            MomoButton(
+                text = "Share",
                 onClick = onShare,
+                type = ButtonType.SECONDARY,
                 modifier = Modifier.weight(1f)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Share,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Share")
-            }
+            )
         }
         
         if (showRetrySync) {
-            Button(
+            MomoButton(
+                text = "Retry Sync",
                 onClick = onRetrySync,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Sync,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Retry Sync")
-            }
+                // Note: MomoButton doesn't support custom colors directly yet, 
+                // but primary (yellow) is fine for retry action in this context
+            )
         }
     }
 }

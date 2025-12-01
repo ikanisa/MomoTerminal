@@ -11,59 +11,71 @@ val MomoBlue = Color(0xFF0046AD)
 val MomoBlueLight = Color(0xFF3373C4)
 val MomoBlueDark = Color(0xFF003080)
 
+// Premium Neutrals
+val Neutral50 = Color(0xFFFAFAFA)
+val Neutral100 = Color(0xFFF5F5F5)
+val Neutral200 = Color(0xFFEEEEEE)
+val Neutral300 = Color(0xFFE0E0E0)
+val Neutral400 = Color(0xFFBDBDBD)
+val Neutral500 = Color(0xFF9E9E9E)
+val Neutral600 = Color(0xFF757575)
+val Neutral700 = Color(0xFF616161)
+val Neutral800 = Color(0xFF424242)
+val Neutral900 = Color(0xFF212121)
+
 // Provider Colors
 val MtnYellow = Color(0xFFFFCC00)
 val VodafoneRed = Color(0xFFE60000)
 val AirtelTigoRed = Color(0xFFED1C24)
 
 // Status Colors
-val SuccessGreen = Color(0xFF00A651)
-val SuccessGreenLight = Color(0xFF4CAF50)
-val ErrorRed = Color(0xFFE60000)
+val SuccessGreen = Color(0xFF00C853) // More vibrant green
+val SuccessGreenLight = Color(0xFF69F0AE)
+val ErrorRed = Color(0xFFD50000) // More vibrant red
 val ErrorRedLight = Color(0xFFFF5252)
-val WarningOrange = Color(0xFFFF9800)
-val WarningOrangeLight = Color(0xFFFFB74D)
-val InfoBlue = Color(0xFF2196F3)
+val WarningOrange = Color(0xFFFFAB00) // More vibrant orange
+val WarningOrangeLight = Color(0xFFFFD740)
+val InfoBlue = Color(0xFF0091EA) // More vibrant blue
 
 // Light Theme Colors
-val LightBackground = Color(0xFFFFFBFE)
-val LightSurface = Color(0xFFFFFFFF)
-val LightSurfaceVariant = Color(0xFFF5F5F5)
-val LightOnBackground = Color(0xFF1C1B1F)
-val LightOnSurface = Color(0xFF1C1B1F)
-val LightOnSurfaceVariant = Color(0xFF49454F)
-val LightOutline = Color(0xFF79747E)
+val LightBackground = Neutral50
+val LightSurface = Color.White
+val LightSurfaceVariant = Neutral100
+val LightOnBackground = Neutral900
+val LightOnSurface = Neutral900
+val LightOnSurfaceVariant = Neutral700
+val LightOutline = Neutral400
 val LightPrimary = MomoYellow
-val LightOnPrimary = Color(0xFF000000)
-val LightPrimaryContainer = Color(0xFFFFF8DC)
+val LightOnPrimary = Color.Black // High contrast on yellow
+val LightPrimaryContainer = Color(0xFFFFF9C4)
 val LightOnPrimaryContainer = Color(0xFF3D3000)
 val LightSecondary = MomoBlue
-val LightOnSecondary = Color(0xFFFFFFFF)
-val LightSecondaryContainer = Color(0xFFD6E3FF)
-val LightOnSecondaryContainer = Color(0xFF001B3E)
+val LightOnSecondary = Color.White
+val LightSecondaryContainer = Color(0xFFE3F2FD)
+val LightOnSecondaryContainer = MomoBlueDark
 val LightTertiary = SuccessGreen
-val LightOnTertiary = Color(0xFFFFFFFF)
-val LightTertiaryContainer = Color(0xFFC8FFC4)
+val LightOnTertiary = Color.White
+val LightTertiaryContainer = Color(0xFFE8F5E9)
 val LightOnTertiaryContainer = Color(0xFF002106)
 val LightError = ErrorRed
-val LightOnError = Color(0xFFFFFFFF)
-val LightErrorContainer = Color(0xFFFFDAD6)
+val LightOnError = Color.White
+val LightErrorContainer = Color(0xFFFFEBEE)
 val LightOnErrorContainer = Color(0xFF410002)
 
 // Dark Theme Colors
 val DarkBackground = Color(0xFF121212)
 val DarkSurface = Color(0xFF1E1E1E)
-val DarkSurfaceVariant = Color(0xFF2D2D2D)
-val DarkOnBackground = Color(0xFFE6E1E5)
-val DarkOnSurface = Color(0xFFE6E1E5)
-val DarkOnSurfaceVariant = Color(0xFFCAC4D0)
-val DarkOutline = Color(0xFF938F99)
-val DarkPrimary = MomoYellowLight
-val DarkOnPrimary = Color(0xFF000000)
+val DarkSurfaceVariant = Color(0xFF2C2C2C)
+val DarkOnBackground = Neutral100
+val DarkOnSurface = Neutral100
+val DarkOnSurfaceVariant = Neutral400
+val DarkOutline = Neutral600
+val DarkPrimary = MomoYellow
+val DarkOnPrimary = Color.Black
 val DarkPrimaryContainer = Color(0xFF5C4B00)
-val DarkOnPrimaryContainer = Color(0xFFFFE066)
+val DarkOnPrimaryContainer = MomoYellowLight
 val DarkSecondary = MomoBlueLight
-val DarkOnSecondary = Color(0xFFFFFFFF)
+val DarkOnSecondary = Color.White
 val DarkSecondaryContainer = Color(0xFF004494)
 val DarkOnSecondaryContainer = Color(0xFFD6E3FF)
 val DarkTertiary = SuccessGreenLight

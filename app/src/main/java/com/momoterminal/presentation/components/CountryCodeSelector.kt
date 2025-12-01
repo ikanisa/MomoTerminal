@@ -38,15 +38,16 @@ fun CountryCodeSelector(
 ) {
     var expanded by remember { mutableStateOf(false) }
     
-    // Common African country codes + others
+    // Target markets: Rwanda, DR Congo, Tanzania, Burundi, Zambia
+    // Excluding: Uganda, Kenya, Nigeria, South Africa
     val countries = listOf(
         CountryCode("+250", "Rwanda", "🇷🇼"),
-        CountryCode("+254", "Kenya", "🇰🇪"),
-        CountryCode("+256", "Uganda", "🇺🇬"),
+        CountryCode("+243", "DR Congo", "🇨🇩"),
         CountryCode("+255", "Tanzania", "🇹🇿"),
+        CountryCode("+257", "Burundi", "🇧🇮"),
+        CountryCode("+260", "Zambia", "🇿🇲"),
+        // Secondary/Other
         CountryCode("+233", "Ghana", "🇬🇭"),
-        CountryCode("+234", "Nigeria", "🇳🇬"),
-        CountryCode("+27", "South Africa", "🇿🇦"),
         CountryCode("+1", "USA/Canada", "🇺🇸")
     )
 

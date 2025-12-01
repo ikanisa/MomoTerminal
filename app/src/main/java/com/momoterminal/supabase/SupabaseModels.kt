@@ -53,3 +53,23 @@ sealed class AuthResult<out T> {
     data class Error(val message: String, val code: String? = null) : AuthResult<Nothing>()
     data object Loading : AuthResult<Nothing>()
 }
+
+/**
+ * Complete user profile request.
+ */
+data class CompleteProfileRequest(
+    val userId: String,
+    val pin: String,
+    val merchantName: String,
+    val acceptedTerms: Boolean
+)
+
+/**
+ * Complete user profile response.
+ */
+data class CompleteProfileResponse(
+    val success: Boolean,
+    val message: String? = null,
+    val error: String? = null,
+    val code: String? = null
+)

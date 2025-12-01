@@ -45,8 +45,12 @@ class SmsReceiver : BroadcastReceiver() {
     companion object {
         private const val TAG = "SmsReceiver"
         
-        // Keywords to filter Mobile Money messages (Ghana-focused)
-        private val MOMO_KEYWORDS = listOf("MOMO", "MobileMoney", "MTN", "GHS", "received", "sent", "payment")
+        // Keywords to filter Mobile Money messages (Targeting Rwanda, DRC, Tanzania, Burundi, Zambia)
+        private val MOMO_KEYWORDS = listOf(
+            "MOMO", "MobileMoney", "Mobile Money", "MTN", "Airtel", "Tigo", "Vodacom", "Halotel", "Lumicash", "EcoCash",
+            "RWF", "CDF", "TZS", "BIF", "ZMW", "GHS", "USD",
+            "received", "sent", "payment", "confirmed", "transferred"
+        )
         
         // Broadcast action for payment received
         const val BROADCAST_PAYMENT_RECEIVED = "com.momoterminal.action.PAYMENT_RECEIVED"
@@ -165,7 +169,7 @@ class SmsReceiver : BroadcastReceiver() {
                     timestamp = timestamp,
                     status = "PENDING",
                     amount = parsedData?.getDisplayAmount(),
-                    currency = parsedData?.currency ?: "GHS",
+                    currency = parsedData?.currency ?: "RWF", // Default to RWF (Rwanda) as primary market
                     transactionId = parsedData?.transactionId,
                     merchantCode = appConfig.getMerchantPhone()
                 )

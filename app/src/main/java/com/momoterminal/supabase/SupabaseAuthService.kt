@@ -112,6 +112,53 @@ class SupabaseAuthService @Inject constructor(
     }
     
     /**
+     * Complete user profile with PIN and merchant info.
+     *
+     * @param userId User ID from OTP verification
+     * @param pin 6-digit PIN
+     * @param merchantName Business/merchant name
+     * @param acceptedTerms Whether terms were accepted
+     * @return AuthResult indicating success or failure
+     */
+    suspend fun completeProfile(
+        userId: String,
+        pin: String,
+        merchantName: String,
+        acceptedTerms: Boolean
+    ): AuthResult<Unit> = withContext(Dispatchers.IO) {
+        try {
+            Timber.d("Completing profile for user: $userId")
+            
+            val response = edgeFunctionsApi.completeUserProfile(
+                CompleteProfileRequest(
+                    userId = userId,
+                    pin = pin,
+                    merchantName = merchantName,
+                    acceptedTerms = acceptedTerms
+                )
+            )
+            
+            if (response.isSuccessful && response.body()?.success == true) {
+                Timber.d("Profile completed successfully")
+                AuthResult.Success(Unit)
+            } else {
+                val errorMessage = response.body()?.error ?: "Failed to complete profile"
+                Timber.e("Profile completion failed: $errorMessage")
+                AuthResult.Error(
+                    message = errorMessage,
+                    code = response.body()?.code ?: "PROFILE_COMPLETION_FAILED"
+                )
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to complete profile")
+            AuthResult.Error(
+                message = e.message ?: "Failed to complete profile",
+                code = "PROFILE_COMPLETION_FAILED"
+            )
+        }
+    }
+    
+    /**
      * Sign out the current user and clear session.
      */
     suspend fun signOut(): AuthResult<Unit> = withContext(Dispatchers.IO) {

@@ -48,6 +48,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.momoterminal.auth.AuthViewModel
 import com.momoterminal.presentation.components.CountryCodeSelector
+import com.momoterminal.presentation.components.MomoButton
+import com.momoterminal.presentation.components.MomoTextField
+import com.momoterminal.presentation.components.ButtonType
 import com.momoterminal.presentation.components.OtpInputField
 import com.momoterminal.presentation.theme.MomoYellow
 import kotlinx.coroutines.delay
@@ -124,12 +127,12 @@ fun LoginScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(64.dp))
 
             // App Logo/Title
             Text(
                 text = "MomoTerminal",
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
                 color = MomoYellow
             )
@@ -140,23 +143,24 @@ fun LoginScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(64.dp))
 
             Text(
                 text = "Welcome Back",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
             )
+            
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = if (uiState.isOtpSent) "Enter OTP from WhatsApp" else "Sign in to continue",
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Phone Number Input
             // Phone Number Input
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -168,11 +172,11 @@ fun LoginScreen(
                     modifier = Modifier.padding(end = 8.dp)
                 )
 
-                OutlinedTextField(
+                MomoTextField(
                     value = uiState.phoneNumber,
                     onValueChange = viewModel::updatePhoneNumber,
-                    label = { Text("Phone Number") },
-                    placeholder = { Text("78XXXXXXX") },
+                    label = "Phone Number",
+                    placeholder = "78XXXXXXX",
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
@@ -191,14 +195,14 @@ fun LoginScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // OTP Input (shown after OTP is sent)
             AnimatedVisibility(visible = uiState.isOtpSent) {
                 Column {
                     Text(
                         text = "Enter 6-digit OTP",
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -210,36 +214,34 @@ fun LoginScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                     
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     
                     // Resend OTP button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Didn't receive OTP?",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        
-                        TextButton(
-                            onClick = {
-                                viewModel.requestOtp()
-                                resendCountdown = 60
-                            },
-                            enabled = resendCountdown == 0 && !uiState.isLoading
-                        ) {
+                        if (resendCountdown > 0) {
                             Text(
-                                text = if (resendCountdown > 0) "Resend in ${resendCountdown}s" else "Resend OTP",
-                                color = if (resendCountdown > 0) {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                } else {
-                                    MaterialTheme.colorScheme.primary
-                                },
-                                style = MaterialTheme.typography.labelLarge
+                                text = "Resend code in ${resendCountdown}s",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        } else {
+                            TextButton(
+                                onClick = {
+                                    viewModel.requestOtp()
+                                    resendCountdown = 60
+                                },
+                                enabled = !uiState.isLoading
+                            ) {
+                                Text(
+                                    text = "Didn't receive code? Resend",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                 }
@@ -249,16 +251,17 @@ fun LoginScreen(
             AnimatedVisibility(visible = uiState.isLockedOut) {
                 Text(
                     text = "Too many failed attempts. Please try again later.",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Send OTP / Sign In Button
-            Button(
+            MomoButton(
+                text = if (uiState.isOtpSent) "Sign In" else "Send OTP via WhatsApp",
                 onClick = {
                     if (uiState.isOtpSent) {
                         viewModel.login()
@@ -266,58 +269,23 @@ fun LoginScreen(
                         viewModel.requestOtp()
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
                 enabled = !uiState.isLoading && 
                          uiState.phoneNumber.isNotBlank() && 
                          (!uiState.isOtpSent || uiState.otpCode.length == 6) &&
                          !uiState.isLockedOut,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MomoYellow,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        if (!uiState.isOtpSent) {
-                            // WhatsApp icon placeholder - you can add actual icon
-                            Text("📱")
-                            Spacer(modifier = Modifier.width(8.dp))
-                        }
-                        Text(
-                            text = if (uiState.isOtpSent) "Sign In" else "Send OTP via WhatsApp",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                }
-            }
+                isLoading = uiState.isLoading
+            )
 
             // Biometric Login Option
             if (uiState.isBiometricAvailable && !uiState.isOtpSent) {
                 Spacer(modifier = Modifier.height(16.dp))
 
-                OutlinedButton(
+                MomoButton(
+                    text = "Use Biometrics",
                     onClick = viewModel::triggerBiometricAuth,
-                    modifier = Modifier.fillMaxWidth(),
+                    type = ButtonType.OUTLINE,
                     enabled = !uiState.isLoading
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Fingerprint,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Use Biometrics")
-                }
+                )
             }
 
             Spacer(modifier = Modifier.weight(1f))

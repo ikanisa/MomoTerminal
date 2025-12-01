@@ -18,6 +18,11 @@ interface EdgeFunctionsApi {
     suspend fun verifyWhatsAppOtp(
         @Body request: VerifyOtpRequest
     ): Response<VerifyOtpResponse>
+    
+    @POST("complete-user-profile")
+    suspend fun completeUserProfile(
+        @Body request: CompleteProfileRequest
+    ): Response<CompleteProfileResponse>
 }
 
 data class SendOtpRequest(

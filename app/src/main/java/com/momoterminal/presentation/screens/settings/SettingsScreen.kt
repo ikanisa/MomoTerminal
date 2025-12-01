@@ -56,6 +56,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.momoterminal.presentation.components.MomoButton
+import com.momoterminal.presentation.components.MomoTextField
+import com.momoterminal.presentation.components.ButtonType
 import com.momoterminal.presentation.components.common.MomoTopAppBar
 import com.momoterminal.presentation.theme.MomoTerminalTheme
 import com.momoterminal.presentation.theme.MomoYellow
@@ -98,145 +101,47 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp)
+                .padding(24.dp)
         ) {
-            // Gateway Configuration Section
-            SectionHeader(
-                title = "Gateway Configuration",
-                icon = Icons.Filled.Link
-            )
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            // Webhook URL
-            OutlinedTextField(
-                value = uiState.webhookUrl,
-                onValueChange = viewModel::updateWebhookUrl,
-                label = { Text("Webhook URL") },
-                placeholder = { Text("https://your-server.com/webhook") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                isError = uiState.webhookUrl.isNotBlank() && !viewModel.isUrlValid(),
-                supportingText = {
-                    if (uiState.webhookUrl.isNotBlank() && !viewModel.isUrlValid()) {
-                        Text("URL must start with http:// or https://")
-                    }
-                }
-            )
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            // API Secret
-            OutlinedTextField(
-                value = uiState.apiSecret,
-                onValueChange = viewModel::updateApiSecret,
-                label = { Text("API Secret (Optional)") },
-                placeholder = { Text("Your API key") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                visualTransformation = if (showApiSecret) {
-                    VisualTransformation.None
-                } else {
-                    PasswordVisualTransformation()
-                },
-                trailingIcon = {
-                    IconButton(onClick = { showApiSecret = !showApiSecret }) {
-                        Icon(
-                            imageVector = if (showApiSecret) {
-                                Icons.Filled.VisibilityOff
-                            } else {
-                                Icons.Filled.Visibility
-                            },
-                            contentDescription = if (showApiSecret) "Hide" else "Show"
-                        )
-                    }
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Security,
-                        contentDescription = null
-                    )
-                }
-            )
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            // Test Connection Button
-            OutlinedButton(
-                onClick = viewModel::testConnection,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = uiState.connectionTestResult !is SettingsViewModel.ConnectionTestResult.Testing
-            ) {
-                when (val result = uiState.connectionTestResult) {
-                    is SettingsViewModel.ConnectionTestResult.Testing -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.height(20.dp).width(20.dp),
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Testing...")
-                    }
-                    is SettingsViewModel.ConnectionTestResult.Success -> {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = null,
-                            tint = SuccessGreen
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Connection Successful", color = SuccessGreen)
-                    }
-                    is SettingsViewModel.ConnectionTestResult.Failed -> {
-                        Text("Test Failed: ${result.message}", color = MaterialTheme.colorScheme.error)
-                    }
-                    else -> {
-                        Text("Test Connection")
-                    }
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(24.dp))
-            
             // Merchant Configuration Section
             SectionHeader(
-                title = "Merchant Configuration",
-                icon = Icons.Filled.Person
+                title = "Merchant Profile",
+                icon = Icons.Default.Person
             )
             
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
             // Merchant Phone
-            OutlinedTextField(
+            MomoTextField(
                 value = uiState.merchantPhone,
                 onValueChange = viewModel::updateMerchantPhone,
-                label = { Text("Merchant Phone Number") },
-                placeholder = { Text("0201234567") },
+                label = "Merchant Phone Number",
+                placeholder = "0201234567",
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 isError = uiState.merchantPhone.isNotBlank() && !viewModel.isPhoneValid()
             )
             
-            Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Spacer(modifier = Modifier.height(32.dp))
             
             // Security Section
             SectionHeader(
                 title = "Security",
-                icon = Icons.Filled.Fingerprint
+                icon = Icons.Default.Fingerprint
             )
             
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
             // Biometric toggle
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                )
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                ),
+                shape = MaterialTheme.shapes.small
             ) {
                 Row(
                     modifier = Modifier
@@ -245,7 +150,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Fingerprint,
+                        imageVector = Icons.Default.Fingerprint,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -255,8 +160,8 @@ fun SettingsScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "Biometric Authentication",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
                         )
                         Text(
                             text = if (uiState.isBiometricAvailable) {
@@ -264,7 +169,7 @@ fun SettingsScreen(
                             } else {
                                 "Not available on this device"
                             },
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -277,25 +182,26 @@ fun SettingsScreen(
                 }
             }
             
-            Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Spacer(modifier = Modifier.height(32.dp))
             
             // Developer Section - App Capabilities Demo
             SectionHeader(
                 title = "Developer Options",
-                icon = Icons.Filled.Build
+                icon = Icons.Default.Build
             )
             
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
             // Capabilities Demo Button
             Card(
                 onClick = onNavigateToCapabilitiesDemo,
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                )
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                ),
+                shape = MaterialTheme.shapes.small
             ) {
                 Row(
                     modifier = Modifier
@@ -304,7 +210,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Build,
+                        imageVector = Icons.Default.Build,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -314,12 +220,12 @@ fun SettingsScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "App Capabilities Demo",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "Test Network, NFC, Biometrics, Services & more",
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "Test Network, NFC, Biometrics & more",
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -332,45 +238,35 @@ fun SettingsScreen(
                 }
             }
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(48.dp))
             
             // Save Button
-            Button(
+            MomoButton(
+                text = "Save Configuration",
                 onClick = { viewModel.saveSettings() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                enabled = viewModel.isUrlValid() && viewModel.isPhoneValid(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MomoYellow,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
-                Text(
-                    text = "Save Configuration",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
+                enabled = viewModel.isPhoneValid()
+            )
             
             // Status indicator
             AnimatedVisibility(visible = uiState.isConfigured) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
+                        .padding(top = 16.dp),
                     horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Check,
+                        imageVector = Icons.Default.Check,
                         contentDescription = null,
                         tint = SuccessGreen
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Configuration saved",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = SuccessGreen
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = SuccessGreen,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }

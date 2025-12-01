@@ -47,6 +47,7 @@ class AuthViewModel @Inject constructor(
         val registrationStep: RegistrationStep = RegistrationStep.PHONE_ENTRY,
         val pinAttempts: Int = 0,
         val isLockedOut: Boolean = false,
+        val userId: String? = null, // User ID from OTP verification
         // OTP timer fields
         val otpExpiresAt: Long = 0L,
         val otpExpiryCountdown: Int = 0,
@@ -463,6 +464,7 @@ class AuthViewModel @Inject constructor(
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
                                 isOtpVerified = true,
+                                userId = result.data.userId, // Store user ID
                                 error = null,
                                 registrationStep = RegistrationStep.PIN_CREATION
                             )
@@ -505,9 +507,15 @@ class AuthViewModel @Inject constructor(
             return
         }
 
+        // Use userId from OTP verification
+        if (state.userId == null) {
+            _uiState.value = state.copy(error = "User ID not found. Please verify OTP again.")
+            return
+        }
+
         viewModelScope.launch {
-            authRepository.register(
-                phoneNumber = state.formattedPhoneNumber,
+            authRepository.completeProfile(
+                userId = state.userId,
                 pin = state.pin,
                 merchantName = state.merchantName,
                 acceptedTerms = state.acceptedTerms

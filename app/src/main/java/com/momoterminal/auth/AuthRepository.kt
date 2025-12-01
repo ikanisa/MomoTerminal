@@ -147,6 +147,38 @@ class AuthRepository @Inject constructor(
     }
 
     /**
+     * Complete user profile after OTP verification.
+     */
+    fun completeProfile(
+        userId: String,
+        pin: String,
+        merchantName: String,
+        acceptedTerms: Boolean
+    ): Flow<AuthResult<Unit>> = flow {
+        emit(AuthResult.Loading)
+        
+        try {
+            // Use Supabase to complete profile
+            when (val result = supabaseAuthService.completeProfile(userId, pin, merchantName, acceptedTerms)) {
+                is SupabaseAuthResult.Success -> {
+                    Timber.d("Profile completed successfully")
+                    emit(AuthResult.Success(Unit))
+                }
+                is SupabaseAuthResult.Error -> {
+                    Timber.e("Profile completion failed: ${result.message}")
+                    emit(AuthResult.Error(result.message))
+                }
+                else -> {
+                    emit(AuthResult.Error("Unexpected error completing profile"))
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Profile completion error")
+            emit(AuthResult.Error(e.message ?: "Network error occurred"))
+        }
+    }
+
+    /**
      * Verify OTP code using Supabase Edge Functions.
      * Verify OTP code using Supabase.
      */
@@ -178,7 +210,8 @@ class AuthRepository @Inject constructor(
                     Timber.d("OTP verification successful")
                     val otpResponse = OtpResponse(
                         success = true,
-                        message = "OTP verified successfully"
+                        message = "OTP verified successfully",
+                        userId = sessionData.user.id
                     )
                     emit(AuthResult.Success(otpResponse))
                 }

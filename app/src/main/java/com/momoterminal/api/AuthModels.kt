@@ -107,6 +107,8 @@ data class OtpResponse(
     val success: Boolean,
     @SerializedName("message")
     val message: String,
+    @SerializedName("user_id")
+    val userId: String? = null,
     @SerializedName("expires_at")
     val expiresAt: Long? = null,
     @SerializedName("expires_in_seconds")

@@ -43,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.momoterminal.data.local.entity.TransactionEntity
 import com.momoterminal.nfc.NfcState
+import com.momoterminal.presentation.components.MomoButton
+import com.momoterminal.presentation.components.ButtonType
 import com.momoterminal.presentation.components.common.MomoTopAppBar
 import com.momoterminal.presentation.components.status.NfcStatusIndicator
 import com.momoterminal.presentation.components.status.SyncStatusBadge
@@ -136,17 +138,13 @@ fun HomeScreen(
                     fontWeight = FontWeight.SemiBold
                 )
                 
-                OutlinedButton(
-                    onClick = onNavigateToTransactions
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.History,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("View All")
-                }
+                MomoButton(
+                    text = "View All",
+                    onClick = onNavigateToTransactions,
+                    type = ButtonType.OUTLINE,
+                    modifier = Modifier.height(36.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                )
             }
             
             Spacer(modifier = Modifier.height(12.dp))
@@ -205,9 +203,12 @@ private fun ConfigurationWarningCard(
                 )
             }
             
-            Button(onClick = onConfigureClick) {
-                Text("Setup")
-            }
+            MomoButton(
+                text = "Setup",
+                onClick = onConfigureClick,
+                modifier = Modifier.height(40.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)
+            )
         }
     }
 }

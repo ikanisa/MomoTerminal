@@ -66,6 +66,8 @@ import com.google.accompanist.permissions.shouldShowRationale
 import timber.log.Timber
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import com.momoterminal.presentation.components.MomoButton
+import com.momoterminal.presentation.components.ButtonType
 
 /**
  * Full-screen QR code scanner composable with camera preview,
@@ -390,9 +392,10 @@ private fun PermissionRationaleContent(
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        androidx.compose.material3.Button(onClick = onRequestPermission) {
-            Text("Grant Permission")
-        }
+        MomoButton(
+            text = "Grant Permission",
+            onClick = onRequestPermission
+        )
     }
 }
 
@@ -435,8 +438,10 @@ private fun PermissionDeniedContent(
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        androidx.compose.material3.OutlinedButton(onClick = onNavigateBack) {
-            Text("Go Back")
-        }
+        MomoButton(
+            text = "Go Back",
+            onClick = onNavigateBack,
+            type = ButtonType.OUTLINE
+        )
     }
 }

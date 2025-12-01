@@ -33,6 +33,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.momoterminal.nfc.NfcState
+import com.momoterminal.presentation.components.MomoButton
+import com.momoterminal.presentation.components.ButtonType
 import com.momoterminal.presentation.components.common.MomoCenterTopAppBar
 import com.momoterminal.presentation.components.terminal.AmountDisplay
 import com.momoterminal.presentation.components.terminal.AmountKeypad
@@ -122,9 +124,11 @@ private fun InputContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Amount display
         AmountDisplay(
             amount = uiState.amount,
@@ -132,7 +136,7 @@ private fun InputContent(
             isActive = uiState.amount.isNotEmpty()
         )
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(32.dp))
         
         // Provider selector
         ProviderSelector(
@@ -151,31 +155,20 @@ private fun InputContent(
             modifier = Modifier.fillMaxWidth()
         )
         
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
         
         // Activate button
-        Button(
+        MomoButton(
+            text = "Activate NFC",
             onClick = onActivate,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            enabled = isValid,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MomoYellow,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        ) {
-            Text(
-                text = "Activate NFC",
-                style = MaterialTheme.typography.titleMedium
-            )
-        }
+            enabled = isValid
+        )
         
         if (!uiState.isConfigured) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "Please configure merchant details in Settings",
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error
             )
         }
@@ -194,7 +187,7 @@ private fun NfcActiveContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -205,7 +198,7 @@ private fun NfcActiveContent(
             isActive = true
         )
         
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(64.dp))
         
         // NFC animation
         NfcPulseAnimation(
@@ -222,20 +215,11 @@ private fun NfcActiveContent(
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            OutlinedButton(
+            MomoButton(
+                text = "Cancel Payment",
                 onClick = onCancel,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Text(
-                    text = "Cancel Payment",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
+                type = ButtonType.OUTLINE
+            )
         }
     }
 }

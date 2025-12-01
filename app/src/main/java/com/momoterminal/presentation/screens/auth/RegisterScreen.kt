@@ -61,6 +61,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.momoterminal.R
 import com.momoterminal.auth.AuthViewModel
 import com.momoterminal.presentation.components.CountryCodeSelector
+import com.momoterminal.presentation.components.MomoButton
+import com.momoterminal.presentation.components.MomoTextField
+import com.momoterminal.presentation.components.ButtonType
 import com.momoterminal.presentation.theme.MomoYellow
 
 /** Timer update interval for OTP expiry countdown in milliseconds */
@@ -285,21 +288,42 @@ private fun PhoneEntryStep(
             .verticalScroll(rememberScrollState())
     ) {
         Text(
-            text = "Enter Your Phone Number",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold
+            text = "Welcome to MoMo Terminal",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Enter your phone number to get started",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // WhatsApp Info Card
+        androidx.compose.material3.Card(
+            colors = androidx.compose.material3.CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+            ),
+            shape = MaterialTheme.shapes.small,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text("📱") // WhatsApp icon
-            Text(
-                text = "We'll send you a verification code via WhatsApp",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("📱", style = MaterialTheme.typography.titleLarge)
+                Text(
+                    text = "We'll send you a verification code via WhatsApp",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -314,11 +338,11 @@ private fun PhoneEntryStep(
                 modifier = Modifier.padding(end = 8.dp)
             )
 
-            OutlinedTextField(
+            MomoTextField(
                 value = phoneNumber,
                 onValueChange = onPhoneChange,
-                label = { Text("Phone Number") },
-                placeholder = { Text("78XXXXXXX") },
+                label = "Phone Number",
+                placeholder = "78XXXXXXX",
                 modifier = Modifier.weight(1f),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
@@ -331,40 +355,19 @@ private fun PhoneEntryStep(
                         onRequestOtp()
                     }
                 ),
-                enabled = !isLoading
+                enabled = !isLoading,
+                leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) }
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        Button(
+        MomoButton(
+            text = "Send WhatsApp Code",
             onClick = onRequestOtp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
             enabled = !isLoading && phoneNumber.isNotBlank(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MomoYellow,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text("📱")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Send WhatsApp Code")
-                }
-            }
-        }
+            isLoading = isLoading
+        )
     }
 }
 
@@ -508,29 +511,14 @@ private fun OtpVerificationStep(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        Button(
+        MomoButton(
+            text = "Verify",
             onClick = onVerifyOtp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
             enabled = !isLoading && otpCode.length == 6 && otpExpiryCountdown > 0,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MomoYellow,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text("Verify")
-            }
-        }
+            isLoading = isLoading
+        )
     }
 }
 
@@ -553,30 +541,28 @@ private fun PinCreationStep(
             .verticalScroll(rememberScrollState())
     ) {
         Text(
-            text = "Create Your PIN",
+            text = "Secure Your Account",
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.Bold
         )
+        
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Choose a 6-digit PIN to secure your account",
-            style = MaterialTheme.typography.bodyMedium,
+            text = "Create a 6-digit PIN to protect your transactions",
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        OutlinedTextField(
+        MomoTextField(
             value = pin,
             onValueChange = onPinChange,
-            label = { Text("6-Digit PIN") },
+            label = "6-Digit PIN",
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            visualTransformation = if (showPin) {
-                VisualTransformation.None
-            } else {
-                PasswordVisualTransformation()
-            },
+            visualTransformation = if (showPin) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { showPin = !showPin }) {
                     Icon(
@@ -597,17 +583,13 @@ private fun PinCreationStep(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedTextField(
+        MomoTextField(
             value = confirmPin,
             onValueChange = onConfirmPinChange,
-            label = { Text("Confirm PIN") },
+            label = "Confirm PIN",
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            visualTransformation = if (showConfirmPin) {
-                VisualTransformation.None
-            } else {
-                PasswordVisualTransformation()
-            },
+            visualTransformation = if (showConfirmPin) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { showConfirmPin = !showConfirmPin }) {
                     Icon(
@@ -630,26 +612,17 @@ private fun PinCreationStep(
             ),
             enabled = !isLoading,
             isError = confirmPin.isNotEmpty() && pin != confirmPin,
-            supportingText = if (confirmPin.isNotEmpty() && pin != confirmPin) {
-                { Text("PINs do not match") }
-            } else null
+            errorMessage = if (confirmPin.isNotEmpty() && pin != confirmPin) "PINs do not match" else null
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        Button(
+        MomoButton(
+            text = "Continue",
             onClick = onNext,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
             enabled = !isLoading && pin.length == 6 && pin == confirmPin,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MomoYellow,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        ) {
-            Text("Continue")
-        }
+            isLoading = isLoading
+        )
     }
 }
 
@@ -666,24 +639,26 @@ private fun MerchantInfoStep(
             .verticalScroll(rememberScrollState())
     ) {
         Text(
-            text = "Business Information",
+            text = "Business Profile",
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.Bold
         )
+        
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Enter your business or merchant name",
-            style = MaterialTheme.typography.bodyMedium,
+            text = "Tell us about your business",
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        OutlinedTextField(
+        MomoTextField(
             value = merchantName,
             onValueChange = onMerchantNameChange,
-            label = { Text("Business Name") },
-            placeholder = { Text("My Store") },
+            label = "Business Name",
+            placeholder = "My Store",
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Business,
@@ -698,21 +673,14 @@ private fun MerchantInfoStep(
             enabled = !isLoading
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        Button(
+        MomoButton(
+            text = "Continue",
             onClick = onNext,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
             enabled = !isLoading && merchantName.isNotBlank(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MomoYellow,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        ) {
-            Text("Continue")
-        }
+            isLoading = isLoading
+        )
     }
 }
 
@@ -731,23 +699,34 @@ private fun TermsAcceptanceStep(
         Text(
             text = stringResource(R.string.terms_title),
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.Bold
         )
+        
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = stringResource(R.string.terms_subtitle),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Terms content from string resources
-        Text(
-            text = stringResource(R.string.terms_content),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Terms Card
+        androidx.compose.material3.Card(
+            colors = androidx.compose.material3.CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ),
+            shape = MaterialTheme.shapes.small,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = stringResource(R.string.terms_content),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -767,28 +746,13 @@ private fun TermsAcceptanceStep(
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        Button(
+        MomoButton(
+            text = "Create Account",
             onClick = onRegister,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
             enabled = !isLoading && acceptedTerms,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MomoYellow,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text("Create Account")
-            }
-        }
+            isLoading = isLoading
+        )
     }
 }

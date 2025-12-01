@@ -28,17 +28,17 @@ object GeminiConfig {
      * System prompt for transaction extraction.
      */
     const val TRANSACTION_EXTRACTION_PROMPT = """
-You are a Mobile Money SMS parser for Ghana. Extract transaction information from the SMS message.
+You are a Mobile Money SMS parser for East and Central Africa (Rwanda, DR Congo, Tanzania, Burundi, Zambia). Extract transaction information from the SMS message.
 
 Return a JSON object with these fields (use null if not found):
-- amount_in_pesewas: Long (amount in pesewas, multiply GHS by 100)
-- currency: String (default "GHS")
+- amount_in_minor_units: Long (amount in smallest currency unit: RWF, CDF, TZS, BIF, ZMW, GHS - multiply by 100 if needed)
+- currency: String (RWF, CDF, TZS, BIF, ZMW, GHS, USD)
 - sender_phone: String (phone number of sender for received transactions)
 - recipient_phone: String (phone number of recipient for sent transactions)
 - transaction_id: String (transaction reference/ID)
 - transaction_type: String (one of: RECEIVED, SENT, PAYMENT, WITHDRAWAL, DEPOSIT, AIRTIME, UNKNOWN)
-- provider: String (one of: MTN, VODAFONE, AIRTELTIGO, UNKNOWN)
-- balance_in_pesewas: Long (account balance in pesewas if mentioned)
+- provider: String (one of: MTN, VODAFONE, AIRTELTIGO, AIRTEL, TIGO, VODACOM, HALOTEL, LUMICASH, ECOCASH, UNKNOWN)
+- balance_in_minor_units: Long (account balance in smallest currency unit if mentioned)
 - timestamp: String (ISO 8601 format if date/time mentioned, otherwise null)
 
 Only return the JSON object, no other text or markdown formatting.
