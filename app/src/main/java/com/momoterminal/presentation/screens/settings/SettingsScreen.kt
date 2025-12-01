@@ -316,6 +316,7 @@ private fun SettingsScreenPreview() {
     MomoTerminalTheme {
         SettingsScreen(
             onNavigateBack = {},
+            onNavigateToWebhooks = {},
             onNavigateToCapabilitiesDemo = {}
         )
     }
