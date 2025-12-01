@@ -144,10 +144,11 @@ fun NfcPulseAnimation(
 }
 
 /**
- * NFC status indicator with different states.
+ * NFC pulse status indicator with different states.
+ * Note: Different from status.NfcStatusIndicator - this is for terminal screen animation context.
  */
 @Composable
-fun NfcStatusIndicator(
+fun NfcPulseStatusIndicator(
     isEnabled: Boolean,
     isActive: Boolean,
     modifier: Modifier = Modifier
@@ -219,14 +220,14 @@ private fun NfcPulseAnimationInactivePreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun NfcStatusIndicatorPreview() {
+private fun NfcPulseStatusIndicatorPreview() {
     MomoTerminalTheme {
         Column {
-            NfcStatusIndicator(isEnabled = true, isActive = true)
+            NfcPulseStatusIndicator(isEnabled = true, isActive = true)
             Spacer(modifier = Modifier.height(16.dp))
-            NfcStatusIndicator(isEnabled = true, isActive = false)
+            NfcPulseStatusIndicator(isEnabled = true, isActive = false)
             Spacer(modifier = Modifier.height(16.dp))
-            NfcStatusIndicator(isEnabled = false, isActive = false)
+            NfcPulseStatusIndicator(isEnabled = false, isActive = false)
         }
     }
 }

@@ -103,6 +103,19 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
+            // Webhook Configuration Section
+            SectionHeader(
+                title = "Webhook Configuration",
+                icon = Icons.Default.Link
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Spacer(modifier = Modifier.height(32.dp))
+
             // Merchant Configuration Section
             SectionHeader(
                 title = "Merchant Profile",
