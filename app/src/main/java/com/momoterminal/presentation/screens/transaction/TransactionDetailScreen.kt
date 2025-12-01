@@ -260,6 +260,12 @@ private fun AmountCard(
 ) {
     val providerColor = when (provider) {
         Provider.MTN -> Color(0xFFFFCC00)
+        Provider.AIRTEL -> Color(0xFFED1C24)
+        Provider.TIGO -> Color(0xFF0066CC)
+        Provider.VODACOM -> Color(0xFFE60000)
+        Provider.HALOTEL -> Color(0xFF9C27B0)
+        Provider.LUMICASH -> Color(0xFF4CAF50)
+        Provider.ECOCASH -> Color(0xFFFF9800)
         Provider.VODAFONE -> Color(0xFFE60000)
         Provider.AIRTELTIGO -> Color(0xFFED1C24)
         null -> MaterialTheme.colorScheme.primary
