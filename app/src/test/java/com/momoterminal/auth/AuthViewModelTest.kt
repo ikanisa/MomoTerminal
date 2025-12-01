@@ -45,7 +45,7 @@ class AuthViewModelTest {
         authRepository = mockk(relaxed = true)
         biometricHelper = mockk(relaxed = true)
         sessionManager = mockk(relaxed = true)
-        phoneNumberValidator = PhoneNumberValidator() // Use real validator
+        phoneNumberValidator = PhoneNumberValidator // Use real validator
         
         every { authRepository.isAuthenticated() } returns false
         every { sessionManager.validateSession() } returns false
@@ -155,7 +155,6 @@ class AuthViewModelTest {
             accessToken = "token",
             refreshToken = "refresh",
             expiresIn = 3600,
-            user = User(id = "123", phoneNumber = "+250788123456")
             user = User(id = "123", phoneNumber = "+250788767816")
         )
         coEvery { authRepository.login(any(), any()) } returns flowOf(

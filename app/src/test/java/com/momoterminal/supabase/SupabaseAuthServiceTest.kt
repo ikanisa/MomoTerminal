@@ -21,6 +21,7 @@ class SupabaseAuthServiceTest {
 
     private lateinit var supabaseAuthService: SupabaseAuthService
     private lateinit var auth: Auth
+    private lateinit var edgeFunctionsApi: EdgeFunctionsApi
 
     private val testPhoneNumber = "+250788767816"
     private val testOtpCode = "123456"
@@ -31,7 +32,8 @@ class SupabaseAuthServiceTest {
     @Before
     fun setup() {
         auth = mockk()
-        supabaseAuthService = SupabaseAuthService(auth)
+        edgeFunctionsApi = mockk()
+        supabaseAuthService = SupabaseAuthService(auth, edgeFunctionsApi)
     }
 
     @After
