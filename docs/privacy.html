@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Privacy Policy for MomoTerminal - Mobile Money POS Terminal App">
+    <title>Privacy Policy - MomoTerminal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        header {
+            background: linear-gradient(135deg, #FFCC00 0%, #FF9900 100%);
+            color: #1a1a1a;
+            padding: 40px 20px;
+            text-align: center;
+            margin: -20px -20px 40px -20px;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .last-updated {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        h2 {
+            color: #FF9900;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #FFCC00;
+        }
+        
+        h3 {
+            color: #555;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 10px;
+        }
+        
+        strong {
+            color: #1a1a1a;
+        }
+        
+        .contact-info {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .consent-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #FFCC00;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 4px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid #e0e0e0;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            header {
+                padding: 30px 15px;
+                margin: -10px -10px 30px -10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Privacy Policy</h1>
+            <p class="last-updated">Last Updated: December 1, 2025</p>
+        </header>
+
+        <section id="introduction">
+            <h2>Introduction</h2>
+            <p>
+                MomoTerminal ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy 
+                explains how we collect, use, disclose, and safeguard your information when you use our mobile 
+                application for Mobile Money POS terminal services.
+            </p>
+        </section>
+
+        <section id="information-collected">
+            <h2>Information We Collect</h2>
+
+            <h3>Personal Information</h3>
+            <ul>
+                <li><strong>Merchant Information</strong>: Phone number, merchant code, and business name for transaction processing and account management</li>
+                <li><strong>Transaction Data</strong>: Payment amounts, transaction IDs, timestamps, payment status, and currency information</li>
+                <li><strong>Device Information</strong>: Device model, operating system version, and unique device identifiers for app optimization and security</li>
+            </ul>
+
+            <h3>Automatically Collected Information</h3>
+            <ul>
+                <li><strong>SMS Data</strong>: We read incoming SMS messages to detect and automatically process mobile money payment confirmations. <em>We only process messages from known mobile money providers</em> (MTN, Vodafone, AirtelTigo in Ghana; MTN, Airtel, Tigo, Vodacom, M-Pesa in East Africa). We do not access or store your personal SMS messages.</li>
+                <li><strong>NFC Data</strong>: When using NFC tap-to-pay functionality, we collect payment amount and merchant code for transmission to the payer's device. This data is processed locally and not permanently stored.</li>
+                <li><strong>Usage Analytics</strong>: App usage patterns, feature usage, screen views, and performance metrics to improve the application and identify bugs.</li>
+            </ul>
+        </section>
+
+        <section id="how-we-use">
+            <h2>How We Use Your Information</h2>
+            <p>We use the collected information to:</p>
+            <ul>
+                <li>Process and record mobile money transactions</li>
+                <li>Sync transaction data with your business systems via custom webhooks</li>
+                <li>Provide NFC tap-to-pay terminal functionality</li>
+                <li>Improve app performance and user experience</li>
+                <li>Send transaction notifications and confirmations</li>
+                <li>Provide customer support and troubleshooting</li>
+                <li>Detect and prevent fraudulent activities</li>
+                <li>Comply with legal obligations</li>
+            </ul>
+        </section>
+
+        <section id="data-storage">
+            <h2>Data Storage and Security</h2>
+
+            <h3>Local Storage</h3>
+            <ul>
+                <li>Transaction data is stored locally on your device in an <strong>encrypted database</strong> using SQLCipher with AES-256 encryption</li>
+                <li>Sensitive data (API keys, merchant codes, authentication tokens) is stored using Android's EncryptedSharedPreferences backed by the Android Keystore</li>
+                <li>Database backups are disabled to prevent unencrypted data extraction</li>
+            </ul>
+
+            <h3>Cloud Sync (Optional)</h3>
+            <ul>
+                <li>Transaction data may be synced to our secure Supabase servers for backup and business reporting (if enabled)</li>
+                <li>All data transmission uses HTTPS with TLS 1.2+ and certificate pinning</li>
+                <li>Server-side data is encrypted at rest</li>
+            </ul>
+
+            <h3>Security Measures</h3>
+            <ul>
+                <li>End-to-end data encryption (at rest and in transit)</li>
+                <li>Secure authentication with biometric support (fingerprint, face unlock)</li>
+                <li>Device security verification (root detection)</li>
+                <li>Screen security to prevent screenshots of sensitive information</li>
+                <li>Regular security audits and penetration testing</li>
+                <li>Webhook requests signed with HMAC for authenticity</li>
+            </ul>
+        </section>
+
+        <section id="third-party">
+            <h2>Third-Party Services</h2>
+            <p>We use the following third-party services to provide and improve our application:</p>
+            <ul>
+                <li><strong>Supabase</strong>: Backend authentication, database sync, and edge functions. Data is stored in secure PostgreSQL databases. <a href="https://supabase.com/privacy" target="_blank">Privacy Policy</a></li>
+                <li><strong>Firebase (Google)</strong>: Crash reporting (Crashlytics), analytics, and performance monitoring. <a href="https://firebase.google.com/support/privacy" target="_blank">Privacy Policy</a></li>
+                <li><strong>Google Play Services</strong>: SMS retrieval API, location services (for fraud prevention), and authentication. <a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a></li>
+                <li><strong>Google Gemini AI</strong>: SMS parsing with on-device fallback. Messages are processed securely and not stored by Google. <a href="https://ai.google.dev/gemini-api/terms" target="_blank">Terms</a></li>
+                <li><strong>Custom Webhooks</strong>: Transaction data may be sent to merchant-configured webhook URLs for business system integration. Merchants are responsible for securing their webhook endpoints.</li>
+            </ul>
+            <p>These services have their own privacy policies, and we encourage you to review them.</p>
+        </section>
+
+        <section id="data-sharing">
+            <h2>Data Sharing and Disclosure</h2>
+            <p>We do not sell, trade, or rent your personal information to third parties. We may share information in the following circumstances:</p>
+            <ul>
+                <li><strong>With Your Consent</strong>: When you explicitly authorize us to share your data (e.g., custom webhooks)</li>
+                <li><strong>Service Providers</strong>: With trusted third-party service providers who assist in operating our application (listed above)</li>
+                <li><strong>Legal Requirements</strong>: When required by law, court order, or government regulation</li>
+                <li><strong>Business Transfers</strong>: In connection with a merger, acquisition, or sale of assets (you will be notified)</li>
+                <li><strong>Fraud Prevention</strong>: To detect, prevent, or address fraud, security, or technical issues</li>
+            </ul>
+        </section>
+
+        <section id="data-retention">
+            <h2>Data Retention</h2>
+            <ul>
+                <li><strong>Transaction Data</strong>: Retained on your device until manually deleted. Server-side backups retained for 2 years or as per your business requirements</li>
+                <li><strong>Crash Logs & Analytics</strong>: Retained for 90 days for debugging and improvement purposes</li>
+                <li><strong>Account Data</strong>: Retained until you request account deletion</li>
+                <li><strong>Archived Data</strong>: Financial records may be retained longer to comply with tax and accounting regulations</li>
+            </ul>
+        </section>
+
+        <section id="your-rights">
+            <h2>Your Rights (GDPR & Data Protection)</h2>
+            <p>You have the following rights regarding your personal data:</p>
+            <ul>
+                <li><strong>Right to Access</strong>: Request a copy of your personal data we hold</li>
+                <li><strong>Right to Rectification</strong>: Request correction of inaccurate or incomplete data</li>
+                <li><strong>Right to Erasure</strong>: Request deletion of your data ("right to be forgotten")</li>
+                <li><strong>Right to Data Portability</strong>: Export your transaction data in CSV or JSON format</li>
+                <li><strong>Right to Restrict Processing</strong>: Limit how we process your data</li>
+                <li><strong>Right to Object</strong>: Opt-out of analytics and marketing communications</li>
+                <li><strong>Right to Withdraw Consent</strong>: Revoke permissions (SMS, NFC) at any time</li>
+            </ul>
+            <p>To exercise any of these rights, please contact us at <strong>privacy@momoterminal.com</strong>.</p>
+        </section>
+
+        <section id="permissions">
+            <h2>App Permissions Explained</h2>
+            <p>MomoTerminal requires the following permissions:</p>
+            <ul>
+                <li><strong>SMS (READ_SMS, RECEIVE_SMS)</strong>: To automatically detect and log mobile money payment confirmations. <em>We only read messages from mobile money providers, not your personal SMS.</em></li>
+                <li><strong>NFC</strong>: To provide tap-to-pay terminal functionality for customer payments</li>
+                <li><strong>Phone (CALL_PHONE)</strong>: To dial USSD codes for manual payment initiation</li>
+                <li><strong>Biometric</strong>: For secure authentication using fingerprint or face unlock</li>
+                <li><strong>Camera</strong>: For barcode scanning (optional feature)</li>
+                <li><strong>Internet</strong>: For syncing data and accessing cloud features</li>
+                <li><strong>Vibration</strong>: For haptic feedback during transactions</li>
+            </ul>
+            <p>You can revoke these permissions at any time through your device settings, though some features may not work without them.</p>
+        </section>
+
+        <section id="childrens-privacy">
+            <h2>Children's Privacy</h2>
+            <p>
+                Our application is intended for business use by merchants aged 18 and above. We do not knowingly 
+                collect personal information from children under 18. If you are a parent or guardian and believe 
+                your child has provided us with personal information, please contact us immediately.
+            </p>
+        </section>
+
+        <section id="international-transfers">
+            <h2>International Data Transfers</h2>
+            <p>
+                Your data may be transferred to and processed in countries other than your own, including the 
+                United States (Firebase/Google Cloud) and Europe (Supabase). We ensure appropriate safeguards 
+                are in place, such as Standard Contractual Clauses (SCCs) and data processing agreements.
+            </p>
+        </section>
+
+        <section id="changes">
+            <h2>Changes to This Privacy Policy</h2>
+            <p>
+                We may update this Privacy Policy from time to time to reflect changes in our practices, technology, 
+                legal requirements, or other factors. We will notify you of any material changes by:
+            </p>
+            <ul>
+                <li>Posting the new Privacy Policy on this page</li>
+                <li>Updating the "Last Updated" date at the top</li>
+                <li>Sending an in-app notification or email (for significant changes)</li>
+            </ul>
+            <p>
+                Your continued use of MomoTerminal after changes become effective constitutes your acceptance 
+                of the revised Privacy Policy.
+            </p>
+        </section>
+
+        <section id="contact">
+            <h2>Contact Us</h2>
+            <div class="contact-info">
+                <p>If you have questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact us:</p>
+                <ul>
+                    <li><strong>Email</strong>: <a href="mailto:privacy@momoterminal.com">privacy@momoterminal.com</a></li>
+                    <li><strong>Support</strong>: <a href="mailto:support@momoterminal.com">support@momoterminal.com</a></li>
+                    <li><strong>Website</strong>: <a href="https://momoterminal.com" target="_blank">https://momoterminal.com</a></li>
+                    <li><strong>Data Protection Officer</strong>: dpo@momoterminal.com</li>
+                </ul>
+                <p><strong>Response Time</strong>: We aim to respond to all privacy inquiries within 30 days.</p>
+            </div>
+        </section>
+
+        <section id="consent">
+            <h2>Consent</h2>
+            <div class="consent-box">
+                <p><strong>By installing and using MomoTerminal, you acknowledge that you have read, understood, and agree to this Privacy Policy and the collection, use, and disclosure of your information as described herein.</strong></p>
+                <p>If you do not agree with this Privacy Policy, please do not use the application.</p>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2025 MomoTerminal. All rights reserved.</p>
+            <p>Mobile Money POS Terminal for Ghana & East Africa</p>
+        </footer>
+    </div>
+</body>
+</html>
