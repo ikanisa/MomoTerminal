@@ -1,11 +1,8 @@
 package com.momoterminal.ussd
 
-import android.Manifest
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
-import androidx.core.content.ContextCompat
 import com.momoterminal.nfc.NfcPaymentData
 
 /**
@@ -68,29 +65,13 @@ object UssdHelper {
     }
 
     /**
-     * Create a dial Intent for the USSD code.
-     * 
-     * @param ussdCode The USSD code to dial
-     * @return Intent that launches the phone dialer with the USSD code
-     */
-    fun createDialIntent(ussdCode: String): Intent {
-        // Encode the USSD code for URI (# becomes %23)
-        val encodedUssd = Uri.encode(ussdCode)
-        val dialUri = Uri.parse("tel:$encodedUssd")
-        
-        return Intent(Intent.ACTION_CALL, dialUri).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-    }
-
-    /**
-     * Create a view dial Intent (shows dialer without calling).
-     * This is safer and doesn't require CALL_PHONE permission.
+     * Create a dial Intent that shows the dialer with USSD code.
+     * Uses ACTION_DIAL which doesn't require CALL_PHONE permission.
      * 
      * @param ussdCode The USSD code to show in dialer
      * @return Intent that shows the dialer with the USSD code
      */
-    fun createViewDialIntent(ussdCode: String): Intent {
+    fun createDialIntent(ussdCode: String): Intent {
         val encodedUssd = Uri.encode(ussdCode)
         val dialUri = Uri.parse("tel:$encodedUssd")
         
@@ -100,31 +81,16 @@ object UssdHelper {
     }
 
     /**
-     * Check if the app has permission to make calls.
-     */
-    fun hasCallPermission(context: Context): Boolean {
-        return ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.CALL_PHONE
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    /**
      * Launch the USSD dialer.
+     * Shows the dialer with USSD code pre-filled (user must press call).
      * 
      * @param context The context
      * @param ussdCode The USSD code to dial
-     * @param directCall If true, calls directly (requires permission). 
-     *                   If false, shows dialer with code pre-filled.
      * @return true if successfully launched
      */
-    fun launchUssdDialer(context: Context, ussdCode: String, directCall: Boolean = false): Boolean {
+    fun launchUssdDialer(context: Context, ussdCode: String): Boolean {
         return try {
-            val intent = if (directCall && hasCallPermission(context)) {
-                createDialIntent(ussdCode)
-            } else {
-                createViewDialIntent(ussdCode)
-            }
+            val intent = createDialIntent(ussdCode)
             context.startActivity(intent)
             true
         } catch (e: Exception) {

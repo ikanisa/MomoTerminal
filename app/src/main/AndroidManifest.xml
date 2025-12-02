@@ -58,13 +58,8 @@
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
 
     <!-- =================================================================== -->
-    <!-- PHONE PERMISSION                                                     -->
-    <!-- Required for: USSD dial functionality                                -->
-    <!-- =================================================================== -->
-    <uses-permission android:name="android.permission.CALL_PHONE" />
-
-    <!-- =================================================================== -->
     <!-- CAMERA PERMISSION AND FEATURE                                        -->
+    <!-- Required for: Barcode scanning                                       -->
     <!-- Required for: Barcode scanning                                       -->
     <!-- =================================================================== -->
     <uses-permission android:name="android.permission.CAMERA" />
