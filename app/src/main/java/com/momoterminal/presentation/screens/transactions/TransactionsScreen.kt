@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -64,7 +66,9 @@ fun TransactionsScreen(
     
     val filteredTransactions = viewModel.getFilteredTransactions(
         transactions = transactions,
-        filter = uiState.filter
+        filter = uiState.filter,
+        dateRangeStart = uiState.dateRangeStart,
+        dateRangeEnd = uiState.dateRangeEnd
     )
     
     Scaffold(
@@ -141,6 +145,51 @@ fun TransactionsScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
             
+            // Date Range Filter Chip
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val startDate = uiState.dateRangeStart
+                val endDate = uiState.dateRangeEnd
+                
+                if (startDate != null && endDate != null) {
+                    FilterChip(
+                        selected = true,
+                        onClick = { viewModel.clearDateRange() },
+                        label = {
+                            Text(
+                                "${formatDate(startDate)} - ${formatDate(endDate)}"
+                            )
+                        },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear date range"
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    )
+                } else {
+                    FilterChip(
+                        selected = false,
+                        onClick = { viewModel.showDatePicker() },
+                        label = { Text("Select Date Range") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = null
+                            )
+                        }
+                    )
+                }
+            }
+            
             // Transaction list
             TransactionList(
                 transactions = filteredTransactions,
@@ -206,4 +255,10 @@ private fun TransactionsScreenPreview() {
             onTransactionClick = {}
         )
     }
+}
+
+
+private fun formatDate(timestamp: Long): String {
+    val sdf = java.text.SimpleDateFormat("MMM dd", java.util.Locale.getDefault())
+    return sdf.format(java.util.Date(timestamp))
 }

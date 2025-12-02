@@ -37,7 +37,10 @@ class TransactionsViewModel @Inject constructor(
     data class TransactionsUiState(
         val filter: TransactionFilter = TransactionFilter.ALL,
         val isRefreshing: Boolean = false,
-        val pendingCount: Int = 0
+        val pendingCount: Int = 0,
+        val dateRangeStart: Long? = null,
+        val dateRangeEnd: Long? = null,
+        val showDatePicker: Boolean = false
     )
     
     private val _uiState = MutableStateFlow(TransactionsUiState())
@@ -82,15 +85,48 @@ class TransactionsViewModel @Inject constructor(
         }
     }
     
+    fun setDateRange(startMillis: Long?, endMillis: Long?) {
+        _uiState.value = _uiState.value.copy(
+            dateRangeStart = startMillis,
+            dateRangeEnd = endMillis
+        )
+    }
+    
+    fun clearDateRange() {
+        _uiState.value = _uiState.value.copy(
+            dateRangeStart = null,
+            dateRangeEnd = null
+        )
+    }
+    
+    fun showDatePicker() {
+        _uiState.value = _uiState.value.copy(showDatePicker = true)
+    }
+    
+    fun hideDatePicker() {
+        _uiState.value = _uiState.value.copy(showDatePicker = false)
+    }
+    
     fun getFilteredTransactions(
         transactions: List<TransactionEntity>,
-        filter: TransactionFilter
+        filter: TransactionFilter,
+        dateRangeStart: Long? = _uiState.value.dateRangeStart,
+        dateRangeEnd: Long? = _uiState.value.dateRangeEnd
     ): List<TransactionEntity> {
-        return when (filter) {
+        var filtered = when (filter) {
             TransactionFilter.ALL -> transactions
             TransactionFilter.PENDING -> transactions.filter { it.status == "PENDING" }
             TransactionFilter.SENT -> transactions.filter { it.status == "SENT" }
             TransactionFilter.FAILED -> transactions.filter { it.status == "FAILED" }
         }
+        
+        // Apply date range filter
+        if (dateRangeStart != null && dateRangeEnd != null) {
+            filtered = filtered.filter { transaction ->
+                transaction.timestamp >= dateRangeStart && transaction.timestamp <= dateRangeEnd
+            }
+        }
+        
+        return filtered
     }
 }
