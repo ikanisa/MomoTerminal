@@ -60,6 +60,12 @@ interface TransactionDao {
     suspend fun deleteOldTransactions(timestamp: Long): Int
     
     /**
+     * Get transactions by date range (for analytics).
+     */
+    @Query("SELECT * FROM transactions WHERE timestamp >= :startTime AND timestamp <= :endTime ORDER BY timestamp DESC")
+    suspend fun getTransactionsByDateRange(startTime: Long, endTime: Long): List<TransactionEntity>
+    
+    /**
      * Get transaction by ID.
      */
     @Query("SELECT * FROM transactions WHERE id = :id")

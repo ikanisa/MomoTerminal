@@ -107,6 +107,108 @@ fun HomeScreen(
             
             Spacer(modifier = Modifier.height(24.dp))
             
+            // Analytics Cards
+            Text(
+                text = "Today's Overview",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Today's Revenue Card
+                AnalyticsCard(
+                    title = "Today's Revenue",
+                    value = "RWF ${formatAmount(uiState.todayRevenue)}",
+                    subtitle = "${uiState.todayTransactionCount} transactions",
+                    modifier = Modifier.weight(1f)
+                )
+                
+                // Success Rate Card
+                AnalyticsCard(
+                    title = "Success Rate",
+                    value = "${String.format("%.1f", uiState.successRate)}%",
+                    subtitle = "Last 7 days",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Weekly Revenue Card
+                AnalyticsCard(
+                    title = "Weekly Revenue",
+                    value = "RWF ${formatAmount(uiState.weeklyRevenue)}",
+                    subtitle = "Last 7 days",
+                    modifier = Modifier.weight(1f)
+                )
+                
+                // Failed Transactions Alert
+                if (uiState.failedCount > 0) {
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Failed",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "${uiState.failedCount}",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                text = "Need attention",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+                } else {
+                    AnalyticsCard(
+                        title = "Status",
+                        value = "All Good",
+                        subtitle = "No failed transactions",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
             // Configuration warning
             if (!uiState.isConfigured) {
                 ConfigurationWarningCard(
@@ -305,6 +407,47 @@ private fun EmptyTransactionsCard() {
             )
         }
     }
+}
+
+@Composable
+private fun AnalyticsCard(
+    title: String,
+    value: String,
+    subtitle: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+private fun formatAmount(amount: Double): String {
+    return String.format("%,.0f", amount)
 }
 
 @Preview(showBackground = true)
