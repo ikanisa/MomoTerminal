@@ -37,6 +37,11 @@ sealed class Screen(
         title = "Enter PIN"
     )
     
+    data object ForgotPin : Screen(
+        route = "forgot_pin",
+        title = "Reset PIN"
+    )
+    
     // Bottom navigation screens
     data object Home : Screen(
         route = "home",
@@ -91,7 +96,7 @@ sealed class Screen(
         /**
          * Authentication screens.
          */
-        val authScreens = listOf(Login, Register, PinEntry)
+        val authScreens = listOf(Login, Register, PinEntry, ForgotPin)
         
         /**
          * Get screen from route.
@@ -102,6 +107,7 @@ sealed class Screen(
                 route == Login.route -> Login
                 route == Register.route -> Register
                 route == PinEntry.route -> PinEntry
+                route == ForgotPin.route -> ForgotPin
                 route == Home.route -> Home
                 route == Terminal.route -> Terminal
                 route == Transactions.route -> Transactions
@@ -116,7 +122,7 @@ sealed class Screen(
          * Check if a route is an authentication screen.
          */
         fun isAuthScreen(route: String?): Boolean {
-            return route in listOf(Login.route, Register.route, PinEntry.route)
+            return route in listOf(Login.route, Register.route, PinEntry.route, ForgotPin.route)
         }
     }
 }

@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.momoterminal.capabilities.CapabilitiesDemoScreen
+import com.momoterminal.presentation.screens.auth.ForgotPinScreen
 import com.momoterminal.presentation.screens.auth.LoginScreen
 import com.momoterminal.presentation.screens.auth.PinScreen
 import com.momoterminal.presentation.screens.auth.RegisterScreen
@@ -75,7 +76,7 @@ fun NavGraph(
                     }
                 },
                 onNavigateToForgotPin = {
-                    // TODO: Implement forgot PIN flow
+                    navController.navigate(Screen.ForgotPin.route)
                 },
                 onShowBiometricPrompt = {
                     // Handled by the screen itself
@@ -114,6 +115,20 @@ fun NavGraph(
                     // Go back to login
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.PinEntry.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+        
+        // Forgot PIN screen
+        composable(route = Screen.ForgotPin.route) {
+            ForgotPinScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToLogin = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.ForgotPin.route) { inclusive = true }
                     }
                 }
             )
