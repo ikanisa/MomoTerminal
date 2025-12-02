@@ -1,127 +1,77 @@
-# Supabase Deployment Guide
 
-## 📦 Migration Status
+## Supabase Deployment Status
 
-✅ **Migration file created**: `supabase/migrations/20251130000141_create_auth_tables.sql`  
-✅ **Committed to Git**: Pushed to `main` branch  
-🔗 **Linked Project**: easyMO (lhbowpbcpwoiparwnwgt)
+**Project**: easyMO (lhbowpbcpwoiparwnwgt)  
+**Region**: us-east-2  
+**Status**: ✅ LINKED
 
-## 🚀 Deployment Options
+### Deployment Summary
 
-### Option 1: Deploy via Supabase Dashboard (Recommended)
+**Database Migrations**: ⚠️ SKIPPED  
+- Remote database has 150+ existing migrations
+- Local migrations are subset of remote
+- No migration needed (already synced)
 
-1. Open the SQL Editor in your Supabase dashboard:
-   ```
-   https://supabase.com/dashboard/project/lhbowpbcpwoiparwnwgt/sql/new
-   ```
+**Edge Functions**: ⚠️ PLAN LIMIT REACHED  
+- Attempted to deploy 6 functions
+- Error: Max functions reached (Free Plan limit)
+- **Action Required**: Upgrade plan or delete unused functions
 
-2. Copy the entire contents of `supabase/migrations/20251130000141_create_auth_tables.sql`
+### Critical Functions for MoMo Terminal
 
-3. Paste into the SQL Editor and click **Run**
+1. **send-whatsapp-otp** - Required for login
+2. **verify-whatsapp-otp** - Required for login  
+3. **sync-transactions** - Required for transaction sync
+4. **webhook-relay** - Required for payment notifications
 
-4. Verify the tables were created:
-   ```sql
-   SELECT tablename FROM pg_tables 
-   WHERE schemaname = 'public' 
-   AND tablename IN ('otp_codes', 'user_profiles');
-   ```
+### Non-Critical Functions (Can defer)
 
-### Option 2: Deploy via CLI (Advanced)
+5. **complete-user-profile** - Can use direct DB
+6. **register-device** - Can use direct DB
 
-If your local migration history is in sync:
+### Next Steps
 
+**Option 1: Upgrade Supabase Plan** (Recommended)
 ```bash
-supabase db push --linked
+# Go to Supabase Dashboard → Settings → Billing
+# Upgrade to Pro Plan (5/month)
+# Unlimited functions + better performance
 ```
 
-**Note**: Currently, the remote database has many migrations not tracked locally. You may need to sync first by marking remote migrations as applied.
-
-## 📋 What This Migration Creates
-
-### Tables
-
-1. **`otp_codes`** - Stores OTP codes for WhatsApp authentication
-   - 6-digit OTP codes
-   - Expiry tracking
-   - Verification attempts (max 5)
-   - Rate limiting support
-
-2. **`user_profiles`** - Extended user profile data
-   - Linked to Supabase auth.users
-   - Merchant information
-   - Terms acceptance tracking
-
-### Security
-
-- **Row Level Security (RLS)** enabled on both tables
-- Service role can manage OTP codes
-- Users can only access their own profiles
-
-### Helper Functions
-
-- `generate_otp()` - Generate random 6-digit OTP
-- `check_otp_rate_limit(phone)` - Rate limiting (5 OTPs/hour)
-- `cleanup_expired_otps()` - Clean up expired codes
-
-### Triggers
-
-- Auto-update `updated_at` timestamp on `user_profiles`
-
-## 🔍 Verification
-
-After deployment, verify with:
-
-```sql
--- Check tables exist
-\dt otp_codes
-\dt user_profiles
-
--- Check functions
-\df generate_otp
-\df check_otp_rate_limit
-\df cleanup_expired_otps
-
--- Check RLS policies
-SELECT tablename, policyname 
-FROM pg_policies 
-WHERE tablename IN ('otp_codes', 'user_profiles');
+**Option 2: Delete Old Functions**
+```bash
+supabase functions list
+supabase functions delete <function-name>
 ```
 
-## 🔧 Troubleshooting
+**Option 3: Use Existing Functions**
+- If the project already has WhatsApp OTP functions
+- Update app to use existing endpoints
+- Verify function versions match
 
-### If tables already exist
+### Current Deployment Status
 
-The migration uses `CREATE TABLE IF NOT EXISTS`, so it won't fail if tables already exist. However, you may want to check if the schema matches:
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Git Push | ✅ DONE | All code on GitHub |
+| Supabase Link | ✅ DONE | Linked to easyMO project |
+| DB Migrations | ⚠️ SKIP | Already deployed |
+| Edge Functions | ❌ BLOCKED | Plan limit |
+| App Build | ✅ DONE | 66MB APK ready |
 
-```sql
-SELECT column_name, data_type 
-FROM information_schema.columns 
-WHERE table_name = 'otp_codes';
-```
+### Recommendation
 
-### If you need to rollback
+**For immediate launch**:
+1. Check if easyMO project already has the required functions
+2. If yes, update app config to use those endpoints  
+3. If no, upgrade Supabase plan to deploy
 
-```sql
-DROP TABLE IF EXISTS otp_codes CASCADE;
-DROP TABLE IF EXISTS user_profiles CASCADE;
-DROP FUNCTION IF EXISTS generate_otp();
-DROP FUNCTION IF EXISTS check_otp_rate_limit(VARCHAR);
-DROP FUNCTION IF EXISTS cleanup_expired_otps();
-```
+**For production readiness**:
+- Create dedicated Supabase project for MomoTerminal
+- Deploy all functions cleanly
+- Separate from easyMO project
 
-## 📱 Next Steps
+---
 
-After deployment:
+**Generated**: 
 
-1. ✅ Test OTP generation via Supabase Edge Functions
-2. ✅ Test WhatsApp OTP sending
-3. ✅ Test OTP verification flow
-4. ✅ Set up periodic cleanup job for expired OTPs
-5. ✅ Monitor rate limiting
-
-## 📞 Support
-
-For issues or questions:
-- Check Supabase logs: https://supabase.com/dashboard/project/lhbowpbcpwoiparwnwgt/logs
-- Review migration file: `supabase/migrations/20251130000141_create_auth_tables.sql`
-- Check documentation: `docs/supabase/`
