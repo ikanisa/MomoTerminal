@@ -3,7 +3,9 @@ package com.momoterminal.presentation.screens.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.momoterminal.auth.AuthRepository
+import com.momoterminal.auth.OtpResult
 import com.momoterminal.auth.WhatsAppOtpService
+import com.momoterminal.supabase.SessionData
 import com.momoterminal.util.PhoneNumberValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -154,8 +156,8 @@ class ForgotPinViewModel @Inject constructor(
                 
                 // Verify OTP  
                 when (val result = whatsAppOtpService.verifyOtp(fullPhoneNumber, state.otpCode)) {
-                    is WhatsAppOtpService.OtpResult.Success<*> -> {
-                        val sessionData = result.data as com.momoterminal.supabase.SessionData
+                    is OtpResult.Success<*> -> {
+                        val sessionData = result.data as SessionData
                         val userId = sessionData.user.id
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
@@ -164,7 +166,7 @@ class ForgotPinViewModel @Inject constructor(
                         )
                         Timber.d("OTP verified successfully")
                     }
-                    is WhatsAppOtpService.OtpResult.Error -> {
+                    is OtpResult.Error -> {
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             error = result.message
