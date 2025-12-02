@@ -152,12 +152,11 @@ class ForgotPinViewModel @Inject constructor(
             try {
                 val fullPhoneNumber = "${state.countryCode}${state.phoneNumber}"
                 
-                // Verify OTP
-                val result = whatsAppOtpService.verifyOtp(fullPhoneNumber, state.otpCode)
-                
-                when (result) {
-                    is WhatsAppOtpService.OtpResult.Success -> {
-                        val userId = result.data.user.id
+                // Verify OTP  
+                when (val result = whatsAppOtpService.verifyOtp(fullPhoneNumber, state.otpCode)) {
+                    is WhatsAppOtpService.OtpResult.Success<*> -> {
+                        val sessionData = result.data as com.momoterminal.supabase.SessionData
+                        val userId = sessionData.user.id
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             step = ForgotPinStep.PIN_ENTRY,
@@ -168,7 +167,7 @@ class ForgotPinViewModel @Inject constructor(
                     is WhatsAppOtpService.OtpResult.Error -> {
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            error = result.message ?: "Invalid code. Please try again."
+                            error = result.message
                         )
                     }
                 }
