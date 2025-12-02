@@ -18,7 +18,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Visibility
@@ -40,6 +43,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -73,6 +78,7 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToWebhooks: () -> Unit = {},
     onNavigateToCapabilitiesDemo: () -> Unit = {},
+    onLogout: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -254,12 +260,161 @@ fun SettingsScreen(
             
             Spacer(modifier = Modifier.height(48.dp))
             
+            // SMS Auto-Sync Section
+            SectionHeader(
+                title = "SMS Synchronization",
+                icon = Icons.Default.Message
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // SMS Auto-Sync Toggle
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Auto-Sync SMS Transactions",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Automatically record MoMo confirmation messages",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = uiState.smsAutoSyncEnabled,
+                    onCheckedChange = viewModel::toggleSmsAutoSync
+                )
+            }
+            
+            if (!uiState.smsAutoSyncEnabled) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Text(
+                        text = "⚠️ Disabling SMS sync means transactions won't be automatically recorded. You'll need to manually enter transaction details.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // About Section
+            SectionHeader(
+                title = "About",
+                icon = Icons.Default.Info
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // App Version
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "App Version",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = uiState.appVersion,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Privacy Policy Link
+            TextButton(
+                onClick = { /* TODO: Open privacy policy URL */ },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Privacy Policy",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null
+                )
+            }
+            
+            // Terms of Service Link
+            TextButton(
+                onClick = { /* TODO: Open terms URL */ },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Terms of Service",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null
+                )
+            }
+            
+            // Open Source Licenses
+            TextButton(
+                onClick = { /* TODO: Show licenses dialog */ },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Open Source Licenses",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(48.dp))
+            
             // Save Button
             MomoButton(
                 text = "Save Configuration",
                 onClick = { viewModel.saveSettings() },
                 enabled = viewModel.isPhoneValid()
             )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Logout Button
+            OutlinedButton(
+                onClick = { viewModel.showLogoutDialog() },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Logout,
+                    contentDescription = null
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Logout")
+            }
             
             // Status indicator
             AnimatedVisibility(visible = uiState.isConfigured) {
@@ -285,6 +440,38 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+    
+    // Logout Confirmation Dialog
+    if (uiState.showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.hideLogoutDialog() },
+            title = {
+                Text("Logout")
+            },
+            text = {
+                Text("Are you sure you want to logout? You'll need to login again to access the app.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.logout()
+                        viewModel.hideLogoutDialog()
+                        onLogout()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Logout")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.hideLogoutDialog() }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 

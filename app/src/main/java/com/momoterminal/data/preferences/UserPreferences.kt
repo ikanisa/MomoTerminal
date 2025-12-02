@@ -128,8 +128,25 @@ class UserPreferences @Inject constructor(
         private val KEY_BIOMETRIC_FOR_TRANSACTIONS = booleanPreferencesKey("biometric_required_for_transactions")
         private val KEY_AUTO_LOCK_TIMEOUT = intPreferencesKey("auto_lock_timeout_minutes")
         private val KEY_DEVICE_UUID = stringPreferencesKey("device_uuid")
+        private val KEY_SMS_AUTO_SYNC_ENABLED = booleanPreferencesKey("sms_auto_sync_enabled")
         
         // Default values
         const val DEFAULT_AUTO_LOCK_TIMEOUT = 5 // 5 minutes
+    }
+    
+    /**
+     * Flow for SMS auto-sync enabled setting.
+     */
+    val smsAutoSyncEnabledFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[KEY_SMS_AUTO_SYNC_ENABLED] ?: true // Enabled by default
+    }
+    
+    /**
+     * Set SMS auto-sync enabled state.
+     */
+    suspend fun setSmsAutoSyncEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[KEY_SMS_AUTO_SYNC_ENABLED] = enabled
+        }
     }
 }

@@ -28,7 +28,8 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val appConfig: AppConfig,
     private val biometricHelper: BiometricHelper,
-    private val userPreferences: UserPreferences
+    private val userPreferences: UserPreferences,
+    private val application: android.app.Application
 ) : ViewModel() {
     
     /**
@@ -51,8 +52,11 @@ class SettingsViewModel @Inject constructor(
         val isConfigured: Boolean = false,
         val isBiometricEnabled: Boolean = false,
         val isBiometricAvailable: Boolean = false,
+        val smsAutoSyncEnabled: Boolean = true,
         val connectionTestResult: ConnectionTestResult = ConnectionTestResult.Idle,
-        val showSaveSuccess: Boolean = false
+        val showSaveSuccess: Boolean = false,
+        val showLogoutDialog: Boolean = false,
+        val appVersion: String = ""
     )
     
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -67,19 +71,33 @@ class SettingsViewModel @Inject constructor(
     init {
         loadSettings()
         observeBiometricPreference()
+        loadAppVersion()
     }
     
     private fun loadSettings() {
         viewModelScope.launch {
             val biometricEnabled = userPreferences.biometricEnabledFlow.first()
+            val smsAutoSync = userPreferences.smsAutoSyncEnabledFlow.first()
             _uiState.value = _uiState.value.copy(
                 webhookUrl = appConfig.getGatewayUrl(),
                 apiSecret = appConfig.getApiSecret(),
                 merchantPhone = appConfig.getMerchantPhone(),
                 isConfigured = appConfig.isConfigured(),
                 isBiometricAvailable = biometricHelper.isBiometricAvailable(),
-                isBiometricEnabled = biometricEnabled
+                isBiometricEnabled = biometricEnabled,
+                smsAutoSyncEnabled = smsAutoSync
             )
+        }
+    }
+    
+    private fun loadAppVersion() {
+        try {
+            val packageInfo = application.packageManager.getPackageInfo(application.packageName, 0)
+            _uiState.value = _uiState.value.copy(
+                appVersion = packageInfo.versionName ?: "1.0.0"
+            )
+        } catch (e: Exception) {
+            _uiState.value = _uiState.value.copy(appVersion = "1.0.0")
         }
     }
     
@@ -201,5 +219,29 @@ class SettingsViewModel @Inject constructor(
     
     fun isPhoneValid(): Boolean {
         return _uiState.value.merchantPhone.isNotBlank()
+    }
+    
+    fun toggleSmsAutoSync(enabled: Boolean) {
+        _uiState.value = _uiState.value.copy(smsAutoSyncEnabled = enabled)
+        viewModelScope.launch {
+            userPreferences.setSmsAutoSyncEnabled(enabled)
+        }
+    }
+    
+    fun showLogoutDialog() {
+        _uiState.value = _uiState.value.copy(showLogoutDialog = true)
+    }
+    
+    fun hideLogoutDialog() {
+        _uiState.value = _uiState.value.copy(showLogoutDialog = false)
+    }
+    
+    fun logout() {
+        viewModelScope.launch {
+            // Clear user preferences
+            userPreferences.clearAll()
+            // App config should also be cleared
+            // Navigation will be handled by the screen
+        }
     }
 }
