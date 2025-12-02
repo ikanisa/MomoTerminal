@@ -1,17 +1,18 @@
 package com.momoterminal.data.repository
 
-import com.google.firebase.messaging.FirebaseMessaging
+// import com.google.firebase.messaging.FirebaseMessaging
 import com.momoterminal.api.MomoApiService
 import com.momoterminal.data.preferences.UserPreferences
 import com.momoterminal.data.remote.dto.RegisterDeviceRequest
 import com.momoterminal.util.DeviceInfoProvider
-import kotlinx.coroutines.tasks.await
+// import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
  * Repository for device registration and management.
+ * TODO: Implement when backend endpoints are ready
  */
 @Singleton
 class DeviceRepository @Inject constructor(
@@ -23,12 +24,15 @@ class DeviceRepository @Inject constructor(
     /**
      * Register this device with the backend.
      * Should be called after user authentication.
+     * TODO: Uncomment when registerDevice API endpoint is implemented
      */
     suspend fun registerDevice(): Result<String> {
         return try {
             val deviceInfo = deviceInfoProvider.getDeviceInfo()
-            val fcmToken = getFcmToken()
+            // val fcmToken = getFcmToken()
             
+            // TODO: Uncomment when API is ready
+            /*
             val request = RegisterDeviceRequest(
                 deviceId = deviceInfo.deviceId,
                 deviceName = deviceInfo.deviceName,
@@ -47,6 +51,12 @@ class DeviceRepository @Inject constructor(
             
             Timber.d("Device registered successfully: ${response.id}")
             Result.success(response.id)
+            */
+            
+            // Temporary: Return device ID as UUID
+            userPreferences.saveDeviceUuid(deviceInfo.deviceId)
+            Timber.d("Device registered (local only): ${deviceInfo.deviceId}")
+            Result.success(deviceInfo.deviceId)
         } catch (e: Exception) {
             Timber.e(e, "Failed to register device")
             Result.failure(e)
@@ -55,6 +65,7 @@ class DeviceRepository @Inject constructor(
     
     /**
      * Update FCM token on the backend.
+     * TODO: Uncomment when updateDeviceToken API endpoint is implemented
      */
     suspend fun updateFcmToken(token: String): Result<Unit> {
         return try {
@@ -64,8 +75,9 @@ class DeviceRepository @Inject constructor(
                 return Result.success(Unit)
             }
             
-            api.updateDeviceToken(deviceUuid, token)
-            Timber.d("FCM token updated successfully")
+            // TODO: Uncomment when API is ready
+            // api.updateDeviceToken(deviceUuid, token)
+            Timber.d("FCM token update skipped (not implemented)")
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to update FCM token")
@@ -76,13 +88,15 @@ class DeviceRepository @Inject constructor(
     /**
      * Check if device is registered.
      */
-    fun isDeviceRegistered(): Boolean {
+    suspend fun isDeviceRegistered(): Boolean {
         return userPreferences.getDeviceUuid() != null
     }
     
     /**
      * Get FCM token with error handling.
+     * TODO: Uncomment when Firebase is integrated
      */
+    /*
     private suspend fun getFcmToken(): String? {
         return try {
             FirebaseMessaging.getInstance().token.await()
@@ -91,4 +105,5 @@ class DeviceRepository @Inject constructor(
             null
         }
     }
+    */
 }

@@ -28,15 +28,11 @@ import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottomAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStartAxis
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.common.fill
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
-import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.common.data.ExtraStore
 import java.text.NumberFormat
 import java.util.Locale
@@ -79,11 +75,11 @@ fun IncomeExpenseChart(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // TODO: Update to Vico 2.0 API - current implementation uses deprecated API
-            // Simplified chart for build compatibility
             CartesianChartHost(
                 chart = rememberCartesianChart(
-                    rememberLineCartesianLayer()
+                    rememberLineCartesianLayer(),
+                    startAxis = rememberStartAxis(),
+                    bottomAxis = rememberBottomAxis(),
                 ),
                 modelProducer = modelProducer,
                 modifier = Modifier
@@ -122,11 +118,11 @@ fun TransactionVolumeChart(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // TODO: Update to Vico 2.0 API - current implementation uses deprecated API
-            // Simplified chart for build compatibility
             CartesianChartHost(
                 chart = rememberCartesianChart(
-                    rememberColumnCartesianLayer()
+                    rememberColumnCartesianLayer(),
+                    startAxis = rememberStartAxis(),
+                    bottomAxis = rememberBottomAxis(),
                 ),
                 modelProducer = modelProducer,
                 modifier = Modifier
@@ -136,6 +132,8 @@ fun TransactionVolumeChart(
         }
     }
 }
+
+
 
 /**
  * Transaction summary cards showing income, expense, net, and count.

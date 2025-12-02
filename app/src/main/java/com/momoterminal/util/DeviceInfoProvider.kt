@@ -66,7 +66,7 @@ class DeviceInfoProvider @Inject constructor(
      */
     private fun getAppVersion(): String {
         return try {
-            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "unknown"
         } catch (e: Exception) {
             "unknown"
         }

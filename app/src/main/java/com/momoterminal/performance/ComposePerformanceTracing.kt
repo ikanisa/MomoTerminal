@@ -176,11 +176,9 @@ private const val SLOW_COMPOSABLE_THRESHOLD_MS = 16.0 // One frame at 60fps
  */
 inline fun <T> (() -> T).traced(name: String): () -> T = {
     Trace.beginSection(name)
-    try {
-        this()
-    } finally {
-        Trace.endSection()
-    }
+    val result = this()
+    Trace.endSection()
+    result
 }
 
 /**
@@ -231,12 +229,10 @@ object ComposeTracing {
         if (tracingEnabled) {
             Trace.beginSection(name)
         }
-        return try {
-            block()
-        } finally {
-            if (tracingEnabled) {
-                Trace.endSection()
-            }
+        val result = block()
+        if (tracingEnabled) {
+            Trace.endSection()
         }
+        return result
     }
 }

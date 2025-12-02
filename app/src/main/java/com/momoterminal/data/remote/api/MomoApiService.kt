@@ -42,6 +42,8 @@ interface MomoApiService {
         @Body merchantInfo: MerchantRegistrationDto
     ): Response<SyncResponseDto>
     
+    // TODO: Uncomment when backend endpoints are implemented
+    /*
     /**
      * Register a new device.
      */
@@ -88,6 +90,7 @@ interface MomoApiService {
     suspend fun uploadErrorLogs(
         @Body request: BatchErrorLogsRequest
     ): Response<Unit>
+    */
     
     /**
      * Health check endpoint.
