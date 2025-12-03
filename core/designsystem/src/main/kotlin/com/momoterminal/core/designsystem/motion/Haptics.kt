@@ -10,54 +10,27 @@ import android.view.View
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalView
-import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Haptic feedback patterns for MomoTerminal interactions.
- * Designed to feel "money-safe" - solid, trustworthy, responsive.
  */
 enum class MomoHaptic {
-    /** Light tap - card press, list item selection */
     Tap,
-    
-    /** NFC tag detected - immediate confirmation */
     NfcDetected,
-    
-    /** NFC read/write success - double pulse, reassuring */
     NfcSuccess,
-    
-    /** NFC failed - triple pulse, attention-grabbing */
     NfcError,
-    
-    /** Payment confirmed - satisfying success pattern */
     PaymentSuccess,
-    
-    /** Payment failed - distinct error pattern */
     PaymentError,
-    
-    /** Balance updated - subtle confirmation */
     BalanceUpdate,
-    
-    /** SMS synced - light confirmation */
     SmsSync,
-    
-    /** Button press - standard click */
     ButtonPress,
-    
-    /** Warning - attention needed */
     Warning
 }
 
 /**
  * Haptic engine for triggering vibration patterns.
- * Inject this into ViewModels or use the Compose extension functions.
  */
-@Singleton
-class MomoHapticEngine @Inject constructor(
-    @ApplicationContext private val context: Context
-) {
+class MomoHapticEngine(private val context: Context) {
     private val vibrator: Vibrator? by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)?.defaultVibrator
@@ -74,34 +47,16 @@ class MomoHapticEngine @Inject constructor(
             val effect = when (haptic) {
                 MomoHaptic.Tap, MomoHaptic.ButtonPress ->
                     VibrationEffect.createOneShot(25, 80)
-                
                 MomoHaptic.NfcDetected ->
                     VibrationEffect.createOneShot(40, 120)
-                
                 MomoHaptic.NfcSuccess, MomoHaptic.PaymentSuccess ->
-                    VibrationEffect.createWaveform(
-                        longArrayOf(0, 40, 60, 80),
-                        intArrayOf(0, 100, 0, 150),
-                        -1
-                    )
-                
+                    VibrationEffect.createWaveform(longArrayOf(0, 40, 60, 80), intArrayOf(0, 100, 0, 150), -1)
                 MomoHaptic.NfcError, MomoHaptic.PaymentError ->
-                    VibrationEffect.createWaveform(
-                        longArrayOf(0, 60, 40, 60, 40, 60),
-                        intArrayOf(0, 180, 0, 180, 0, 180),
-                        -1
-                    )
-                
+                    VibrationEffect.createWaveform(longArrayOf(0, 60, 40, 60, 40, 60), intArrayOf(0, 180, 0, 180, 0, 180), -1)
                 MomoHaptic.BalanceUpdate ->
                     VibrationEffect.createOneShot(30, 60)
-                
                 MomoHaptic.SmsSync ->
-                    VibrationEffect.createWaveform(
-                        longArrayOf(0, 20, 30, 20),
-                        intArrayOf(0, 60, 0, 60),
-                        -1
-                    )
-                
+                    VibrationEffect.createWaveform(longArrayOf(0, 20, 30, 20), intArrayOf(0, 60, 0, 60), -1)
                 MomoHaptic.Warning ->
                     VibrationEffect.createOneShot(100, 200)
             }
@@ -123,28 +78,19 @@ class MomoHapticEngine @Inject constructor(
     fun isAvailable(): Boolean = vibrator?.hasVibrator() == true
 }
 
-/**
- * Trigger haptic feedback from a View (Compose-friendly).
- */
 fun View.performMomoHaptic(haptic: MomoHaptic) {
     val constant = when (haptic) {
         MomoHaptic.Tap, MomoHaptic.ButtonPress -> HapticFeedbackConstants.KEYBOARD_TAP
-        MomoHaptic.NfcDetected, MomoHaptic.BalanceUpdate, MomoHaptic.SmsSync -> 
-            HapticFeedbackConstants.KEYBOARD_TAP
+        MomoHaptic.NfcDetected, MomoHaptic.BalanceUpdate, MomoHaptic.SmsSync -> HapticFeedbackConstants.KEYBOARD_TAP
         MomoHaptic.NfcSuccess, MomoHaptic.PaymentSuccess -> 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) HapticFeedbackConstants.CONFIRM 
-            else HapticFeedbackConstants.KEYBOARD_TAP
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.KEYBOARD_TAP
         MomoHaptic.NfcError, MomoHaptic.PaymentError -> 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) HapticFeedbackConstants.REJECT 
-            else HapticFeedbackConstants.LONG_PRESS
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) HapticFeedbackConstants.REJECT else HapticFeedbackConstants.LONG_PRESS
         MomoHaptic.Warning -> HapticFeedbackConstants.LONG_PRESS
     }
     performHapticFeedback(constant)
 }
 
-/**
- * Composable to get haptic trigger function.
- */
 @Composable
 fun rememberMomoHaptic(): (MomoHaptic) -> Unit {
     val view = LocalView.current

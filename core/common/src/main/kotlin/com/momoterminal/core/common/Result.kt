@@ -20,7 +20,7 @@ sealed class Result<out T> {
         is Loading -> throw IllegalStateException("Result is still loading")
     }
 
-    fun getOrElse(default: T): T = when (this) {
+    fun getOrElse(default: @UnsafeVariance T): T = when (this) {
         is Success -> data
         else -> default
     }

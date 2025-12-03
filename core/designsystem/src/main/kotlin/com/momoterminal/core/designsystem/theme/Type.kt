@@ -2,12 +2,10 @@ package com.momoterminal.core.designsystem.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.unit.sp
-import com.momoterminal.R
 
 // Use system fonts with tabular figures for amounts
 val MomoFontFamily = FontFamily.Default

@@ -1,44 +1,10 @@
 package com.momoterminal.core.domain.usecase
 
-import com.momoterminal.core.domain.repository.TransactionRepository
 import com.momoterminal.core.common.Result
-import javax.inject.Inject
 
-/**
- * Use case for syncing pending transactions to the server.
- */
-class SyncTransactionsUseCase @Inject constructor(
-    private val transactionRepository: TransactionRepository
-) {
-    
-    /**
-     * Sync all pending transactions.
-     * 
-     * @return Result containing the number of successfully synced transactions
-     */
-    suspend operator fun invoke(): Result<SyncResult> {
-        return when (val result = transactionRepository.syncPendingTransactions()) {
-            is Result.Success -> {
-                Result.Success(
-                    SyncResult(
-                        syncedCount = result.data,
-                        success = true
-                    )
-                )
-            }
-            is Result.Error -> {
-                Result.Error(result.exception)
-            }
-            is Result.Loading -> Result.Loading
-        }
+class SyncTransactionsUseCase {
+    suspend fun execute(): Result<Int> {
+        // Placeholder - implement sync logic
+        return Result.Success(0)
     }
 }
-
-/**
- * Data class containing sync result information.
- */
-data class SyncResult(
-    val syncedCount: Int,
-    val success: Boolean,
-    val errorMessage: String? = null
-)

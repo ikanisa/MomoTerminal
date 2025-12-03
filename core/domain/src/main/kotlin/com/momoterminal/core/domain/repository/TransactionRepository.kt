@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.Flow
 interface TransactionRepository {
     fun getTransactions(page: Int, pageSize: Int): Flow<Result<PaginatedResult<Transaction>>>
     fun getTransactionById(id: String): Flow<Result<Transaction>>
+    fun getRecentTransactions(limit: Int = 20): Flow<List<Transaction>>
+    suspend fun getPendingCount(): Int
     suspend fun createTransaction(transaction: Transaction): Result<Transaction>
     suspend fun syncTransactions(): Result<Unit>
 }
