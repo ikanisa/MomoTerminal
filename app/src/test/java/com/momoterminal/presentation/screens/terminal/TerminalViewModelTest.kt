@@ -133,8 +133,8 @@ class TerminalViewModelTest {
         viewModel.onProviderSelected(NfcPaymentData.Provider.VODAFONE)
         assertThat(viewModel.uiState.value.selectedProvider).isEqualTo(NfcPaymentData.Provider.VODAFONE)
         
-        viewModel.onProviderSelected(NfcPaymentData.Provider.AIRTEL_TIGO)
-        assertThat(viewModel.uiState.value.selectedProvider).isEqualTo(NfcPaymentData.Provider.AIRTEL_TIGO)
+        viewModel.onProviderSelected(NfcPaymentData.Provider.AIRTEL)
+        assertThat(viewModel.uiState.value.selectedProvider).isEqualTo(NfcPaymentData.Provider.AIRTEL)
     }
 
     @Test

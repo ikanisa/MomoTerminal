@@ -22,16 +22,13 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -63,7 +60,7 @@ import com.momoterminal.auth.AuthViewModel
 import com.momoterminal.presentation.components.CountryCodeSelector
 import com.momoterminal.presentation.components.MomoButton
 import com.momoterminal.presentation.components.MomoTextField
-import com.momoterminal.presentation.components.ButtonType
+import com.momoterminal.presentation.components.OtpInputField
 import com.momoterminal.presentation.theme.MomoYellow
 
 /** Timer update interval for OTP expiry countdown in milliseconds */
@@ -110,7 +107,7 @@ fun RegisterScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Create Account") },
+                title = { Text(stringResource(R.string.auth_register_title)) },
                 navigationIcon = {
                     IconButton(onClick = {
                         if (uiState.registrationStep == AuthViewModel.RegistrationStep.PHONE_ENTRY) {
@@ -121,7 +118,7 @@ fun RegisterScreen(
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 }
@@ -212,13 +209,13 @@ fun RegisterScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Already have an account?",
+                    text = stringResource(R.string.auth_has_account),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 TextButton(onClick = onNavigateToLogin) {
                     Text(
-                        text = "Sign In",
+                        text = stringResource(R.string.auth_sign_in),
                         fontWeight = FontWeight.SemiBold,
                         color = MomoYellow
                     )
@@ -233,14 +230,20 @@ private fun StepIndicator(
     currentStep: AuthViewModel.RegistrationStep,
     modifier: Modifier = Modifier
 ) {
-    val steps = listOf("Phone", "OTP", "PIN", "Info", "Terms")
+    val steps = listOf(
+        R.string.reg_step_phone,
+        R.string.reg_step_otp,
+        R.string.reg_step_pin,
+        R.string.reg_step_info,
+        R.string.reg_step_terms
+    )
     val currentIndex = currentStep.ordinal
 
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        steps.forEachIndexed { index, step ->
+        steps.forEachIndexed { index, stepRes ->
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.weight(1f)
@@ -259,7 +262,7 @@ private fun StepIndicator(
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = step,
+                    text = stringResource(stepRes),
                     style = MaterialTheme.typography.labelSmall,
                     color = when {
                         isCompleted || isCurrent -> MaterialTheme.colorScheme.onSurface
@@ -288,7 +291,7 @@ private fun PhoneEntryStep(
             .verticalScroll(rememberScrollState())
     ) {
         Text(
-            text = "Welcome to MoMo Terminal",
+            text = stringResource(R.string.reg_welcome),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
@@ -297,7 +300,7 @@ private fun PhoneEntryStep(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Enter your phone number to get started",
+            text = stringResource(R.string.reg_phone_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -305,8 +308,8 @@ private fun PhoneEntryStep(
         Spacer(modifier = Modifier.height(32.dp))
         
         // WhatsApp Info Card
-        androidx.compose.material3.Card(
-            colors = androidx.compose.material3.CardDefaults.cardColors(
+        Card(
+            colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
             ),
             shape = MaterialTheme.shapes.small,
@@ -319,7 +322,7 @@ private fun PhoneEntryStep(
             ) {
                 Text("📱", style = MaterialTheme.typography.titleLarge)
                 Text(
-                    text = "We'll send you a verification code via WhatsApp",
+                    text = stringResource(R.string.reg_whatsapp_info),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
@@ -341,7 +344,7 @@ private fun PhoneEntryStep(
             MomoTextField(
                 value = phoneNumber,
                 onValueChange = onPhoneChange,
-                label = "Phone Number",
+                label = stringResource(R.string.auth_phone_number),
                 placeholder = "78XXXXXXX",
                 modifier = Modifier.weight(1f),
                 singleLine = true,
@@ -363,7 +366,7 @@ private fun PhoneEntryStep(
         Spacer(modifier = Modifier.height(32.dp))
 
         MomoButton(
-            text = "Send WhatsApp Code",
+            text = stringResource(R.string.reg_send_code),
             onClick = onRequestOtp,
             enabled = !isLoading && phoneNumber.isNotBlank(),
             isLoading = isLoading
@@ -391,7 +394,7 @@ private fun OtpVerificationStep(
             .verticalScroll(rememberScrollState())
     ) {
         Text(
-            text = "Verify Your Phone",
+            text = stringResource(R.string.reg_verify_phone),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold
         )
@@ -402,7 +405,7 @@ private fun OtpVerificationStep(
         ) {
             Text("📱") // WhatsApp icon
             Text(
-                text = "Enter the 6-digit code sent to WhatsApp",
+                text = stringResource(R.string.reg_otp_instruction),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -419,7 +422,7 @@ private fun OtpVerificationStep(
         if (otpExpiryCountdown <= 0) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Code expired. Please request a new one.",
+                text = stringResource(R.string.reg_code_expired_message),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error
             )
@@ -442,7 +445,7 @@ private fun OtpVerificationStep(
                 enabled = !isLoading
             ) {
                 Text(
-                    text = "Change",
+                    text = stringResource(R.string.reg_change),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -455,7 +458,7 @@ private fun OtpVerificationStep(
             val minutes = otpExpiryCountdown / 60
             val seconds = otpExpiryCountdown % 60
             Text(
-                text = "Code expires in ${minutes}:${seconds.toString().padStart(2, '0')}",
+                text = stringResource(R.string.reg_code_expires, minutes, seconds.toString().padStart(2, '0')),
                 style = MaterialTheme.typography.bodySmall,
                 color = if (otpExpiryCountdown <= 60) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth(),
@@ -463,7 +466,7 @@ private fun OtpVerificationStep(
             )
         } else {
             Text(
-                text = "Code expired",
+                text = stringResource(R.string.reg_code_expired),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.fillMaxWidth(),
@@ -473,7 +476,7 @@ private fun OtpVerificationStep(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        com.momoterminal.presentation.components.OtpInputField(
+        OtpInputField(
             value = otpCode,
             onValueChange = onOtpChange,
             modifier = Modifier.fillMaxWidth()
@@ -497,14 +500,14 @@ private fun OtpVerificationStep(
                     enabled = !isLoading
                 ) {
                     Text(
-                        text = "Didn't receive the code? Resend",
+                        text = stringResource(R.string.reg_resend_code),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
             } else {
                 Text(
-                    text = "Resend code in ${resendCountdown}s",
+                    text = stringResource(R.string.reg_resend_countdown, resendCountdown),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -514,7 +517,7 @@ private fun OtpVerificationStep(
         Spacer(modifier = Modifier.height(32.dp))
 
         MomoButton(
-            text = "Verify",
+            text = stringResource(R.string.reg_verify),
             onClick = onVerifyOtp,
             enabled = !isLoading && otpCode.length == 6 && otpExpiryCountdown > 0,
             isLoading = isLoading
@@ -541,7 +544,7 @@ private fun PinCreationStep(
             .verticalScroll(rememberScrollState())
     ) {
         Text(
-            text = "Secure Your Account",
+            text = stringResource(R.string.reg_secure_account),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
@@ -549,7 +552,7 @@ private fun PinCreationStep(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Create a 6-digit PIN to protect your transactions",
+            text = stringResource(R.string.reg_pin_instruction),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -559,7 +562,7 @@ private fun PinCreationStep(
         MomoTextField(
             value = pin,
             onValueChange = onPinChange,
-            label = "6-Digit PIN",
+            label = stringResource(R.string.auth_pin),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             visualTransformation = if (showPin) VisualTransformation.None else PasswordVisualTransformation(),
@@ -586,7 +589,7 @@ private fun PinCreationStep(
         MomoTextField(
             value = confirmPin,
             onValueChange = onConfirmPinChange,
-            label = "Confirm PIN",
+            label = stringResource(R.string.auth_confirm_pin),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             visualTransformation = if (showConfirmPin) VisualTransformation.None else PasswordVisualTransformation(),
@@ -612,13 +615,13 @@ private fun PinCreationStep(
             ),
             enabled = !isLoading,
             isError = confirmPin.isNotEmpty() && pin != confirmPin,
-            errorMessage = if (confirmPin.isNotEmpty() && pin != confirmPin) "PINs do not match" else null
+            errorMessage = if (confirmPin.isNotEmpty() && pin != confirmPin) stringResource(R.string.reg_pins_not_match) else null
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
         MomoButton(
-            text = "Continue",
+            text = stringResource(R.string.reg_continue),
             onClick = onNext,
             enabled = !isLoading && pin.length == 6 && pin == confirmPin,
             isLoading = isLoading
@@ -639,7 +642,7 @@ private fun MerchantInfoStep(
             .verticalScroll(rememberScrollState())
     ) {
         Text(
-            text = "Business Profile",
+            text = stringResource(R.string.reg_business_profile),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
@@ -647,7 +650,7 @@ private fun MerchantInfoStep(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Tell us about your business",
+            text = stringResource(R.string.reg_business_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -657,7 +660,7 @@ private fun MerchantInfoStep(
         MomoTextField(
             value = merchantName,
             onValueChange = onMerchantNameChange,
-            label = "Business Name",
+            label = stringResource(R.string.auth_merchant_name),
             placeholder = "My Store",
             leadingIcon = {
                 Icon(
@@ -676,7 +679,7 @@ private fun MerchantInfoStep(
         Spacer(modifier = Modifier.height(32.dp))
 
         MomoButton(
-            text = "Continue",
+            text = stringResource(R.string.reg_continue),
             onClick = onNext,
             enabled = !isLoading && merchantName.isNotBlank(),
             isLoading = isLoading
@@ -749,7 +752,7 @@ private fun TermsAcceptanceStep(
         Spacer(modifier = Modifier.height(32.dp))
 
         MomoButton(
-            text = "Create Account",
+            text = stringResource(R.string.auth_sign_up),
             onClick = onRegister,
             enabled = !isLoading && acceptedTerms,
             isLoading = isLoading

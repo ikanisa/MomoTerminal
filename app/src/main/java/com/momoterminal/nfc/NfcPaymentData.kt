@@ -3,62 +3,65 @@ package com.momoterminal.nfc
 /**
  * Data class representing payment data for NFC transactions.
  * 
- * Note: Amount is stored in pesewas (smallest currency unit) to avoid
- * floating-point precision errors. 1 GHS = 100 pesewas.
+ * Amount is stored in minor units (smallest currency unit) to avoid
+ * floating-point precision errors. E.g., 100 = 1.00 in main currency.
  */
 data class NfcPaymentData(
     val merchantPhone: String,
-    val amountInPesewas: Long,
-    val currency: String = "GHS",
+    val amountInMinorUnits: Long,
+    val currency: String,
     val provider: Provider = Provider.MTN,
     val reference: String? = null,
     val timestamp: Long = System.currentTimeMillis()
 ) {
+    // Legacy alias for backward compatibility
+    val amountInPesewas: Long get() = amountInMinorUnits
+
     /**
-     * Supported Mobile Money providers.
+     * Supported Mobile Money providers across Africa.
      */
     enum class Provider(
         val displayName: String,
-        val ussdPrefix: String,
         val colorHex: String
     ) {
-        MTN("MTN MoMo", "*170#", "#FFCC00"),
-        VODAFONE("Vodafone Cash", "*110#", "#E60000"),
-        AIRTEL_TIGO("AirtelTigo Money", "*500#", "#ED1C24");
-        
+        MTN("MTN Mobile Money", "#FFCC00"),
+        AIRTEL("Airtel Money", "#ED1C24"),
+        VODACOM("Vodacom M-Pesa", "#E60000"),
+        VODAFONE("Vodafone Cash", "#E60000"),
+        ORANGE("Orange Money", "#FF6600"),
+        TIGO("Tigo Pesa", "#00A0DF"),
+        WAVE("Wave", "#1A1F71"),
+        MOOV("Moov Money", "#0066B3");
+
         companion object {
             fun fromString(value: String): Provider {
                 return entries.find { 
                     it.name.equals(value, ignoreCase = true) || 
-                    it.displayName.equals(value, ignoreCase = true)
+                    it.displayName.contains(value, ignoreCase = true)
                 } ?: MTN
             }
         }
     }
-    
+
     /**
-     * Get the amount as a Double for display purposes.
-     * Returns the amount in main currency units (e.g., GHS, not pesewas).
+     * Get the amount in main currency units for display.
      */
-    fun getDisplayAmount(): Double = amountInPesewas / 100.0
-    
+    fun getDisplayAmount(): Double = amountInMinorUnits / 100.0
+
     /**
-     * Get the amount formatted as a string for display (e.g., "50.00").
+     * Get the amount formatted as a string (e.g., "50.00").
      */
     fun getFormattedAmount(): String = "%.2f".format(getDisplayAmount())
-    
+
     /**
-     * Generate USSD payment string for this provider.
+     * Generate USSD dial string for this payment.
+     * Note: Actual USSD codes vary by country and provider.
      */
     fun toUssdString(): String {
-        val formattedAmount = getFormattedAmount()
-        return when (provider) {
-            Provider.MTN -> "tel:*170*1*1*${merchantPhone}*${formattedAmount}#"
-            Provider.VODAFONE -> "tel:*110*1*${merchantPhone}*${formattedAmount}#"
-            Provider.AIRTEL_TIGO -> "tel:*500*1*${merchantPhone}*${formattedAmount}#"
-        }
+        val amount = getFormattedAmount()
+        return "tel:*182*8*1*$merchantPhone*$amount#" // Generic format
     }
-    
+
     /**
      * Generate payment URI for NFC transmission.
      */
@@ -66,40 +69,31 @@ data class NfcPaymentData(
         val ref = reference?.let { "&ref=$it" } ?: ""
         return "momo://pay?to=$merchantPhone&amount=${getFormattedAmount()}&currency=$currency&provider=${provider.name}$ref"
     }
-    
+
     /**
      * Validate the payment data.
      */
-    fun isValid(): Boolean {
-        return merchantPhone.isNotBlank() && amountInPesewas > 0
-    }
-    
+    fun isValid(): Boolean = merchantPhone.isNotBlank() && amountInMinorUnits > 0
+
     companion object {
         /**
-         * Convert a Double amount to pesewas (Long).
-         * @param amount The amount in main currency units (e.g., GHS)
-         * @return The amount in pesewas
+         * Convert a Double amount to minor units.
          */
-        fun toPesewas(amount: Double): Long = (amount * 100).toLong()
-        
+        fun toMinorUnits(amount: Double): Long = (amount * 100).toLong()
+
         /**
          * Create NfcPaymentData from a Double amount.
-         * @param merchantPhone The merchant phone number
-         * @param amount The amount in main currency units (e.g., GHS)
-         * @param currency The currency code (default: GHS)
-         * @param provider The mobile money provider
-         * @param reference Optional payment reference
          */
         fun fromAmount(
             merchantPhone: String,
             amount: Double,
-            currency: String = "GHS",
+            currency: String,
             provider: Provider = Provider.MTN,
             reference: String? = null
         ): NfcPaymentData {
             return NfcPaymentData(
                 merchantPhone = merchantPhone,
-                amountInPesewas = toPesewas(amount),
+                amountInMinorUnits = toMinorUnits(amount),
                 currency = currency,
                 provider = provider,
                 reference = reference

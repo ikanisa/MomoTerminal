@@ -1,6 +1,7 @@
 package com.momoterminal.presentation.screens.settings
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,58 +16,49 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.momoterminal.R
+import com.momoterminal.config.SupportedCountries
 import com.momoterminal.presentation.components.MomoButton
 import com.momoterminal.presentation.components.MomoTextField
-import com.momoterminal.presentation.components.ButtonType
 import com.momoterminal.presentation.components.common.MomoTopAppBar
 import com.momoterminal.presentation.theme.MomoTerminalTheme
-import com.momoterminal.presentation.theme.MomoYellow
 import com.momoterminal.presentation.theme.SuccessGreen
 
 /**
@@ -84,8 +76,6 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     
-    var showApiSecret by remember { mutableStateOf(false) }
-    
     // Show snackbar for save success
     LaunchedEffect(uiState.showSaveSuccess) {
         if (uiState.showSaveSuccess) {
@@ -96,7 +86,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             MomoTopAppBar(
-                title = "Settings",
+                title = stringResource(R.string.settings_title),
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationClick = onNavigateBack
             )
@@ -112,7 +102,7 @@ fun SettingsScreen(
         ) {
             // Webhook Configuration Section
             SectionHeader(
-                title = "Webhook Configuration",
+                title = stringResource(R.string.webhook_configuration),
                 icon = Icons.Default.Link
             )
             
@@ -125,7 +115,7 @@ fun SettingsScreen(
 
             // Merchant Configuration Section
             SectionHeader(
-                title = "Merchant Profile",
+                title = stringResource(R.string.merchant_profile),
                 icon = Icons.Default.Person
             )
             
@@ -135,12 +125,20 @@ fun SettingsScreen(
             MomoTextField(
                 value = uiState.merchantPhone,
                 onValueChange = viewModel::updateMerchantPhone,
-                label = "Merchant Phone Number",
+                label = stringResource(R.string.merchant_phone_label),
                 placeholder = "0201234567",
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 isError = uiState.merchantPhone.isNotBlank() && !viewModel.isPhoneValid()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Country Selector
+            CountrySelector(
+                selectedCountryCode = uiState.countryCode,
+                onCountrySelected = viewModel::updateCountryCode
             )
             
             Spacer(modifier = Modifier.height(32.dp))
@@ -149,7 +147,7 @@ fun SettingsScreen(
             
             // Security Section
             SectionHeader(
-                title = "Security",
+                title = stringResource(R.string.security),
                 icon = Icons.Default.Fingerprint
             )
             
@@ -179,16 +177,15 @@ fun SettingsScreen(
                     
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Biometric Authentication",
+                            text = stringResource(R.string.biometric_auth),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = if (uiState.isBiometricAvailable) {
-                                "Use fingerprint or face to confirm payments"
-                            } else {
-                                "Not available on this device"
-                            },
+                            text = stringResource(
+                                if (uiState.isBiometricAvailable) R.string.biometric_description
+                                else R.string.not_available_device
+                            ),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -208,7 +205,7 @@ fun SettingsScreen(
             
             // Developer Section - App Capabilities Demo
             SectionHeader(
-                title = "Developer Options",
+                title = stringResource(R.string.developer_options),
                 icon = Icons.Default.Build
             )
             
@@ -239,12 +236,12 @@ fun SettingsScreen(
                     
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "App Capabilities Demo",
+                            text = stringResource(R.string.app_capabilities_demo),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "Test Network, NFC, Biometrics & more",
+                            text = stringResource(R.string.capabilities_description),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -262,8 +259,8 @@ fun SettingsScreen(
             
             // SMS Auto-Sync Section
             SectionHeader(
-                title = "SMS Synchronization",
-                icon = Icons.Default.Message
+                title = stringResource(R.string.sms_synchronization),
+                icon = Icons.AutoMirrored.Filled.Message
             )
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -271,18 +268,18 @@ fun SettingsScreen(
             // SMS Auto-Sync Toggle
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Auto-Sync SMS Transactions",
+                        text = stringResource(R.string.auto_sync_sms),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Automatically record MoMo confirmation messages",
+                        text = stringResource(R.string.auto_sync_description),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -302,7 +299,7 @@ fun SettingsScreen(
                     )
                 ) {
                     Text(
-                        text = "⚠️ Disabling SMS sync means transactions won't be automatically recorded. You'll need to manually enter transaction details.",
+                        text = stringResource(R.string.sms_sync_warning),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.padding(12.dp)
@@ -316,7 +313,7 @@ fun SettingsScreen(
             
             // About Section
             SectionHeader(
-                title = "About",
+                title = stringResource(R.string.about),
                 icon = Icons.Default.Info
             )
             
@@ -325,10 +322,10 @@ fun SettingsScreen(
             // App Version
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "App Version",
+                    text = stringResource(R.string.app_version),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -347,7 +344,7 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Privacy Policy",
+                    text = stringResource(R.string.privacy_policy),
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -363,7 +360,7 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Terms of Service",
+                    text = stringResource(R.string.terms_of_service),
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -379,7 +376,7 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Open Source Licenses",
+                    text = stringResource(R.string.open_source_licenses),
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -393,7 +390,7 @@ fun SettingsScreen(
             
             // Save Button
             MomoButton(
-                text = "Save Configuration",
+                text = stringResource(R.string.save_configuration),
                 onClick = { viewModel.saveSettings() },
                 enabled = viewModel.isPhoneValid()
             )
@@ -409,11 +406,11 @@ fun SettingsScreen(
                 )
             ) {
                 Icon(
-                    imageVector = Icons.Default.Logout,
+                    imageVector = Icons.AutoMirrored.Filled.Logout,
                     contentDescription = null
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Logout")
+                Text(stringResource(R.string.logout))
             }
             
             // Status indicator
@@ -422,7 +419,7 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp),
-                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -432,7 +429,7 @@ fun SettingsScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Configuration saved",
+                        text = stringResource(R.string.configuration_saved),
                         style = MaterialTheme.typography.bodyMedium,
                         color = SuccessGreen,
                         fontWeight = FontWeight.Medium
@@ -447,10 +444,10 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { viewModel.hideLogoutDialog() },
             title = {
-                Text("Logout")
+                Text(stringResource(R.string.logout_confirm_title))
             },
             text = {
-                Text("Are you sure you want to logout? You'll need to login again to access the app.")
+                Text(stringResource(R.string.logout_confirm_message))
             },
             confirmButton = {
                 Button(
@@ -463,12 +460,12 @@ fun SettingsScreen(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Logout")
+                    Text(stringResource(R.string.logout))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.hideLogoutDialog() }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -495,6 +492,63 @@ private fun SectionHeader(
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary
         )
+    }
+}
+
+@Composable
+private fun CountrySelector(
+    selectedCountryCode: String,
+    onCountrySelected: (String) -> Unit
+) {
+    val countries = SupportedCountries.PRIMARY_LAUNCH
+    val selectedCountry = SupportedCountries.getByCode(selectedCountryCode)
+
+    Column {
+        Text(
+            text = "Country / Currency",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        countries.forEach { country ->
+            val isSelected = country.code == selectedCountryCode
+            Card(
+                onClick = { onCountrySelected(country.code) },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isSelected) 
+                        MaterialTheme.colorScheme.primaryContainer 
+                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = country.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                        )
+                        Text(
+                            text = "${country.currency} (${country.currencySymbol})",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    if (isSelected) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

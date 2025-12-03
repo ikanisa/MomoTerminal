@@ -33,26 +33,36 @@ object Constants {
     // NFC
     const val NFC_AID = "D2760000850101"
     
-    // Currency
-    const val DEFAULT_CURRENCY = "GHS"
-    
     // Transaction Status
     const val STATUS_PENDING = "PENDING"
     const val STATUS_SENT = "SENT"
     const val STATUS_FAILED = "FAILED"
     
-    // SMS Keywords for filtering (Ghana-focused)
+    // SMS Keywords for filtering (multi-country)
     val MOMO_KEYWORDS = listOf(
-        "MOMO", "MobileMoney", "MTN", "GHS",
-        "received", "sent", "payment", "credited",
-        "transferred", "VodaCash", "AirtelTigo"
+        "MoMo", "MobileMoney", "Mobile Money",
+        "received", "sent", "payment", "credited", "transferred",
+        // Providers
+        "MTN", "Airtel", "Vodacom", "Vodafone", "Orange", "Tigo", "Wave", "M-Pesa",
+        // Currencies
+        "GHS", "RWF", "CDF", "XOF", "XAF", "TZS", "ZMW", "BIF"
     )
     
-    // Provider Sender IDs
+    // Provider Sender IDs (multi-country)
     val KNOWN_PROVIDER_SENDER_IDS = setOf(
-        "MTN", "MobileMoney", "MTN MoMo", "MTN-MOMO",
-        "VodaCash", "Vodafone", "VodafoneCash",
-        "AirtelTigo", "ATMoney", "AT-Money",
-        "MoMo", "mPesa", "MPESA"
+        // MTN
+        "MTN", "MobileMoney", "MTN MoMo", "MTN-MOMO", "MoMo",
+        // Vodafone/Vodacom
+        "VodaCash", "Vodafone", "VodafoneCash", "Vodacom", "M-Pesa", "MPESA",
+        // Airtel
+        "Airtel", "AirtelMoney", "Airtel Money",
+        // Orange
+        "Orange", "OrangeMoney", "Orange Money",
+        // Tigo
+        "Tigo", "TigoPesa", "Tigo Pesa",
+        // Wave
+        "Wave",
+        // Others
+        "AirtelTigo", "ATMoney", "AT-Money"
     )
 }

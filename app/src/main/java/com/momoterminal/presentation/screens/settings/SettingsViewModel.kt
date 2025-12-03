@@ -49,6 +49,7 @@ class SettingsViewModel @Inject constructor(
         val webhookUrl: String = "",
         val apiSecret: String = "",
         val merchantPhone: String = "",
+        val countryCode: String = "RW",
         val isConfigured: Boolean = false,
         val isBiometricEnabled: Boolean = false,
         val isBiometricAvailable: Boolean = false,
@@ -82,6 +83,7 @@ class SettingsViewModel @Inject constructor(
                 webhookUrl = appConfig.getGatewayUrl(),
                 apiSecret = appConfig.getApiSecret(),
                 merchantPhone = appConfig.getMerchantPhone(),
+                countryCode = appConfig.getCountryCode(),
                 isConfigured = appConfig.isConfigured(),
                 isBiometricAvailable = biometricHelper.isBiometricAvailable(),
                 isBiometricEnabled = biometricEnabled,
@@ -120,7 +122,12 @@ class SettingsViewModel @Inject constructor(
     fun updateMerchantPhone(phone: String) {
         _uiState.value = _uiState.value.copy(merchantPhone = phone)
     }
-    
+
+    fun updateCountryCode(code: String) {
+        _uiState.value = _uiState.value.copy(countryCode = code)
+        appConfig.saveCountryCode(code)
+    }
+
     fun toggleBiometric(enabled: Boolean) {
         _uiState.value = _uiState.value.copy(isBiometricEnabled = enabled)
         viewModelScope.launch {

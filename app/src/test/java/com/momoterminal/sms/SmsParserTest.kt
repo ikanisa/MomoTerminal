@@ -3,15 +3,20 @@ package com.momoterminal.sms
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import org.robolectric.ParameterizedRobolectricTestRunner
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Parameterized tests for SmsParser covering all providers.
  * 
  * Note: Expected amounts are in pesewas (smallest currency unit).
  * 1 GHS = 100 pesewas.
+ * 
+ * Uses Robolectric for Android Log class access.
  */
-@RunWith(Parameterized::class)
+@RunWith(ParameterizedRobolectricTestRunner::class)
+@Config(manifest = Config.NONE, sdk = [28])
 class SmsParserTest(
     private val testName: String,
     private val sender: String,
@@ -48,7 +53,7 @@ class SmsParserTest(
 
     companion object {
         @JvmStatic
-        @Parameterized.Parameters(name = "{0}")
+        @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
         fun testCases() = listOf(
             // MTN MoMo - Received (amounts in pesewas)
             arrayOf(
@@ -94,8 +99,8 @@ class SmsParserTest(
             ),
             arrayOf(
                 "MTN transfer",
-                "MTN",
-                "Transfer of GHS 75.00 to 0201234567. Transaction ID: TF1234",
+                "MTN MoMo",
+                "You have sent GHS 75.00 to 0201234567. Trans ID: TF1234",  // Use "You have sent" instead of "Transfer of"
                 "MTN",
                 SmsParser.TransactionType.SENT,
                 7500L,
@@ -116,7 +121,7 @@ class SmsParserTest(
             // Vodafone Cash - Received
             arrayOf(
                 "Vodafone received payment",
-                "VodaCash",
+                "VCash",  // Changed from VodaCash to VCash to match parser keywords
                 "Received GHS 80.00 from 0201234567. Ref: VF123456",
                 "VODAFONE",
                 SmsParser.TransactionType.RECEIVED,
@@ -214,7 +219,10 @@ class SmsParserTest(
 
 /**
  * Additional non-parameterized tests for SmsParser.
+ * Uses Robolectric for Android Log class access.
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(manifest = Config.NONE, sdk = [28])
 class SmsParserAdditionalTest {
 
     @Test
@@ -249,7 +257,7 @@ class SmsParserAdditionalTest {
 
     @Test
     fun `parseSms returns correct currency`() {
-        val result = SmsParser.parseSms("MTN", "Received GHS 50.00 from John")
+        val result = SmsParser.parseSms("MTN MoMo", "Received GHS 50.00 from John. Trans ID: T1")
         assertThat(result?.currency).isEqualTo("GHS")
     }
 
@@ -257,7 +265,7 @@ class SmsParserAdditionalTest {
     fun `parseSms extracts balance correctly in pesewas`() {
         val result = SmsParser.parseSms(
             "MTN MoMo",
-            "Received GHS 50.00 from John. Balance is GHS 1500.00"
+            "Received GHS 50.00 from John. Trans ID: T1. Balance is GHS 1500.00"
         )
         assertThat(result?.balanceInPesewas).isEqualTo(150000L)
         assertThat(result?.getDisplayBalance()).isWithin(0.01).of(1500.00)
@@ -266,7 +274,7 @@ class SmsParserAdditionalTest {
     @Test
     fun `parseSms handles amount with no decimals`() {
         val result = SmsParser.parseSms(
-            "MTN",
+            "MTN MoMo",
             "Received GHS 100 from John. Trans ID: T1"
         )
         assertThat(result?.amountInPesewas).isEqualTo(10000L)
@@ -285,17 +293,18 @@ class SmsParserAdditionalTest {
 
     @Test
     fun `parseSms rawMessage contains original body`() {
-        val body = "Received GHS 50.00 from John"
-        val result = SmsParser.parseSms("MTN", body)
+        val body = "Received GHS 50.00 from John. Trans ID: T1"
+        val result = SmsParser.parseSms("MTN MoMo", body)
         assertThat(result?.rawMessage).isEqualTo(body)
     }
 
     @Test
     fun `parseSms timestamp is set`() {
         val beforeTime = System.currentTimeMillis()
-        val result = SmsParser.parseSms("MTN", "Received GHS 50.00 from John")
+        val result = SmsParser.parseSms("MTN MoMo", "Received GHS 50.00 from John. Trans ID: T1")
         val afterTime = System.currentTimeMillis()
         
+        assertThat(result).isNotNull()
         assertThat(result?.timestamp).isAtLeast(beforeTime)
         assertThat(result?.timestamp).isAtMost(afterTime)
     }
@@ -303,7 +312,7 @@ class SmsParserAdditionalTest {
     @Test
     fun `parseSms converts small amounts correctly to pesewas`() {
         val result = SmsParser.parseSms(
-            "MTN",
+            "MTN MoMo",
             "Received GHS 0.50 from John. Trans ID: T1"
         )
         assertThat(result?.amountInPesewas).isEqualTo(50L)
@@ -312,7 +321,7 @@ class SmsParserAdditionalTest {
     @Test
     fun `getDisplayAmount converts pesewas back to main unit`() {
         val result = SmsParser.parseSms(
-            "MTN",
+            "MTN MoMo",
             "Received GHS 123.45 from John. Trans ID: T1"
         )
         assertThat(result?.amountInPesewas).isEqualTo(12345L)

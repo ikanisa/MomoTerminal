@@ -61,11 +61,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.momoterminal.R
 import com.momoterminal.data.local.entity.TransactionEntity
 import com.momoterminal.domain.model.Provider
 import com.momoterminal.presentation.components.MomoButton
@@ -96,7 +98,7 @@ fun TransactionDetailScreen(
     Scaffold(
         topBar = {
             MomoTopAppBar(
-                title = "Transaction Details",
+                title = stringResource(R.string.transaction_details),
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationClick = onNavigateBack,
                 actions = {
@@ -146,12 +148,12 @@ fun TransactionDetailScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Transaction not found",
+                            text = stringResource(R.string.transaction_not_found),
                             style = MaterialTheme.typography.titleMedium
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         MomoButton(
-                            text = "Go Back",
+                            text = stringResource(R.string.go_back),
                             onClick = onNavigateBack
                         )
                     }
@@ -354,7 +356,7 @@ private fun StatusCard(
             
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Status",
+                    text = stringResource(R.string.status),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -400,7 +402,7 @@ private fun DetailsCard(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Transaction Details",
+                text = stringResource(R.string.transaction_details),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -497,14 +499,14 @@ private fun RawMessageCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Raw SMS Message",
+                    text = stringResource(R.string.raw_sms_message),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 IconButton(onClick = onToggle) {
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = if (isExpanded) "Collapse" else "Expand"
+                        contentDescription = null
                     )
                 }
             }
@@ -563,7 +565,7 @@ private fun ActionButtons(
         ) {
             transactionId?.let { txId ->
                 MomoButton(
-                    text = "Copy ID",
+                    text = stringResource(R.string.copy_id),
                     onClick = { onCopyTransactionId(txId) },
                     type = ButtonType.OUTLINE,
                     modifier = Modifier.weight(1f)
@@ -571,7 +573,7 @@ private fun ActionButtons(
             }
             
             MomoButton(
-                text = "Share",
+                text = stringResource(R.string.share),
                 onClick = onShare,
                 type = ButtonType.SECONDARY,
                 modifier = Modifier.weight(1f)
@@ -580,7 +582,7 @@ private fun ActionButtons(
         
         if (showRetrySync) {
             MomoButton(
-                text = "Retry Sync",
+                text = stringResource(R.string.retry_sync),
                 onClick = onRetrySync,
                 modifier = Modifier.fillMaxWidth(),
                 // Note: MomoButton doesn't support custom colors directly yet, 

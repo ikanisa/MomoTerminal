@@ -1,6 +1,13 @@
 package com.momoterminal.presentation.screens.auth
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -10,11 +17,27 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -22,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.momoterminal.R
 import com.momoterminal.presentation.components.CountryCodeSelector
 import com.momoterminal.presentation.components.MomoButton
 import com.momoterminal.presentation.components.MomoTextField
@@ -80,13 +104,13 @@ fun ForgotPinScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Reset PIN") },
+                title = { Text(stringResource(R.string.forgot_pin_title)) },
                 navigationIcon = {
                     if (uiState.step != ForgotPinViewModel.ForgotPinStep.SUCCESS) {
                         IconButton(onClick = onNavigateBack) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
+                                contentDescription = stringResource(R.string.back)
                             )
                         }
                     }
@@ -158,7 +182,7 @@ private fun PhoneEntryStep(
     Spacer(modifier = Modifier.height(24.dp))
     
     Text(
-        text = "Enter Your Phone Number",
+        text = stringResource(R.string.forgot_pin_enter_phone),
         style = MaterialTheme.typography.headlineSmall,
         fontWeight = FontWeight.Bold
     )
@@ -166,7 +190,7 @@ private fun PhoneEntryStep(
     Spacer(modifier = Modifier.height(8.dp))
     
     Text(
-        text = "We'll send you a verification code via WhatsApp",
+        text = stringResource(R.string.forgot_pin_whatsapp_info),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center
@@ -187,7 +211,7 @@ private fun PhoneEntryStep(
     MomoTextField(
         value = uiState.phoneNumber,
         onValueChange = viewModel::updatePhoneNumber,
-        label = "Phone Number",
+        label = stringResource(R.string.auth_phone_number),
         placeholder = "201234567",
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
@@ -219,7 +243,7 @@ private fun PhoneEntryStep(
     
     // Send OTP Button
     MomoButton(
-        text = "Send Verification Code",
+        text = stringResource(R.string.forgot_pin_send_code),
         onClick = { viewModel.sendOtp() },
         enabled = !uiState.isLoading && uiState.phoneNumber.isNotBlank(),
         isLoading = uiState.isLoading,
@@ -244,7 +268,7 @@ private fun OtpVerificationStep(
     Spacer(modifier = Modifier.height(24.dp))
     
     Text(
-        text = "Verify Code",
+        text = stringResource(R.string.forgot_pin_verify_code),
         style = MaterialTheme.typography.headlineSmall,
         fontWeight = FontWeight.Bold
     )
@@ -252,7 +276,7 @@ private fun OtpVerificationStep(
     Spacer(modifier = Modifier.height(8.dp))
     
     Text(
-        text = "Enter the 6-digit code sent to\n${uiState.countryCode} ${uiState.phoneNumber}",
+        text = stringResource(R.string.forgot_pin_otp_sent, uiState.countryCode, uiState.phoneNumber),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center
@@ -278,13 +302,13 @@ private fun OtpVerificationStep(
     // Resend OTP
     if (resendCountdown > 0) {
         Text(
-            text = "Resend code in ${resendCountdown}s",
+            text = stringResource(R.string.reg_resend_countdown, resendCountdown),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     } else {
         TextButton(onClick = onResendClick) {
-            Text("Resend Code")
+            Text(stringResource(R.string.forgot_pin_resend_code))
         }
     }
     
@@ -292,7 +316,7 @@ private fun OtpVerificationStep(
     
     // Verify Button
     MomoButton(
-        text = "Verify",
+        text = stringResource(R.string.reg_verify),
         onClick = { viewModel.verifyOtp() },
         enabled = !uiState.isLoading && uiState.otpCode.length == 6,
         isLoading = uiState.isLoading,
@@ -315,7 +339,7 @@ private fun PinEntryStep(
     Spacer(modifier = Modifier.height(24.dp))
     
     Text(
-        text = "Create New PIN",
+        text = stringResource(R.string.forgot_pin_create_new),
         style = MaterialTheme.typography.headlineSmall,
         fontWeight = FontWeight.Bold
     )
@@ -323,7 +347,7 @@ private fun PinEntryStep(
     Spacer(modifier = Modifier.height(8.dp))
     
     Text(
-        text = "Enter a 4-digit PIN for your account",
+        text = stringResource(R.string.forgot_pin_4digit_instruction),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
@@ -347,7 +371,7 @@ private fun PinEntryStep(
     
     // Continue Button
     MomoButton(
-        text = "Continue",
+        text = stringResource(R.string.reg_continue),
         onClick = { viewModel.continueToConfirm() },
         enabled = uiState.newPin.length == 4,
         modifier = Modifier.fillMaxWidth()
@@ -369,7 +393,7 @@ private fun PinConfirmStep(
     Spacer(modifier = Modifier.height(24.dp))
     
     Text(
-        text = "Confirm Your PIN",
+        text = stringResource(R.string.forgot_pin_confirm),
         style = MaterialTheme.typography.headlineSmall,
         fontWeight = FontWeight.Bold
     )
@@ -377,7 +401,7 @@ private fun PinConfirmStep(
     Spacer(modifier = Modifier.height(8.dp))
     
     Text(
-        text = "Re-enter your 4-digit PIN to confirm",
+        text = stringResource(R.string.forgot_pin_confirm_instruction),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant
     )
@@ -400,7 +424,7 @@ private fun PinConfirmStep(
     if (uiState.pinMismatch) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "PINs do not match. Please try again.",
+            text = stringResource(R.string.forgot_pin_mismatch),
             color = MaterialTheme.colorScheme.error,
             style = MaterialTheme.typography.bodySmall
         )
@@ -410,7 +434,7 @@ private fun PinConfirmStep(
     
     // Reset PIN Button
     MomoButton(
-        text = "Reset PIN",
+        text = stringResource(R.string.forgot_pin_reset_button),
         onClick = { viewModel.resetPin() },
         enabled = !uiState.isLoading && uiState.confirmPin.length == 4,
         isLoading = uiState.isLoading,
@@ -427,7 +451,7 @@ private fun SuccessStep() {
     ) {
         Icon(
             imageVector = Icons.Default.CheckCircle,
-            contentDescription = "Success",
+            contentDescription = null,
             modifier = Modifier.size(96.dp),
             tint = SuccessGreen
         )
@@ -435,7 +459,7 @@ private fun SuccessStep() {
         Spacer(modifier = Modifier.height(24.dp))
         
         Text(
-            text = "PIN Reset Successfully!",
+            text = stringResource(R.string.forgot_pin_success),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
@@ -443,7 +467,7 @@ private fun SuccessStep() {
         Spacer(modifier = Modifier.height(8.dp))
         
         Text(
-            text = "You can now login with your new PIN",
+            text = stringResource(R.string.forgot_pin_success_message),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center

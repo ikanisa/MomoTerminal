@@ -23,9 +23,11 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.momoterminal.R
 import com.momoterminal.data.local.entity.TransactionEntity
 import com.momoterminal.presentation.theme.MomoTerminalTheme
 
@@ -98,7 +100,7 @@ private fun EmptyTransactionList(
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = "No Transactions Yet",
+                text = stringResource(R.string.no_transactions_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -106,7 +108,7 @@ private fun EmptyTransactionList(
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                text = "Your transaction history will appear here once you receive or send payments.",
+                text = stringResource(R.string.no_transactions_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center

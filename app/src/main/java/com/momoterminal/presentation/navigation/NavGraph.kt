@@ -31,8 +31,9 @@ fun NavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     startDestination: String = Screen.Home.route,
-    isAuthenticated: Boolean = true
+    isAuthenticated: Boolean = false
 ) {
+    // Require authentication - start at Login if not authenticated
     val actualStartDestination = if (isAuthenticated) startDestination else Screen.Login.route
 
     NavHost(

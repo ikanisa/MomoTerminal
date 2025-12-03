@@ -43,7 +43,7 @@ object PhoneNumberValidator {
         if (phoneNumber.isBlank()) {
             return ValidationResult(
                 isValid = false,
-                errorMessage = "Phone number is required"
+                errorMessage = "Phone number cannot be empty"
             )
         }
         
@@ -101,6 +101,11 @@ object PhoneNumberValidator {
         // If already has country code with +
         if (cleaned.startsWith("+")) {
             return cleaned
+        }
+        
+        // Handle 00 international prefix (e.g., 00250788... -> +250788...)
+        if (cleaned.startsWith("00") && cleaned.length >= 11) {
+            return "+${cleaned.substring(2)}"
         }
         
         // Handle Rwanda numbers (starts with 0 or 7)

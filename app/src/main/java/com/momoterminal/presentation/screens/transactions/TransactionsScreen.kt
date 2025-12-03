@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -41,6 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.momoterminal.R
 import com.momoterminal.presentation.components.common.MomoTopAppBar
 import com.momoterminal.presentation.components.status.SyncStatusBadge
 import com.momoterminal.presentation.components.transaction.TransactionList
@@ -74,7 +76,7 @@ fun TransactionsScreen(
     Scaffold(
         topBar = {
             MomoTopAppBar(
-                title = "Transactions",
+                title = stringResource(R.string.transactions_title),
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationClick = onNavigateBack,
                 actions = {
@@ -112,7 +114,7 @@ fun TransactionsScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "SMS Access Required",
+                                text = stringResource(R.string.sms_access_required),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onErrorContainer
@@ -120,7 +122,7 @@ fun TransactionsScreen(
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "To automatically record transactions, please allow SMS access.",
+                            text = stringResource(R.string.sms_access_description),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
@@ -129,7 +131,7 @@ fun TransactionsScreen(
                             onClick = { smsPermissionState.launchPermissionRequest() }
                         ) {
                             Text(
-                                "Grant Permission",
+                                stringResource(R.string.grant_permission),
                                 color = MaterialTheme.colorScheme.onErrorContainer,
                                 fontWeight = FontWeight.Bold
                             )
@@ -168,7 +170,7 @@ fun TransactionsScreen(
                         trailingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Clear date range"
+                                contentDescription = stringResource(R.string.clear_date_range)
                             )
                         },
                         colors = FilterChipDefaults.filterChipColors(
@@ -179,7 +181,7 @@ fun TransactionsScreen(
                     FilterChip(
                         selected = false,
                         onClick = { viewModel.showDatePicker() },
-                        label = { Text("Select Date Range") },
+                        label = { Text(stringResource(R.string.select_date_range)) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.CalendarToday,
@@ -222,12 +224,14 @@ private fun FilterChipsRow(
                 onClick = { onFilterSelected(filter) },
                 label = {
                     Text(
-                        text = when (filter) {
-                            TransactionsViewModel.TransactionFilter.ALL -> "All"
-                            TransactionsViewModel.TransactionFilter.PENDING -> "Pending"
-                            TransactionsViewModel.TransactionFilter.SENT -> "Sent"
-                            TransactionsViewModel.TransactionFilter.FAILED -> "Failed"
-                        }
+                        text = stringResource(
+                            when (filter) {
+                                TransactionsViewModel.TransactionFilter.ALL -> R.string.filter_all
+                                TransactionsViewModel.TransactionFilter.PENDING -> R.string.filter_pending
+                                TransactionsViewModel.TransactionFilter.SENT -> R.string.filter_sent
+                                TransactionsViewModel.TransactionFilter.FAILED -> R.string.filter_failed
+                            }
+                        )
                     )
                 },
                 colors = FilterChipDefaults.filterChipColors(

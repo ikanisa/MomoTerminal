@@ -114,20 +114,15 @@ android {
     // Do NOT commit actual keystore credentials to version control
     signingConfigs {
         create("release") {
-            // Load signing config from environment variables or gradle.properties
-            // Example local.properties entries:
-            // MOMO_KEYSTORE_FILE=path/to/keystore.jks
-            // MOMO_KEYSTORE_PASSWORD=your_password
-            // MOMO_KEY_ALIAS=your_alias
-            // MOMO_KEY_PASSWORD=your_key_password
+            // Load signing config from environment variables or local.properties
             val keystoreFile = System.getenv("MOMO_KEYSTORE_FILE")
-                ?: project.findProperty("MOMO_KEYSTORE_FILE")?.toString()
+                ?: localProps.getProperty("MOMO_KEYSTORE_FILE")
             val keystorePassword = System.getenv("MOMO_KEYSTORE_PASSWORD")
-                ?: project.findProperty("MOMO_KEYSTORE_PASSWORD")?.toString()
+                ?: localProps.getProperty("MOMO_KEYSTORE_PASSWORD")
             val keyAlias = System.getenv("MOMO_KEY_ALIAS")
-                ?: project.findProperty("MOMO_KEY_ALIAS")?.toString()
+                ?: localProps.getProperty("MOMO_KEY_ALIAS")
             val keyPassword = System.getenv("MOMO_KEY_PASSWORD")
-                ?: project.findProperty("MOMO_KEY_PASSWORD")?.toString()
+                ?: localProps.getProperty("MOMO_KEY_PASSWORD")
 
             if (keystoreFile != null && File(keystoreFile).exists()) {
                 storeFile = File(keystoreFile)

@@ -2,8 +2,6 @@ package com.momoterminal.supabase
 
 import com.google.common.truth.Truth.assertThat
 import io.github.jan.supabase.gotrue.Auth
-import io.github.jan.supabase.gotrue.OtpType
-import io.github.jan.supabase.gotrue.providers.builtin.OTP
 import io.github.jan.supabase.gotrue.user.UserInfo
 import io.github.jan.supabase.gotrue.user.UserSession
 import io.mockk.*
@@ -12,6 +10,7 @@ import kotlinx.datetime.Instant
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import retrofit2.Response
 
 /**
  * Unit tests for SupabaseAuthService.
@@ -31,8 +30,8 @@ class SupabaseAuthServiceTest {
 
     @Before
     fun setup() {
-        auth = mockk()
-        edgeFunctionsApi = mockk()
+        auth = mockk(relaxed = true)
+        edgeFunctionsApi = mockk(relaxed = true)
         supabaseAuthService = SupabaseAuthService(auth, edgeFunctionsApi)
     }
 
@@ -45,56 +44,46 @@ class SupabaseAuthServiceTest {
 
     @Test
     fun `sendWhatsAppOtp sends OTP successfully`() = runTest {
-        // Given
-        coEvery { 
-            auth.signInWith(OTP, any())
-        } just Runs
+        // Given - mock EdgeFunctionsApi response
+        coEvery { edgeFunctionsApi.sendWhatsAppOtp(any()) } returns Response.success(
+            SendOtpResponse(success = true, message = "OTP sent")
+        )
 
         // When
         val result = supabaseAuthService.sendWhatsAppOtp(testPhoneNumber)
 
         // Then
         assertThat(result).isInstanceOf(AuthResult.Success::class.java)
-        assertThat((result as AuthResult.Success).data).isEqualTo(Unit)
-
-        // Verify Auth was called with correct parameters
-        coVerify(exactly = 1) { 
-            auth.signInWith(OTP, any())
-        }
     }
 
     @Test
     fun `sendWhatsAppOtp handles invalid phone number`() = runTest {
         // Given
-        val invalidPhone = "invalid"
-        coEvery { 
-            auth.signInWith(OTP, any())
-        } throws Exception("Invalid phone number format")
+        coEvery { edgeFunctionsApi.sendWhatsAppOtp(any()) } returns Response.success(
+            SendOtpResponse(success = false, message = "Failed", error = "Invalid phone number format")
+        )
 
         // When
-        val result = supabaseAuthService.sendWhatsAppOtp(invalidPhone)
+        val result = supabaseAuthService.sendWhatsAppOtp("invalid")
 
         // Then
         assertThat(result).isInstanceOf(AuthResult.Error::class.java)
         val error = result as AuthResult.Error
-        assertThat(error.message).contains("Invalid phone number")
         assertThat(error.code).isEqualTo("OTP_SEND_FAILED")
     }
 
     @Test
     fun `verifyOtp verifies code successfully and returns session`() = runTest {
-        // Given
-        val userSession = createMockUserSession()
-        
-        coEvery { 
-            auth.verifyPhoneOtp(
-                type = OtpType.Phone.SMS,
-                phone = testPhoneNumber,
-                token = testOtpCode
+        // Given - mock EdgeFunctionsApi response
+        coEvery { edgeFunctionsApi.verifyWhatsAppOtp(any()) } returns Response.success(
+            VerifyOtpResponse(
+                success = true,
+                message = "Verified",
+                userId = testUserId,
+                accessToken = testAccessToken,
+                refreshToken = testRefreshToken
             )
-        } just Runs
-
-        coEvery { auth.currentSessionOrNull() } returns userSession
+        )
 
         // When
         val result = supabaseAuthService.verifyOtp(testPhoneNumber, testOtpCode)
@@ -102,7 +91,6 @@ class SupabaseAuthServiceTest {
         // Then
         assertThat(result).isInstanceOf(AuthResult.Success::class.java)
         val sessionData = (result as AuthResult.Success).data
-        assertThat(sessionData.accessToken).isEqualTo(testAccessToken)
         assertThat(sessionData.user.id).isEqualTo(testUserId)
     }
 

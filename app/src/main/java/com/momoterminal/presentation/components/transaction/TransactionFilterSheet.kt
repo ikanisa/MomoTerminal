@@ -32,9 +32,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.momoterminal.R
 import com.momoterminal.domain.model.Provider
 import com.momoterminal.domain.model.SyncStatus
 import com.momoterminal.domain.model.TransactionFilter
@@ -76,13 +78,13 @@ fun TransactionFilterSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Filter Transactions",
+                    text = stringResource(R.string.filter_transactions),
                     style = MaterialTheme.typography.titleLarge
                 )
                 
                 if (tempFilter.hasActiveFilters) {
                     TextButton(onClick = { tempFilter = TransactionFilter() }) {
-                        Text("Clear All")
+                        Text(stringResource(R.string.filter_all))
                     }
                 }
             }
@@ -91,7 +93,7 @@ fun TransactionFilterSheet(
             
             // Provider filter
             Text(
-                text = "Provider",
+                text = stringResource(R.string.provider),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -127,7 +129,7 @@ fun TransactionFilterSheet(
             
             // Status filter
             Text(
-                text = "Sync Status",
+                text = stringResource(R.string.sync_status),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -159,7 +161,7 @@ fun TransactionFilterSheet(
             
             // Date range filter
             Text(
-                text = "Date Range",
+                text = stringResource(R.string.date_range),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

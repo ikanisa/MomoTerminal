@@ -99,14 +99,13 @@ class TerminalViewModel @Inject constructor(
         
         if (state.amount.isEmpty() || state.merchantPhone.isEmpty()) return
         
-        // Convert display amount (String) to pesewas (Long)
         val amountDouble = state.amount.toDoubleOrNull() ?: return
-        val amountInPesewas = (amountDouble * 100).toLong()
+        val amountInMinorUnits = (amountDouble * 100).toLong()
         
         val paymentData = NfcPaymentData(
             merchantPhone = state.merchantPhone,
-            amountInPesewas = amountInPesewas,
-            currency = "GHS",
+            amountInMinorUnits = amountInMinorUnits,
+            currency = appConfig.getCurrency(),
             provider = state.selectedProvider
         )
         

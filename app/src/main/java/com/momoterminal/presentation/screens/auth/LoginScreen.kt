@@ -9,22 +9,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -35,17 +24,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.momoterminal.R
 import com.momoterminal.auth.AuthViewModel
 import com.momoterminal.presentation.components.CountryCodeSelector
 import com.momoterminal.presentation.components.MomoButton
@@ -71,8 +61,6 @@ fun LoginScreen(
     val events by viewModel.events.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val focusManager = LocalFocusManager.current
-
-    // Resend OTP countdown timer
     var resendCountdown by remember { mutableIntStateOf(0) }
     
     LaunchedEffect(resendCountdown) {
@@ -82,7 +70,6 @@ fun LoginScreen(
         }
     }
 
-    // Handle events
     LaunchedEffect(events) {
         when (events) {
             is AuthViewModel.AuthEvent.NavigateToHome -> {
@@ -101,7 +88,6 @@ fun LoginScreen(
         }
     }
 
-    // Show error in snackbar
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
             snackbarHostState.showSnackbar(it)
@@ -109,16 +95,13 @@ fun LoginScreen(
         }
     }
 
-    // Start countdown when OTP is sent
     LaunchedEffect(uiState.isOtpSent) {
         if (uiState.isOtpSent && resendCountdown == 0) {
-            resendCountdown = 60 // 60 seconds countdown
+            resendCountdown = 60
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
+    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -129,16 +112,15 @@ fun LoginScreen(
         ) {
             Spacer(modifier = Modifier.height(64.dp))
 
-            // App Logo/Title
             Text(
-                text = "MomoTerminal",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
                 color = MomoYellow
             )
 
             Text(
-                text = "Mobile Money POS",
+                text = stringResource(R.string.service_description),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -146,7 +128,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(64.dp))
 
             Text(
-                text = "Welcome Back",
+                text = stringResource(R.string.auth_login_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -154,14 +136,13 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = if (uiState.isOtpSent) "Enter OTP from WhatsApp" else "Sign in to continue",
+                text = if (uiState.isOtpSent) "Enter OTP from WhatsApp" else stringResource(R.string.auth_login_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Phone Number Input
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -175,7 +156,7 @@ fun LoginScreen(
                 MomoTextField(
                     value = uiState.phoneNumber,
                     onValueChange = viewModel::updatePhoneNumber,
-                    label = "Phone Number",
+                    label = stringResource(R.string.auth_phone_number),
                     placeholder = "78XXXXXXX",
                     modifier = Modifier.weight(1f),
                     singleLine = true,
@@ -197,11 +178,10 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // OTP Input (shown after OTP is sent)
             AnimatedVisibility(visible = uiState.isOtpSent) {
                 Column {
                     Text(
-                        text = "Enter 6-digit OTP",
+                        text = stringResource(R.string.enter_otp),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -216,7 +196,6 @@ fun LoginScreen(
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // Resend OTP button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
@@ -224,7 +203,7 @@ fun LoginScreen(
                     ) {
                         if (resendCountdown > 0) {
                             Text(
-                                text = "Resend code in ${resendCountdown}s",
+                                text = stringResource(R.string.reg_resend_countdown, resendCountdown),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -237,7 +216,7 @@ fun LoginScreen(
                                 enabled = !uiState.isLoading
                             ) {
                                 Text(
-                                    text = "Didn't receive code? Resend",
+                                    text = stringResource(R.string.resend_code),
                                     style = MaterialTheme.typography.labelLarge,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -247,10 +226,9 @@ fun LoginScreen(
                 }
             }
 
-            // Lockout warning
             AnimatedVisibility(visible = uiState.isLockedOut) {
                 Text(
-                    text = "Too many failed attempts. Please try again later.",
+                    text = stringResource(R.string.too_many_attempts),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(top = 8.dp)
@@ -259,15 +237,10 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Send OTP / Sign In Button
             MomoButton(
-                text = if (uiState.isOtpSent) "Sign In" else "Send OTP via WhatsApp",
+                text = stringResource(if (uiState.isOtpSent) R.string.auth_sign_in else R.string.send_otp),
                 onClick = {
-                    if (uiState.isOtpSent) {
-                        viewModel.login()
-                    } else {
-                        viewModel.requestOtp()
-                    }
+                    if (uiState.isOtpSent) viewModel.login() else viewModel.requestOtp()
                 },
                 enabled = !uiState.isLoading && 
                          uiState.phoneNumber.isNotBlank() && 
@@ -276,12 +249,10 @@ fun LoginScreen(
                 isLoading = uiState.isLoading
             )
 
-            // Biometric Login Option
             if (uiState.isBiometricAvailable && !uiState.isOtpSent) {
                 Spacer(modifier = Modifier.height(16.dp))
-
                 MomoButton(
-                    text = "Use Biometrics",
+                    text = stringResource(R.string.auth_use_biometrics),
                     onClick = viewModel::triggerBiometricAuth,
                     type = ButtonType.OUTLINE,
                     enabled = !uiState.isLoading
@@ -290,20 +261,19 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Register Link
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Don't have an account?",
+                    text = stringResource(R.string.auth_no_account),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 TextButton(onClick = onNavigateToRegister) {
                     Text(
-                        text = "Register",
+                        text = stringResource(R.string.auth_register),
                         fontWeight = FontWeight.SemiBold,
                         color = MomoYellow
                     )

@@ -3,10 +3,16 @@ package com.momoterminal.webhook
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Unit tests for HmacSigner.
+ * Uses Robolectric to provide Android Base64 implementation.
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(manifest = Config.NONE, sdk = [28])
 class HmacSignerTest {
     
     private lateinit var hmacSigner: HmacSigner

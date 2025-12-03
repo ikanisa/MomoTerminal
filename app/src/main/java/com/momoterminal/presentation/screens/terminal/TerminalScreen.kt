@@ -15,13 +15,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,9 +26,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.momoterminal.R
 import com.momoterminal.nfc.NfcState
 import com.momoterminal.presentation.components.MomoButton
 import com.momoterminal.presentation.components.ButtonType
@@ -41,7 +40,6 @@ import com.momoterminal.presentation.components.terminal.AmountKeypad
 import com.momoterminal.presentation.components.terminal.NfcPulseAnimation
 import com.momoterminal.presentation.components.terminal.ProviderSelector
 import com.momoterminal.presentation.theme.MomoTerminalTheme
-import com.momoterminal.presentation.theme.MomoYellow
 
 /**
  * Terminal screen for NFC payment.
@@ -54,14 +52,13 @@ fun TerminalScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val nfcState by viewModel.nfcState.collectAsState()
-    
     val isNfcActive = nfcState.isActive()
     val isSuccess = nfcState is NfcState.Success
     
     Scaffold(
         topBar = {
             MomoCenterTopAppBar(
-                title = "Payment Terminal",
+                title = stringResource(R.string.nav_terminal),
                 navigationIcon = if (!isNfcActive) Icons.AutoMirrored.Filled.ArrowBack else null,
                 onNavigationClick = if (!isNfcActive) onNavigateBack else null,
                 actions = {
@@ -69,7 +66,7 @@ fun TerminalScreen(
                         IconButton(onClick = { viewModel.cancelPayment() }) {
                             Icon(
                                 imageVector = Icons.Filled.Close,
-                                contentDescription = "Cancel",
+                                contentDescription = stringResource(R.string.cancel),
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
@@ -79,23 +76,19 @@ fun TerminalScreen(
         }
     ) { paddingValues ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+            modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
             AnimatedContent(
                 targetState = isNfcActive || isSuccess,
                 label = "terminal_content"
             ) { showNfcMode ->
                 if (showNfcMode) {
-                    // NFC Active Mode
                     NfcActiveContent(
                         nfcState = nfcState,
                         amount = uiState.amount,
                         onCancel = { viewModel.cancelPayment() }
                     )
                 } else {
-                    // Input Mode
                     InputContent(
                         uiState = uiState,
                         onDigitClick = viewModel::onDigitClick,
@@ -132,7 +125,7 @@ private fun InputContent(
         // Amount display
         AmountDisplay(
             amount = uiState.amount,
-            label = "Amount to Receive",
+            label = stringResource(R.string.amount_to_receive),
             isActive = uiState.amount.isNotEmpty()
         )
         
@@ -159,7 +152,7 @@ private fun InputContent(
         
         // Activate button
         MomoButton(
-            text = "Activate NFC",
+            text = stringResource(R.string.activate_nfc),
             onClick = onActivate,
             enabled = isValid
         )
@@ -167,7 +160,7 @@ private fun InputContent(
         if (!uiState.isConfigured) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Please configure merchant details in Settings",
+                text = stringResource(R.string.configure_merchant_details),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error
             )
@@ -194,7 +187,7 @@ private fun NfcActiveContent(
         // Amount display
         AmountDisplay(
             amount = amount,
-            label = if (isSuccess) "Payment Received" else "Amount",
+            label = stringResource(if (isSuccess) R.string.payment_received else R.string.amount_hint),
             isActive = true
         )
         
@@ -216,7 +209,7 @@ private fun NfcActiveContent(
             exit = fadeOut()
         ) {
             MomoButton(
-                text = "Cancel Payment",
+                text = stringResource(R.string.cancel_payment),
                 onClick = onCancel,
                 type = ButtonType.OUTLINE
             )

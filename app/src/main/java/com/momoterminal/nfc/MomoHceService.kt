@@ -178,11 +178,11 @@ class MomoHceService : HostApduService() {
                 val providerName = it.getStringExtra(EXTRA_PROVIDER) ?: "MTN"
                 
                 if (amount > 0 && merchantPhone.isNotEmpty()) {
-                    // Convert amount to pesewas (smallest currency unit)
-                    val amountInPesewas = (amount * 100).toLong()
+                    val amountInMinorUnits = (amount * 100).toLong()
                     currentPaymentData = NfcPaymentData(
                         merchantPhone = merchantPhone,
-                        amountInPesewas = amountInPesewas,
+                        amountInMinorUnits = amountInMinorUnits,
+                        currency = it.getStringExtra(EXTRA_CURRENCY) ?: "RWF",
                         provider = NfcPaymentData.Provider.fromString(providerName)
                     )
                     Log.d(TAG, "Payment data set: $currentPaymentData")
@@ -210,6 +210,7 @@ class MomoHceService : HostApduService() {
         const val EXTRA_AMOUNT = "extra_amount"
         const val EXTRA_MERCHANT_CODE = "extra_merchant_code"
         const val EXTRA_PROVIDER = "extra_provider"
+        const val EXTRA_CURRENCY = "extra_currency"
     }
 }
 

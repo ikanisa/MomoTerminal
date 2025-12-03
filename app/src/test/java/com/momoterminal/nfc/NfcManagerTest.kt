@@ -44,8 +44,8 @@ class NfcManagerTest {
     fun `NfcPaymentData isValid returns true for valid data`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amountInPesewas = 5000L, // 50 GHS
-            currency = "GHS",
+            amountInMinorUnits = 5000L, // 50 GHS
+            currency = "RWF",
             provider = NfcPaymentData.Provider.MTN
         )
         
@@ -56,8 +56,8 @@ class NfcManagerTest {
     fun `NfcPaymentData isValid returns false for empty merchant phone`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "",
-            amountInPesewas = 5000L,
-            currency = "GHS",
+            amountInMinorUnits = 5000L,
+            currency = "RWF",
             provider = NfcPaymentData.Provider.MTN
         )
         
@@ -68,8 +68,8 @@ class NfcManagerTest {
     fun `NfcPaymentData isValid returns false for zero amount`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amountInPesewas = 0L,
-            currency = "GHS",
+            amountInMinorUnits = 0L,
+            currency = "RWF",
             provider = NfcPaymentData.Provider.MTN
         )
         
@@ -80,8 +80,8 @@ class NfcManagerTest {
     fun `NfcPaymentData isValid returns false for negative amount`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amountInPesewas = -5000L,
-            currency = "GHS",
+            amountInMinorUnits = -5000L,
+            currency = "RWF",
             provider = NfcPaymentData.Provider.MTN
         )
         
@@ -92,8 +92,8 @@ class NfcManagerTest {
     fun `NfcPaymentData toPaymentUri generates correct URI format`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amountInPesewas = 5000L, // 50.00 GHS
-            currency = "GHS",
+            amountInMinorUnits = 5000L,
+            currency = "RWF",
             provider = NfcPaymentData.Provider.MTN
         )
         
@@ -101,69 +101,70 @@ class NfcManagerTest {
         assertThat(uri).startsWith("momo://pay?")
         assertThat(uri).contains("to=0244123456")
         assertThat(uri).contains("amount=50.00")
-        assertThat(uri).contains("currency=GHS")
+        assertThat(uri).contains("currency=RWF")
         assertThat(uri).contains("provider=MTN")
     }
 
     @Test
-    fun `NfcPaymentData toUssdString generates correct MTN USSD`() {
+    fun `NfcPaymentData toUssdString generates valid USSD`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amountInPesewas = 5000L, // 50.00 GHS
-            currency = "GHS",
+            amountInMinorUnits = 5000L,
+            currency = "RWF",
             provider = NfcPaymentData.Provider.MTN
         )
         
         val ussd = paymentData.toUssdString()
         assertThat(ussd).startsWith("tel:")
-        assertThat(ussd).contains("*170*")
         assertThat(ussd).contains("0244123456")
         assertThat(ussd).contains("50.00")
     }
 
     @Test
-    fun `NfcPaymentData toUssdString generates correct Vodafone USSD`() {
+    fun `NfcPaymentData toUssdString contains merchant phone`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0201234567",
-            amountInPesewas = 10000L, // 100.00 GHS
-            currency = "GHS",
+            amountInMinorUnits = 10000L,
+            currency = "RWF",
             provider = NfcPaymentData.Provider.VODAFONE
         )
         
         val ussd = paymentData.toUssdString()
         assertThat(ussd).startsWith("tel:")
-        assertThat(ussd).contains("*110*")
+        assertThat(ussd).contains("0201234567")
     }
 
     @Test
-    fun `NfcPaymentData toUssdString generates correct AirtelTigo USSD`() {
+    fun `NfcPaymentData toUssdString contains formatted amount`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0271234567",
-            amountInPesewas = 7500L, // 75.00 GHS
-            currency = "GHS",
-            provider = NfcPaymentData.Provider.AIRTEL_TIGO
+            amountInMinorUnits = 7500L,
+            currency = "RWF",
+            provider = NfcPaymentData.Provider.AIRTEL
         )
         
         val ussd = paymentData.toUssdString()
         assertThat(ussd).startsWith("tel:")
-        assertThat(ussd).contains("*500*")
+        assertThat(ussd).contains("75.00")
     }
 
     @Test
-    fun `NfcPaymentData default currency is GHS`() {
+    fun `NfcPaymentData currency is set correctly`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amountInPesewas = 5000L
+            amountInMinorUnits = 5000L,
+            currency = "RWF"
         )
         
-        assertThat(paymentData.currency).isEqualTo("GHS")
+        assertThat(paymentData.currency).isEqualTo("RWF")
     }
 
     @Test
     fun `NfcPaymentData default provider is MTN`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amountInPesewas = 5000L
+            amountInMinorUnits = 5000L,
+            currency = "RWF"
         )
         
         assertThat(paymentData.provider).isEqualTo(NfcPaymentData.Provider.MTN)
@@ -175,7 +176,8 @@ class NfcManagerTest {
         
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amountInPesewas = 5000L
+            amountInMinorUnits = 5000L,
+            currency = "RWF"
         )
         
         val afterTime = System.currentTimeMillis()
@@ -193,8 +195,8 @@ class NfcManagerTest {
     fun `NfcState Active contains payment data`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amountInPesewas = 5000L,
-            currency = "GHS",
+            amountInMinorUnits = 5000L,
+            currency = "RWF",
             provider = NfcPaymentData.Provider.MTN
         )
         
@@ -233,7 +235,8 @@ class NfcManagerTest {
     fun `NfcPaymentData with reference includes it in URI`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amountInPesewas = 5000L,
+            amountInMinorUnits = 5000L,
+            currency = "RWF",
             reference = "REF123"
         )
         
@@ -245,7 +248,8 @@ class NfcManagerTest {
     fun `NfcPaymentData without reference omits it from URI`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amountInPesewas = 5000L,
+            amountInMinorUnits = 5000L,
+            currency = "RWF",
             reference = null
         )
         
@@ -254,19 +258,20 @@ class NfcManagerTest {
     }
     
     @Test
-    fun `NfcPaymentData getDisplayAmount converts pesewas to GHS`() {
+    fun `NfcPaymentData getDisplayAmount converts minor units to main`() {
         val paymentData = NfcPaymentData(
             merchantPhone = "0244123456",
-            amountInPesewas = 12345L
+            amountInMinorUnits = 12345L,
+            currency = "RWF"
         )
         
         assertThat(paymentData.getDisplayAmount()).isWithin(0.001).of(123.45)
     }
     
     @Test
-    fun `NfcPaymentData toPesewas converts GHS to pesewas`() {
-        assertThat(NfcPaymentData.toPesewas(50.00)).isEqualTo(5000L)
-        assertThat(NfcPaymentData.toPesewas(123.45)).isEqualTo(12345L)
+    fun `NfcPaymentData toMinorUnits converts correctly`() {
+        assertThat(NfcPaymentData.toMinorUnits(50.00)).isEqualTo(5000L)
+        assertThat(NfcPaymentData.toMinorUnits(123.45)).isEqualTo(12345L)
     }
 }
 
@@ -306,11 +311,5 @@ class NfcPaymentDataProviderTest {
             assertThat(provider.colorHex).startsWith("#")
             assertThat(provider.colorHex).hasLength(7)
         }
-    }
-
-    @Test
-    fun `all providers have unique USSD prefixes`() {
-        val prefixes = NfcPaymentData.Provider.entries.map { it.ussdPrefix }
-        assertThat(prefixes.toSet()).hasSize(NfcPaymentData.Provider.entries.size)
     }
 }

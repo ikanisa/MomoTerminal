@@ -51,6 +51,27 @@ class AppConfig(context: Context) {
     fun getMerchantPhone(): String {
         return prefs.getString(KEY_MERCHANT_PHONE, "") ?: ""
     }
+
+    /**
+     * Save the country code.
+     */
+    fun saveCountryCode(countryCode: String) {
+        prefs.edit().putString(KEY_COUNTRY_CODE, countryCode).apply()
+    }
+
+    /**
+     * Get the configured country code.
+     */
+    fun getCountryCode(): String {
+        return prefs.getString(KEY_COUNTRY_CODE, "GH") ?: "GH"
+    }
+
+    /**
+     * Get the currency for the configured country.
+     */
+    fun getCurrency(): String {
+        return SupportedCountries.getCurrencyForCountry(getCountryCode())
+    }
     
     /**
      * Check if the app has been configured.
@@ -71,6 +92,7 @@ class AppConfig(context: Context) {
         private const val KEY_GATEWAY_URL = "gateway_url"
         private const val KEY_API_SECRET = "api_secret"
         private const val KEY_MERCHANT_PHONE = "merchant_phone"
+        private const val KEY_COUNTRY_CODE = "country_code"
         private const val KEY_IS_CONFIGURED = "is_configured"
     }
 }

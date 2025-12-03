@@ -120,10 +120,12 @@ fun MomoTerminalApp(
         }
     }
     
-    // Determine if we should show bottom nav (only for main screens when authenticated)
-    val showBottomNav = isAuthenticated && Screen.bottomNavItems.any { screen ->
+    // Determine if we should show bottom nav (show for main screens)
+    // Show bottom nav on main screens regardless of auth state for better UX
+    val isOnMainScreen = Screen.bottomNavItems.any { screen ->
         currentDestination?.hierarchy?.any { it.route == screen.route } == true
     }
+    val showBottomNav = isOnMainScreen || (isAuthenticated && !Screen.isAuthScreen(currentDestination?.route))
     
     Surface(
         modifier = Modifier.fillMaxSize(),

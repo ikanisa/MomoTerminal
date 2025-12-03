@@ -91,9 +91,13 @@ class TransactionsViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
         
         viewModel.refresh()
+        testDispatcher.scheduler.runCurrent()
+        
+        // isRefreshing should be true immediately after refresh
         assertThat(viewModel.uiState.value.isRefreshing).isTrue()
         
-        advanceTimeBy(1500)
+        // Advance time to complete the refresh delay
+        advanceTimeBy(2000)
         testDispatcher.scheduler.advanceUntilIdle()
         
         assertThat(viewModel.uiState.value.isRefreshing).isFalse()
@@ -104,6 +108,7 @@ class TransactionsViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
         
         viewModel.refresh()
+        testDispatcher.scheduler.runCurrent()
         
         verify { syncManager.enqueueSyncNow() }
     }

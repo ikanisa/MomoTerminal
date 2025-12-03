@@ -19,6 +19,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -72,26 +73,26 @@ class AuthViewModelTest {
 
     @Test
     fun `updatePhoneNumber updates state and formats number`() = runTest {
-        // When - update with a valid Rwanda number
-        viewModel.updatePhoneNumber("0788767816")
+        // When - update with a valid Rwanda number (raw digits without country code)
+        viewModel.updatePhoneNumber("788767816")
         testDispatcher.scheduler.advanceUntilIdle()
 
-        // Then
-        assertEquals("0788767816", viewModel.uiState.value.phoneNumber)
+        // Then - phoneNumber stores raw input, formattedPhoneNumber has E.164 format
+        assertEquals("788767816", viewModel.uiState.value.phoneNumber)
         assertEquals("+250788767816", viewModel.uiState.value.formattedPhoneNumber)
         assertNull(viewModel.uiState.value.phoneNumberError)
     }
 
     @Test
     fun `updatePhoneNumber shows error for invalid number`() = runTest {
-        // When - update with an invalid number
-        viewModel.updatePhoneNumber("abc")
+        // When - update with an invalid number (too short)
+        viewModel.updatePhoneNumber("123")
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Then
-        assertEquals("abc", viewModel.uiState.value.phoneNumber)
-        assertEquals("", viewModel.uiState.value.formattedPhoneNumber)
+        assertEquals("123", viewModel.uiState.value.phoneNumber)
         // Error should be shown for non-empty invalid numbers
+        assertNotNull(viewModel.uiState.value.phoneNumberError)
     }
 
     @Test
@@ -134,9 +135,8 @@ class AuthViewModelTest {
 
     @Test
     fun `login fails with invalid OTP length`() = runTest {
-        // Given
-        viewModel.updatePhoneNumber("+250788123456")
-        viewModel.updatePhoneNumber("0788767816")
+        // Given - use valid phone number (9 digits without leading 0)
+        viewModel.updatePhoneNumber("788767816")
         viewModel.updateOtpCode("123") // Only 3 digits
         testDispatcher.scheduler.advanceUntilIdle()
 
@@ -162,8 +162,7 @@ class AuthViewModelTest {
             AuthRepository.AuthResult.Success(authResponse)
         )
 
-        viewModel.updatePhoneNumber("+250788123456")
-        viewModel.updatePhoneNumber("0788767816")
+        viewModel.updatePhoneNumber("788767816")
         viewModel.updateOtpCode("123456")
         testDispatcher.scheduler.advanceUntilIdle()
 
@@ -188,8 +187,7 @@ class AuthViewModelTest {
             AuthRepository.AuthResult.Error("Invalid OTP")
         )
 
-        viewModel.updatePhoneNumber("+250788123456")
-        viewModel.updatePhoneNumber("0788767816")
+        viewModel.updatePhoneNumber("788767816")
         viewModel.updateOtpCode("123456")
         testDispatcher.scheduler.advanceUntilIdle()
 
@@ -210,13 +208,13 @@ class AuthViewModelTest {
             AuthRepository.AuthResult.Error("Invalid OTP")
         )
 
-        viewModel.updatePhoneNumber("+250788123456")
-        viewModel.updatePhoneNumber("0788767816")
-        viewModel.updateOtpCode("123456")
+        viewModel.updatePhoneNumber("788767816")
         testDispatcher.scheduler.advanceUntilIdle()
 
-        // When - fail 3 times
+        // When - fail 3 times (re-set OTP code before each attempt since it's cleared on failure)
         repeat(3) {
+            viewModel.updateOtpCode("123456")
+            testDispatcher.scheduler.advanceUntilIdle()
             viewModel.login()
             testDispatcher.scheduler.advanceUntilIdle()
         }
@@ -229,8 +227,7 @@ class AuthViewModelTest {
     @Test
     fun `logout clears state and navigates to login`() = runTest {
         // Given - set up authenticated state
-        viewModel.updatePhoneNumber("+250788123456")
-        viewModel.updatePhoneNumber("0788767816")
+        viewModel.updatePhoneNumber("788767816")
         testDispatcher.scheduler.advanceUntilIdle()
 
         // When
@@ -357,7 +354,7 @@ class AuthViewModelTest {
     @Test
     fun `changePhoneNumber resets OTP state and goes to phone entry`() = runTest {
         // Given - simulate having sent OTP
-        viewModel.updatePhoneNumber("0788767816")
+        viewModel.updatePhoneNumber("788767816")
         viewModel.nextRegistrationStep() // Move to OTP step
         testDispatcher.scheduler.advanceUntilIdle()
         

@@ -147,14 +147,14 @@ class GeminiConfigTest {
     fun `prompt contains required fields`() {
         val prompt = GeminiConfig.TRANSACTION_EXTRACTION_PROMPT
         
-        assertThat(prompt).contains("amount_in_pesewas")
+        assertThat(prompt).contains("amount_in_minor_units")
         assertThat(prompt).contains("currency")
         assertThat(prompt).contains("sender_phone")
         assertThat(prompt).contains("recipient_phone")
         assertThat(prompt).contains("transaction_id")
         assertThat(prompt).contains("transaction_type")
         assertThat(prompt).contains("provider")
-        assertThat(prompt).contains("balance_in_pesewas")
+        assertThat(prompt).contains("balance_in_minor_units")
     }
 
     @Test

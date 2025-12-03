@@ -19,7 +19,7 @@ class PhoneNumberValidatorTest {
         val result = PhoneNumberValidator.validate("")
         
         assertFalse(result.isValid)
-        assertEquals("Phone number is required", result.errorMessage)
+        assertEquals("Phone number cannot be empty", result.errorMessage)
         assertNull(result.formattedNumber)
     }
 

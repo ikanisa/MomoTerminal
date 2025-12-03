@@ -184,8 +184,11 @@ data class Money(
          * @return Money instance with amount converted to smallest unit
          */
         fun fromMajorUnits(amount: Double, currency: Currency = Currency.GHS): Money {
-            val divisor = BigDecimal.TEN.pow(currency.decimals).toDouble()
-            val smallestUnit = kotlin.math.round(amount * divisor).toLong()
+            val divisor = BigDecimal.TEN.pow(currency.decimals)
+            val smallestUnit = BigDecimal.valueOf(amount)
+                .multiply(divisor)
+                .setScale(0, RoundingMode.HALF_UP)
+                .toLong()
             return Money(smallestUnit, currency)
         }
 

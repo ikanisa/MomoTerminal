@@ -1,6 +1,11 @@
 package com.momoterminal.presentation.screens.home
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,435 +15,245 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.outlined.Nfc
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.outlined.Nfc
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.momoterminal.data.local.entity.TransactionEntity
+import com.momoterminal.R
+import com.momoterminal.nfc.NfcPaymentData
 import com.momoterminal.nfc.NfcState
 import com.momoterminal.presentation.components.MomoButton
 import com.momoterminal.presentation.components.ButtonType
 import com.momoterminal.presentation.components.common.MomoTopAppBar
 import com.momoterminal.presentation.components.status.NfcStatusIndicator
 import com.momoterminal.presentation.components.status.SyncStatusBadge
-import com.momoterminal.presentation.components.transaction.TransactionCard
+import com.momoterminal.presentation.components.terminal.AmountDisplay
+import com.momoterminal.presentation.components.terminal.AmountKeypad
+import com.momoterminal.presentation.components.terminal.NfcPulseAnimation
+import com.momoterminal.presentation.components.terminal.ProviderSelector
 import com.momoterminal.presentation.theme.MomoTerminalTheme
 import com.momoterminal.presentation.theme.MomoYellow
 
 /**
- * Home screen (Dashboard).
+ * Unified Home screen with integrated payment terminal.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onNavigateToTerminal: () -> Unit,
+    onNavigateToTerminal: () -> Unit = {},
     onNavigateToTransactions: () -> Unit,
     onNavigateToSettings: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val nfcState by viewModel.nfcState.collectAsState()
-    
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    
+    val isNfcActive = nfcState.isActive()
+    val isSuccess = nfcState is NfcState.Success
+
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             MomoTopAppBar(
-                title = "MoMo Terminal",
+                title = stringResource(R.string.app_name),
                 actions = {
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(
-                            imageVector = Icons.Filled.Settings,
-                            contentDescription = "Settings"
-                        )
+                    if (isNfcActive) {
+                        IconButton(onClick = { viewModel.cancelPayment() }) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = stringResource(R.string.cancel),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    } else {
+                        IconButton(onClick = onNavigateToTransactions) {
+                            Icon(Icons.Filled.History, contentDescription = stringResource(R.string.nav_history))
+                        }
+                        IconButton(onClick = onNavigateToSettings) {
+                            Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.action_settings))
+                        }
                     }
                 }
             )
         }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
         ) {
-            // Status bar
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                NfcStatusIndicator(
-                    isEnabled = nfcState !is NfcState.Disabled && nfcState !is NfcState.NotSupported,
-                    isActive = nfcState.isActive()
-                )
-                
-                SyncStatusBadge(pendingCount = uiState.pendingCount)
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // Analytics Cards
-            Text(
-                text = "Today's Overview",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Today's Revenue Card
-                AnalyticsCard(
-                    title = "Today's Revenue",
-                    value = "RWF ${formatAmount(uiState.todayRevenue)}",
-                    subtitle = "${uiState.todayTransactionCount} transactions",
-                    modifier = Modifier.weight(1f)
-                )
-                
-                // Success Rate Card
-                AnalyticsCard(
-                    title = "Success Rate",
-                    value = "${String.format("%.1f", uiState.successRate)}%",
-                    subtitle = "Last 7 days",
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Weekly Revenue Card
-                AnalyticsCard(
-                    title = "Weekly Revenue",
-                    value = "RWF ${formatAmount(uiState.weeklyRevenue)}",
-                    subtitle = "Last 7 days",
-                    modifier = Modifier.weight(1f)
-                )
-                
-                // Failed Transactions Alert
-                if (uiState.failedCount > 0) {
-                    Card(
-                        modifier = Modifier.weight(1f),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Warning,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Failed",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onErrorContainer
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "${uiState.failedCount}",
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                            Text(
-                                text = "Need attention",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        }
-                    }
+            AnimatedContent(
+                targetState = isNfcActive || isSuccess,
+                label = "home_content"
+            ) { showNfcMode ->
+                if (showNfcMode) {
+                    NfcActiveContent(
+                        nfcState = nfcState,
+                        amount = uiState.amount,
+                        currency = uiState.currency,
+                        onCancel = { viewModel.cancelPayment() }
+                    )
                 } else {
-                    AnalyticsCard(
-                        title = "Status",
-                        value = "All Good",
-                        subtitle = "No failed transactions",
-                        modifier = Modifier.weight(1f)
+                    PaymentInputContent(
+                        uiState = uiState,
+                        nfcState = nfcState,
+                        onDigitClick = viewModel::onDigitClick,
+                        onBackspaceClick = viewModel::onBackspaceClick,
+                        onClearClick = viewModel::onClearClick,
+                        onProviderSelected = viewModel::onProviderSelected,
+                        onActivate = viewModel::activatePayment,
+                        onNavigateToSettings = onNavigateToSettings,
+                        isValid = viewModel.isAmountValid() && viewModel.isNfcAvailable()
                     )
                 }
             }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // Configuration warning
-            if (!uiState.isConfigured) {
-                ConfigurationWarningCard(
-                    onConfigureClick = onNavigateToSettings
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            
-            // Quick action - Start Payment
-            QuickActionCard(
-                title = "Start NFC Payment",
-                description = "Accept mobile money payments via NFC tap",
-                icon = Icons.Outlined.Nfc,
-                onClick = onNavigateToTerminal,
-                enabled = uiState.isConfigured
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // Recent transactions section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Recent Transactions",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                
-                MomoButton(
-                    text = "View All",
-                    onClick = onNavigateToTransactions,
-                    type = ButtonType.OUTLINE,
-                    modifier = Modifier.height(36.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            if (uiState.recentTransactions.isEmpty()) {
-                EmptyTransactionsCard()
-            } else {
-                uiState.recentTransactions.take(3).forEach { transaction ->
-                    TransactionCard(
-                        transaction = transaction,
-                        onClick = { /* Navigate to detail */ }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
         }
     }
 }
 
 @Composable
-private fun ConfigurationWarningCard(
-    onConfigureClick: () -> Unit
+private fun PaymentInputContent(
+    uiState: HomeViewModel.HomeUiState,
+    nfcState: NfcState,
+    onDigitClick: (String) -> Unit,
+    onBackspaceClick: () -> Unit,
+    onClearClick: () -> Unit,
+    onProviderSelected: (NfcPaymentData.Provider) -> Unit,
+    onActivate: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+    isValid: Boolean
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Compact status row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Filled.Warning,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.error,
-                modifier = Modifier.size(24.dp)
+            NfcStatusIndicator(
+                isEnabled = nfcState !is NfcState.Disabled && nfcState !is NfcState.NotSupported,
+                isActive = false
             )
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Setup Required",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onErrorContainer
-                )
-                Text(
-                    text = "Configure your merchant details to start accepting payments",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
-                )
-            }
-            
-            MomoButton(
-                text = "Setup",
-                onClick = onConfigureClick,
-                modifier = Modifier.height(40.dp),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)
-            )
+            SyncStatusBadge(pendingCount = uiState.pendingCount)
         }
-    }
-}
 
-@Composable
-private fun QuickActionCard(
-    title: String,
-    description: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit,
-    enabled: Boolean = true
-) {
-    Card(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (enabled) MomoYellow.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                modifier = Modifier.size(56.dp),
-                shape = MaterialTheme.shapes.medium,
-                color = if (enabled) MomoYellow else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.padding(12.dp),
-                    tint = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = null,
-                tint = if (enabled) MomoYellow else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun EmptyTransactionsCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = Icons.Filled.History,
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
-            
+        // Configuration warning
+        if (!uiState.isConfigured) {
+            ConfigurationBanner(onConfigureClick = onNavigateToSettings)
             Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "No transactions yet",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
         }
+
+        // Today's summary (compact)
+        TodaySummaryRow(
+            revenue = uiState.todayRevenue,
+            count = uiState.todayTransactionCount,
+            currency = uiState.currency
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Amount display
+        AmountDisplay(
+            amount = uiState.amount,
+            currency = uiState.currency,
+            label = stringResource(R.string.amount_to_receive),
+            isActive = uiState.amount.isNotEmpty()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Provider selector
+        ProviderSelector(
+            selectedProvider = uiState.selectedProvider,
+            onProviderSelected = onProviderSelected,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Keypad
+        AmountKeypad(
+            onDigitClick = onDigitClick,
+            onBackspaceClick = onBackspaceClick,
+            onClearClick = onClearClick,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Activate NFC button
+        MomoButton(
+            text = stringResource(R.string.activate_nfc),
+            onClick = onActivate,
+            enabled = isValid,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
 @Composable
-private fun AnalyticsCard(
-    title: String,
-    value: String,
-    subtitle: String,
-    modifier: Modifier = Modifier
+private fun TodaySummaryRow(
+    revenue: Double,
+    count: Int,
+    currency: String
 ) {
     Card(
-        modifier = modifier,
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
         )
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            Column {
+                Text(
+                    text = stringResource(R.string.today),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "$currency ${formatAmount(revenue)}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
             Text(
-                text = title,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = subtitle,
+                text = "$count ${stringResource(R.string.transactions).lowercase()}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -446,16 +261,92 @@ private fun AnalyticsCard(
     }
 }
 
-private fun formatAmount(amount: Double): String {
-    return String.format("%,.0f", amount)
+@Composable
+private fun ConfigurationBanner(onConfigureClick: () -> Unit) {
+    Card(
+        onClick = onConfigureClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Warning,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.tap_to_configure),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
 }
+
+@Composable
+private fun NfcActiveContent(
+    nfcState: NfcState,
+    amount: String,
+    currency: String,
+    onCancel: () -> Unit
+) {
+    val isSuccess = nfcState is NfcState.Success
+    val message = nfcState.getDisplayMessage()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        AmountDisplay(
+            amount = amount,
+            currency = currency,
+            label = if (isSuccess) stringResource(R.string.payment_received) else stringResource(R.string.amount),
+            isActive = true
+        )
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        NfcPulseAnimation(
+            isActive = nfcState.isActive(),
+            isSuccess = isSuccess,
+            message = message
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        AnimatedVisibility(
+            visible = !isSuccess,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            MomoButton(
+                text = stringResource(R.string.cancel_payment),
+                onClick = onCancel,
+                type = ButtonType.OUTLINE,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+private fun formatAmount(amount: Double): String = String.format("%,.0f", amount)
 
 @Preview(showBackground = true)
 @Composable
 private fun HomeScreenPreview() {
     MomoTerminalTheme {
         HomeScreen(
-            onNavigateToTerminal = {},
             onNavigateToTransactions = {},
             onNavigateToSettings = {}
         )

@@ -13,15 +13,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,7 +26,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,10 +36,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.momoterminal.R
 import com.momoterminal.presentation.theme.MomoYellow
 
 /**
@@ -54,8 +51,8 @@ import com.momoterminal.presentation.theme.MomoYellow
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PinScreen(
-    title: String = "Enter PIN",
-    subtitle: String = "Enter your 6-digit PIN to continue",
+    title: String? = null,
+    subtitle: String? = null,
     onPinEntered: (String) -> Unit,
     onCancel: () -> Unit,
     onBiometricClick: (() -> Unit)? = null,
@@ -92,7 +89,7 @@ fun PinScreen(
                     IconButton(onClick = onCancel) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Cancel"
+                            contentDescription = stringResource(R.string.cancel)
                         )
                     }
                 }
@@ -110,7 +107,7 @@ fun PinScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = title,
+                text = title ?: stringResource(R.string.pin_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -118,7 +115,7 @@ fun PinScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = subtitle,
+                text = subtitle ?: stringResource(R.string.pin_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -128,7 +125,7 @@ fun PinScreen(
             if (currentAttempts > 0) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Attempts remaining: ${maxAttempts - currentAttempts}",
+                    text = stringResource(R.string.pin_attempts_left, maxAttempts - currentAttempts),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error
                 )
@@ -236,7 +233,7 @@ private fun NumberPad(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Fingerprint,
-                                        contentDescription = "Biometric",
+                                        contentDescription = null,
                                         modifier = Modifier.size(28.dp),
                                         tint = MaterialTheme.colorScheme.primary
                                     )
@@ -252,7 +249,7 @@ private fun NumberPad(
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.Backspace,
-                                    contentDescription = "Backspace",
+                                    contentDescription = null,
                                     modifier = Modifier.size(28.dp)
                                 )
                             }

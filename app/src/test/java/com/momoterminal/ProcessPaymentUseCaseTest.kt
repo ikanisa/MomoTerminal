@@ -10,6 +10,11 @@ import org.junit.Test
 
 /**
  * Unit tests for ProcessPaymentUseCase.
+ * 
+ * Note: USSD prefixes are defined in Provider enum:
+ * - MTN: *182*8*1*
+ * - VODAFONE: *110*1*
+ * - AIRTELTIGO: *500*1*
  */
 class ProcessPaymentUseCaseTest {
     
@@ -30,8 +35,8 @@ class ProcessPaymentUseCaseTest {
         
         assertTrue(result is Result.Success)
         val data = (result as Result.Success).data
-        assertEquals("*170*1*1*0244123456*50.00#", data.ussdCode)
-        assertEquals("tel:*170*1*1*0244123456*50.00#", data.dialString)
+        assertEquals("*182*8*1*0244123456*50.00#", data.ussdCode)
+        assertEquals("tel:*182*8*1*0244123456*50.00#", data.dialString)
         assertEquals(Provider.MTN, data.provider)
     }
     
