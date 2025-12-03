@@ -89,7 +89,7 @@ class AppConfig(context: Context) {
     // Get provider for the mobile money country
     fun getMomoProvider(): String {
         val countryCode = getMomoCountryCode().ifBlank { getProfileCountryCode() }
-        return SupportedCountries.getByCode(countryCode)?.providers?.firstOrNull() ?: "MTN"
+        return SupportedCountries.getPrimaryProviderForCountry(countryCode)
     }
 
     fun getAuthPhone(): String = prefs.getString(KEY_AUTH_PHONE, "") ?: ""

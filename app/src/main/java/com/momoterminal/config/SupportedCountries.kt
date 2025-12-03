@@ -5,6 +5,9 @@ package com.momoterminal.config
  * 
  * Target markets: Sub-Saharan French and English speaking countries
  * Excluded: Uganda (UG), Kenya (KE), Nigeria (NG), South Africa (ZA)
+ * 
+ * Note: Each country has ONE authorized mobile money provider.
+ * The primary provider from the list is used for transactions.
  */
 object SupportedCountries {
     
@@ -16,8 +19,53 @@ object SupportedCountries {
         val currencySymbol: String,
         val phonePrefix: String,
         val language: String,    // Primary language
-        val providers: List<String>
-    )
+        val providers: List<String>  // Legacy: list of providers, first is primary
+    ) {
+        /**
+         * Get the primary (authorized) provider for this country.
+         */
+        val primaryProvider: String get() = providers.firstOrNull() ?: "MTN"
+        
+        /**
+         * Get display name for the primary provider.
+         */
+        val providerDisplayName: String get() = getProviderDisplayName(primaryProvider)
+    }
+    
+    /**
+     * Get display name for a provider code.
+     */
+    fun getProviderDisplayName(providerCode: String): String {
+        return when (providerCode.uppercase()) {
+            "MTN" -> "MTN MoMo"
+            "AIRTEL" -> "Airtel Money"
+            "VODACOM" -> "M-Pesa"
+            "VODAFONE" -> "Vodafone Cash"
+            "ORANGE" -> "Orange Money"
+            "TIGO" -> "Tigo Pesa"
+            "WAVE" -> "Wave"
+            "MOOV" -> "Moov Money"
+            "ECOCASH" -> "EcoCash"
+            "TMONEY" -> "T-Money"
+            "MVOLA" -> "MVola"
+            "LUMICASH" -> "LumiCash"
+            "TOGOCEL" -> "Flooz"
+            "FREE" -> "Free Money"
+            "TNM" -> "TNM Mpamba"
+            "MASCOM" -> "MyZaka"
+            "MTC" -> "MTC MoMo"
+            "ECONET" -> "EcoCash"
+            "AFRICELL" -> "Africell Money"
+            "QCELL" -> "QMoney"
+            "HALOTEL" -> "Halopesa"
+            "ZAMTEL" -> "Zamtel Kwacha"
+            "MOVITEL" -> "M-Pesa"
+            "TELECEL" -> "Telecel Money"
+            "ONEMONEY" -> "OneMoney"
+            "AIRTELTIGO" -> "AirtelTigo Money"
+            else -> providerCode
+        }
+    }
     
     // Primary launch countries
     val RWANDA = Country(
@@ -29,13 +77,13 @@ object SupportedCountries {
     val DR_CONGO = Country(
         code = "CD", name = "DR Congo", nameLocal = "RD Congo",
         currency = "CDF", currencySymbol = "FC", phonePrefix = "+243",
-        language = "fr", providers = listOf("VODACOM", "AIRTEL", "ORANGE")
+        language = "fr", providers = listOf("ORANGE", "VODACOM", "AIRTEL")
     )
     
     val BURUNDI = Country(
         code = "BI", name = "Burundi", nameLocal = "Burundi",
         currency = "BIF", currencySymbol = "FBu", phonePrefix = "+257",
-        language = "fr", providers = listOf("LUMICASH", "ECOCASH")
+        language = "fr", providers = listOf("ECOCASH", "LUMICASH")
     )
     
     val TANZANIA = Country(
@@ -96,7 +144,7 @@ object SupportedCountries {
     val TOGO = Country(
         code = "TG", name = "Togo", nameLocal = "Togo",
         currency = "XOF", currencySymbol = "CFA", phonePrefix = "+228",
-        language = "fr", providers = listOf("TOGOCEL", "MOOV")
+        language = "fr", providers = listOf("TMONEY", "MOOV")
     )
     
     val GUINEA = Country(
@@ -233,4 +281,7 @@ object SupportedCountries {
 
     // Get currency for country code
     fun getCurrencyForCountry(code: String): String = getByCode(code)?.currency ?: "GHS"
+    
+    // Get primary provider for country code
+    fun getPrimaryProviderForCountry(code: String): String = getByCode(code)?.primaryProvider ?: "MTN"
 }

@@ -131,13 +131,12 @@ class SettingsViewModel @Inject constructor(
 
     fun updateMomoCountryCode(code: String) {
         val country = SupportedCountries.getByCode(code)
-        val providerName = country?.providers?.firstOrNull() ?: "MTN"
         
         _uiState.value = _uiState.value.copy(
             momoCountryCode = code,
             momoCountryName = country?.name ?: "Rwanda",
             momoCurrency = country?.currency ?: "RWF",
-            momoProviderName = getProviderDisplayName(providerName),
+            momoProviderName = country?.providerDisplayName ?: "MTN MoMo",
             countryCode = code
         )
         appConfig.saveMomoCountryCode(code)

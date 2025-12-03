@@ -569,7 +569,7 @@ private fun MomoCountryPickerDialog(
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                                 )
                                 Text(
-                                    text = "${country.providers.firstOrNull() ?: ""} • ${country.currency}",
+                                    text = "${country.providerDisplayName} • ${country.currency}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
