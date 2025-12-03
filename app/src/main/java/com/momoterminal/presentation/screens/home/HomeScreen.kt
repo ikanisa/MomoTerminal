@@ -146,38 +146,15 @@ private fun PaymentInputContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Compact status row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            NfcStatusIndicator(
-                isEnabled = nfcState !is NfcState.Disabled && nfcState !is NfcState.NotSupported,
-                isActive = false
-            )
-            SyncStatusBadge(pendingCount = uiState.pendingCount)
-        }
-
         // Configuration warning
         if (!uiState.isConfigured) {
             ConfigurationBanner(onConfigureClick = onNavigateToSettings)
             Spacer(modifier = Modifier.height(8.dp))
         }
-
-        // Today's summary (compact)
-        TodaySummaryRow(
-            revenue = uiState.todayRevenue,
-            count = uiState.todayTransactionCount,
-            currency = uiState.currency
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         // Amount display
         AmountDisplay(
@@ -187,7 +164,7 @@ private fun PaymentInputContent(
             isActive = uiState.amount.isNotEmpty()
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Provider selector
         ProviderSelector(
@@ -206,7 +183,7 @@ private fun PaymentInputContent(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Activate NFC button
         MomoButton(

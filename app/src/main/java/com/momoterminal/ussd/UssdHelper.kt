@@ -15,18 +15,20 @@ object UssdHelper {
      * Note: USSD codes vary by country and provider. This is a generic implementation.
      */
     fun generateUssdCode(provider: NfcPaymentData.Provider, merchantCode: String, amount: Double): String {
-        val formattedAmount = "%.2f".format(amount)
+        val formattedAmount = "%.0f".format(amount) // Whole numbers for most African MoMo
         
-        // Generic USSD format - actual codes depend on country/provider
         return when (provider) {
-            NfcPaymentData.Provider.MTN -> "*170*1*1*$merchantCode*$formattedAmount#"
+            NfcPaymentData.Provider.MTN -> "*182*8*1*$merchantCode*$formattedAmount#"
             NfcPaymentData.Provider.VODAFONE -> "*110*1*$merchantCode*$formattedAmount#"
-            NfcPaymentData.Provider.VODACOM -> "*150*00#" // M-Pesa varies by country
-            NfcPaymentData.Provider.AIRTEL -> "*500*1*$merchantCode*$formattedAmount#"
-            NfcPaymentData.Provider.ORANGE -> "*144#"
-            NfcPaymentData.Provider.TIGO -> "*150*01#"
-            NfcPaymentData.Provider.WAVE -> "*228#"
-            NfcPaymentData.Provider.MOOV -> "*155#"
+            NfcPaymentData.Provider.VODACOM -> "*150*00*$merchantCode*$formattedAmount#"
+            NfcPaymentData.Provider.AIRTEL -> "*211*$merchantCode*$formattedAmount#"
+            NfcPaymentData.Provider.ORANGE -> "*144*4*$merchantCode*$formattedAmount#"
+            NfcPaymentData.Provider.TIGO -> "*150*01*$merchantCode*$formattedAmount#"
+            NfcPaymentData.Provider.WAVE -> "*228*$merchantCode*$formattedAmount#"
+            NfcPaymentData.Provider.MOOV -> "*900*4*$merchantCode*$formattedAmount#"
+            NfcPaymentData.Provider.ECOCASH -> "*151*2*$merchantCode*$formattedAmount#"
+            NfcPaymentData.Provider.TMONEY -> "*145*3*$merchantCode*$formattedAmount#"
+            NfcPaymentData.Provider.MVOLA -> "#111*4*$merchantCode*$formattedAmount#"
         }
     }
 

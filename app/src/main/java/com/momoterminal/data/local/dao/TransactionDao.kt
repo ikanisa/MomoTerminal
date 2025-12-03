@@ -88,7 +88,21 @@ interface TransactionDao {
      */
     @Query("DELETE FROM transactions")
     suspend fun clearAll()
-    
+
+    // ============= Sync Queries =============
+
+    /**
+     * Get unsynced transactions.
+     */
+    @Query("SELECT * FROM transactions WHERE syncedAt IS NULL ORDER BY timestamp ASC LIMIT 50")
+    suspend fun getUnsyncedTransactions(): List<TransactionEntity>
+
+    /**
+     * Mark transaction as synced.
+     */
+    @Query("UPDATE transactions SET syncedAt = :syncedAt WHERE id = :id")
+    suspend fun markAsSynced(id: Long, syncedAt: Long = System.currentTimeMillis())
+
     // ============= Pagination Queries =============
     
     /**

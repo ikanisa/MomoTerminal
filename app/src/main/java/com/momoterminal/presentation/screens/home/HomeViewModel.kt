@@ -35,7 +35,8 @@ class HomeViewModel @Inject constructor(
         val todayTransactionCount: Int = 0,
         // Terminal state
         val amount: String = "",
-        val currency: String = "GHS",
+        val currency: String = "RWF",
+        val countryCode: String = "RW",
         val selectedProvider: NfcPaymentData.Provider = NfcPaymentData.Provider.MTN,
         val isPaymentActive: Boolean = false
     )
@@ -60,7 +61,8 @@ class HomeViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             isConfigured = appConfig.isConfigured(),
             merchantPhone = appConfig.getMerchantPhone(),
-            currency = appConfig.getCurrency()
+            currency = appConfig.getCurrency(),
+            countryCode = appConfig.getCountryCode()
         )
     }
 
@@ -120,6 +122,7 @@ class HomeViewModel @Inject constructor(
             merchantPhone = state.merchantPhone,
             amountInMinorUnits = amountInMinorUnits,
             currency = state.currency,
+            countryCode = state.countryCode,
             provider = state.selectedProvider
         )
 

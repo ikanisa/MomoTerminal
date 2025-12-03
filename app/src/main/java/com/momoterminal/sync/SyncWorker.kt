@@ -58,36 +58,23 @@ class SyncWorker @AssistedInject constructor(
         
         for (txn in pendingTransactions) {
             try {
-                // Parse transaction using AI for structured data
-                val parsedData = try {
-                    aiSmsParserService.parseSmartly(txn.sender, txn.body)
-                } catch (e: Exception) {
-                    Log.w(TAG, "AI parsing failed for transaction ${txn.id}", e)
-                    null
-                }
-                
-                // Sync to Supabase payments table first
+                // Sync to Supabase
                 val supabaseResult = paymentRepository.syncTransaction(
                     transaction = txn,
-                    parsedData = parsedData,
-                    deviceId = deviceId,
-                    merchantCode = merchantCode
+                    merchantId = merchantCode, // Using phone as merchant ID for now
+                    deviceId = deviceId
                 )
                 
-                when (supabaseResult) {
-                    is PaymentResult.Success -> {
-                        Log.d(TAG, "Transaction ${txn.id} synced to Supabase")
-                        // Mark as sent in local DB
-                        transactionDao.updateStatus(txn.id, "SENT")
-                    }
-                    is PaymentResult.Error -> {
-                        Log.w(TAG, "Supabase sync failed for ${txn.id}: ${supabaseResult.message}")
-                        // Try webhook fallback
-                        val webhookSuccess = syncToWebhook(txn, appConfig)
-                        if (!webhookSuccess) {
-                            Log.e(TAG, "Both Supabase and webhook sync failed for ${txn.id}")
-                            hasErrors = true
-                        }
+                if (supabaseResult.isSuccess) {
+                    Log.d(TAG, "Transaction ${txn.id} synced to Supabase")
+                    transactionDao.updateStatus(txn.id, "SENT")
+                } else {
+                    Log.w(TAG, "Supabase sync failed for ${txn.id}")
+                    // Try webhook fallback
+                    val webhookSuccess = syncToWebhook(txn, appConfig)
+                    if (!webhookSuccess) {
+                        Log.e(TAG, "Both Supabase and webhook sync failed for ${txn.id}")
+                        hasErrors = true
                     }
                 }
                 

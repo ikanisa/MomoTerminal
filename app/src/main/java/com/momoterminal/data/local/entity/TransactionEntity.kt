@@ -7,62 +7,53 @@ import kotlin.math.roundToLong
 
 /**
  * Room Entity representing a transaction stored in the local database.
- * Used for offline-first reliability - SMS messages are saved immediately
- * and synced to the configured webhook when connectivity is available.
- * 
- * Note: Amount is stored as a Double representing the value in the main currency unit (e.g., GHS).
- * For calculations requiring precision, convert to the smallest unit (pesewas) by multiplying by 100.
  */
 @Entity(tableName = "transactions")
 data class TransactionEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     
-    /**
-     * The sender of the SMS (e.g., "MTN MoMo").
-     */
+    /** SMS sender (e.g., "MTN MoMo"). */
     val sender: String,
     
-    /**
-     * The raw SMS body content.
-     */
+    /** Raw SMS body content. */
     val body: String,
     
-    /**
-     * The timestamp when the SMS was received.
-     */
+    /** Timestamp when SMS was received. */
     val timestamp: Long,
     
-    /**
-     * The sync status: 'PENDING', 'SENT', 'FAILED'.
-     */
+    /** Sync status: 'PENDING', 'SENT', 'FAILED', 'completed'. */
     val status: String,
     
-    /**
-     * Optional: Extracted amount from the SMS in the main currency unit (e.g., GHS).
-     */
+    /** Amount in main currency unit. */
     @ColumnInfo(name = "amount")
     val amount: Double? = null,
     
-    /**
-     * Optional: Currency code (default: GHS).
-     */
-    val currency: String? = "GHS",
+    /** Currency code. */
+    val currency: String? = "RWF",
     
-    /**
-     * Optional: Extracted transaction ID.
-     */
+    /** Transaction ID from provider. */
     val transactionId: String? = null,
     
-    /**
-     * Optional: Merchant code associated with this transaction.
-     */
-    val merchantCode: String? = null
+    /** Merchant code. */
+    val merchantCode: String? = null,
+
+    /** Transaction type: 'received', 'sent', 'payment', 'withdrawal'. */
+    val type: String? = null,
+
+    /** Provider name: 'MTN', 'AIRTEL', etc. */
+    val provider: String? = null,
+
+    /** Sender phone number. */
+    val senderPhone: String? = null,
+
+    /** Sender name. */
+    val senderName: String? = null,
+
+    /** Timestamp when synced to cloud. Null if not synced. */
+    val syncedAt: Long? = null
 ) {
-    /**
-     * Get amount in pesewas (smallest currency unit) for precise calculations.
-     * 1 GHS = 100 pesewas. Uses roundToLong() for accurate conversion.
-     */
+    /** Amount in minor units (pesewas/cents) for precise calculations. */
     val amountInPesewas: Long?
         get() = amount?.let { (it * 100).roundToLong() }
 }

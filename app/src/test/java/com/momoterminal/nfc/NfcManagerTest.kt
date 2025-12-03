@@ -108,50 +108,52 @@ class NfcManagerTest {
     @Test
     fun `NfcPaymentData toUssdString generates valid USSD`() {
         val paymentData = NfcPaymentData(
-            merchantPhone = "0244123456",
-            amountInMinorUnits = 5000L,
+            merchantPhone = "12345",
+            amountInMinorUnits = 500000L, // 5000 RWF
             currency = "RWF",
+            countryCode = "RW",
             provider = NfcPaymentData.Provider.MTN
         )
         
         val ussd = paymentData.toUssdString()
         assertThat(ussd).startsWith("tel:")
-        assertThat(ussd).contains("0244123456")
-        assertThat(ussd).contains("50.00")
+        assertThat(ussd).contains("12345")
     }
 
     @Test
     fun `NfcPaymentData toUssdString contains merchant phone`() {
         val paymentData = NfcPaymentData(
-            merchantPhone = "0201234567",
-            amountInMinorUnits = 10000L,
+            merchantPhone = "67890",
+            amountInMinorUnits = 1000000L, // 10000
             currency = "RWF",
-            provider = NfcPaymentData.Provider.VODAFONE
+            countryCode = "RW",
+            provider = NfcPaymentData.Provider.MTN
         )
         
         val ussd = paymentData.toUssdString()
         assertThat(ussd).startsWith("tel:")
-        assertThat(ussd).contains("0201234567")
+        assertThat(ussd).contains("67890")
     }
 
     @Test
-    fun `NfcPaymentData toUssdString contains formatted amount`() {
+    fun `NfcPaymentData toUssdString contains whole amount`() {
         val paymentData = NfcPaymentData(
-            merchantPhone = "0271234567",
-            amountInMinorUnits = 7500L,
+            merchantPhone = "12345",
+            amountInMinorUnits = 750000L, // 7500
             currency = "RWF",
-            provider = NfcPaymentData.Provider.AIRTEL
+            countryCode = "RW",
+            provider = NfcPaymentData.Provider.MTN
         )
         
         val ussd = paymentData.toUssdString()
         assertThat(ussd).startsWith("tel:")
-        assertThat(ussd).contains("75.00")
+        assertThat(ussd).contains("7500")
     }
 
     @Test
     fun `NfcPaymentData currency is set correctly`() {
         val paymentData = NfcPaymentData(
-            merchantPhone = "0244123456",
+            merchantPhone = "12345",
             amountInMinorUnits = 5000L,
             currency = "RWF"
         )

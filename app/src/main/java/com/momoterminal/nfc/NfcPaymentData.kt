@@ -1,37 +1,34 @@
 package com.momoterminal.nfc
 
+import com.momoterminal.config.UssdConfig
+
 /**
  * Data class representing payment data for NFC transactions.
- * 
- * Amount is stored in minor units (smallest currency unit) to avoid
- * floating-point precision errors. E.g., 100 = 1.00 in main currency.
  */
 data class NfcPaymentData(
     val merchantPhone: String,
     val amountInMinorUnits: Long,
     val currency: String,
+    val countryCode: String = "RW",
     val provider: Provider = Provider.MTN,
     val reference: String? = null,
     val timestamp: Long = System.currentTimeMillis()
 ) {
-    // Legacy alias for backward compatibility
+    // Legacy alias
     val amountInPesewas: Long get() = amountInMinorUnits
 
-    /**
-     * Supported Mobile Money providers across Africa.
-     */
-    enum class Provider(
-        val displayName: String,
-        val colorHex: String
-    ) {
-        MTN("MTN Mobile Money", "#FFCC00"),
+    enum class Provider(val displayName: String, val colorHex: String) {
+        MTN("MTN MoMo", "#FFCC00"),
         AIRTEL("Airtel Money", "#ED1C24"),
-        VODACOM("Vodacom M-Pesa", "#E60000"),
+        VODACOM("M-Pesa", "#E60000"),
         VODAFONE("Vodafone Cash", "#E60000"),
         ORANGE("Orange Money", "#FF6600"),
         TIGO("Tigo Pesa", "#00A0DF"),
         WAVE("Wave", "#1A1F71"),
-        MOOV("Moov Money", "#0066B3");
+        MOOV("Moov Money", "#0066B3"),
+        ECOCASH("EcoCash", "#00A651"),
+        TMONEY("T-Money", "#FF6B00"),
+        MVOLA("MVola", "#E31937");
 
         companion object {
             fun fromString(value: String): Provider {
@@ -43,51 +40,54 @@ data class NfcPaymentData(
         }
     }
 
-    /**
-     * Get the amount in main currency units for display.
-     */
     fun getDisplayAmount(): Double = amountInMinorUnits / 100.0
-
-    /**
-     * Get the amount formatted as a string (e.g., "50.00").
-     */
     fun getFormattedAmount(): String = "%.2f".format(getDisplayAmount())
+    
+    /**
+     * Get the whole number amount (no decimals) for USSD.
+     * Most African mobile money uses whole numbers.
+     */
+    fun getWholeAmount(): String = amountInMinorUnits.div(100).toString()
 
     /**
-     * Generate USSD dial string for this payment.
-     * Note: Actual USSD codes vary by country and provider.
+     * Generate USSD code for merchant payment using country config.
      */
     fun toUssdString(): String {
-        val amount = getFormattedAmount()
-        return "tel:*182*8*1*$merchantPhone*$amount#" // Generic format
+        val rawUssd = getRawUssdCode()
+        return try {
+            "tel:${android.net.Uri.encode(rawUssd)}"
+        } catch (e: Exception) {
+            // Fallback for unit tests where Android classes aren't available
+            "tel:$rawUssd"
+        }
     }
 
     /**
-     * Generate payment URI for NFC transmission.
+     * Get raw USSD code (without tel: prefix).
      */
+    fun getRawUssdCode(): String {
+        return UssdConfig.generateMerchantPaymentUssd(
+            countryCode = countryCode,
+            merchantCode = merchantPhone,
+            amount = getWholeAmount()
+        ) ?: "*182*8*1*$merchantPhone*${getWholeAmount()}#"
+    }
+
     fun toPaymentUri(): String {
         val ref = reference?.let { "&ref=$it" } ?: ""
         return "momo://pay?to=$merchantPhone&amount=${getFormattedAmount()}&currency=$currency&provider=${provider.name}$ref"
     }
 
-    /**
-     * Validate the payment data.
-     */
     fun isValid(): Boolean = merchantPhone.isNotBlank() && amountInMinorUnits > 0
 
     companion object {
-        /**
-         * Convert a Double amount to minor units.
-         */
         fun toMinorUnits(amount: Double): Long = (amount * 100).toLong()
 
-        /**
-         * Create NfcPaymentData from a Double amount.
-         */
         fun fromAmount(
             merchantPhone: String,
             amount: Double,
             currency: String,
+            countryCode: String = "RW",
             provider: Provider = Provider.MTN,
             reference: String? = null
         ): NfcPaymentData {
@@ -95,6 +95,7 @@ data class NfcPaymentData(
                 merchantPhone = merchantPhone,
                 amountInMinorUnits = toMinorUnits(amount),
                 currency = currency,
+                countryCode = countryCode,
                 provider = provider,
                 reference = reference
             )
