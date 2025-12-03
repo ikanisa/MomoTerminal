@@ -2,6 +2,7 @@ package com.momoterminal.presentation.screens.transactions
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.momoterminal.config.AppConfig
 import com.momoterminal.data.local.MomoDatabase
 import com.momoterminal.data.local.entity.TransactionEntity
 import com.momoterminal.sync.SyncManager
@@ -15,13 +16,14 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * ViewModel for the Transactions screen.
+ * ViewModel for the Transactions/History screen.
  * Handles pagination, filtering, and sync operations.
  */
 @HiltViewModel
 class TransactionsViewModel @Inject constructor(
     private val database: MomoDatabase,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val appConfig: AppConfig
 ) : ViewModel() {
     
     /**
@@ -40,7 +42,10 @@ class TransactionsViewModel @Inject constructor(
         val pendingCount: Int = 0,
         val dateRangeStart: Long? = null,
         val dateRangeEnd: Long? = null,
-        val showDatePicker: Boolean = false
+        val showDatePicker: Boolean = false,
+        val showSmsPermissionHint: Boolean = true,
+        val todayRevenue: Double = 0.0,
+        val currency: String = "RWF"
     )
     
     private val _uiState = MutableStateFlow(TransactionsUiState())
@@ -56,7 +61,15 @@ class TransactionsViewModel @Inject constructor(
         )
     
     init {
+        loadCurrency()
         observePendingCount()
+        loadTodayStats()
+    }
+    
+    private fun loadCurrency() {
+        _uiState.value = _uiState.value.copy(
+            currency = appConfig.getCurrency()
+        )
     }
     
     private fun observePendingCount() {
@@ -64,6 +77,19 @@ class TransactionsViewModel @Inject constructor(
             database.transactionDao().getPendingCount().collect { count ->
                 _uiState.value = _uiState.value.copy(pendingCount = count)
             }
+        }
+    }
+    
+    private fun loadTodayStats() {
+        viewModelScope.launch {
+            val todayStart = System.currentTimeMillis() - (System.currentTimeMillis() % 86400000)
+            val transactions = database.transactionDao()
+                .getTransactionsByDateRange(todayStart, System.currentTimeMillis())
+            val successful = transactions.filter { it.status == "completed" || it.status == "success" || it.status == "SENT" }
+
+            _uiState.value = _uiState.value.copy(
+                todayRevenue = successful.sumOf { (it.amount ?: 0.0).toLong() }.toDouble()
+            )
         }
     }
     
@@ -77,6 +103,9 @@ class TransactionsViewModel @Inject constructor(
             
             // Trigger sync
             syncManager.enqueueSyncNow()
+            
+            // Reload today stats
+            loadTodayStats()
             
             // Small delay to show refresh indicator
             kotlinx.coroutines.delay(1000)
@@ -105,6 +134,10 @@ class TransactionsViewModel @Inject constructor(
     
     fun hideDatePicker() {
         _uiState.value = _uiState.value.copy(showDatePicker = false)
+    }
+    
+    fun dismissSmsHint() {
+        _uiState.value = _uiState.value.copy(showSmsPermissionHint = false)
     }
     
     fun getFilteredTransactions(

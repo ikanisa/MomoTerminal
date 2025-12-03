@@ -14,6 +14,12 @@
     <string name="merchant_code_hint">Merchant Code</string>
     <string name="currency_symbol">RWF</string>
     
+    <!-- NFC Writer Toggle -->
+    <string name="nfc_writer">NFC Writer</string>
+    <string name="nfc_writer_on">Ready to broadcast payments</string>
+    <string name="nfc_writer_off">NFC broadcasting disabled</string>
+    <string name="tap_amount_to_start">Tap the amount field to enter payment amount</string>
+    
     <!-- SMS Relay -->
     <string name="sms_relay_status">SMS Relay Status</string>
     <string name="sms_relay_active">SMS Relay Active</string>
@@ -206,23 +212,29 @@
     <string name="logout">Logout</string>
     <string name="merchant_profile">Merchant Profile</string>
     <string name="merchant_phone_label">Merchant Phone Number</string>
-    <string name="developer_options">Developer Options</string>
-    <string name="app_capabilities_demo">App Capabilities Demo</string>
-    <string name="capabilities_description">Test Network, NFC, Biometrics &amp; more</string>
-    <string name="sms_synchronization">SMS Synchronization</string>
-    <string name="auto_sync_sms">Auto-Sync SMS Transactions</string>
-    <string name="auto_sync_description">Automatically record MoMo confirmation messages</string>
-    <string name="sms_sync_warning">⚠️ Disabling SMS sync means transactions won\'t be automatically recorded. You\'ll need to manually enter transaction details.</string>
     <string name="about">About</string>
     <string name="app_version">App Version</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="terms_of_service">Terms of Service</string>
-    <string name="open_source_licenses">Open Source Licenses</string>
     <string name="save_configuration">Save Configuration</string>
     <string name="configuration_saved">Configuration saved</string>
     <string name="settings_saved">Settings saved successfully</string>
     <string name="logout_confirm_title">Logout</string>
     <string name="logout_confirm_message">Are you sure you want to logout? You\'ll need to login again to access the app.</string>
+    
+    <!-- User Profile Section -->
+    <string name="user_profile">User Profile</string>
+    <string name="whatsapp_number">WhatsApp Number</string>
+    <string name="profile_country">Profile Country</string>
+    <string name="not_set">Not set</string>
+    
+    <!-- Mobile Money Setup Section -->
+    <string name="mobile_money_setup">Mobile Money Setup</string>
+    <string name="momo_country_info">Your mobile money country can be different from your profile country. Select the country where your mobile money account is registered.</string>
+    <string name="mobile_money_number">Mobile Money Number</string>
+    <string name="mobile_money_number_placeholder">Enter your mobile money number</string>
+    <string name="select_momo_country">Select Mobile Money Country</string>
+    <string name="change_country">Change country</string>
     
     <!-- Navigation -->
     <string name="nav_home">Home</string>
@@ -234,6 +246,8 @@
     <string name="transactions_title">Transactions</string>
     <string name="sms_access_required">SMS Access Required</string>
     <string name="sms_access_description">To automatically record transactions, please allow SMS access.</string>
+    <string name="sms_permission_optional">SMS Permission (Optional)</string>
+    <string name="sms_permission_optional_desc">Enable SMS access to automatically capture transaction confirmations.</string>
     <string name="grant_permission">Grant Permission</string>
     <string name="select_date_range">Select Date Range</string>
     <string name="clear_date_range">Clear date range</string>
@@ -241,6 +255,7 @@
     <string name="filter_pending">Pending</string>
     <string name="filter_sent">Sent</string>
     <string name="filter_failed">Failed</string>
+    <string name="no_transactions_with_filters">No transactions match your filters. Try adjusting the filters or date range.</string>
     
     <!-- Common -->
     <string name="ok">OK</string>

@@ -12,6 +12,8 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,12 +38,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -64,6 +70,9 @@ import com.momoterminal.presentation.theme.MomoTerminalTheme
 import com.momoterminal.presentation.theme.MomoYellow
 
 /**
+ * Unified Home screen with integrated payment terminal.
+ * Features modern animations and fluid transitions.
+ * Provider is automatically selected based on the user's mobile money country.
  * Home screen with NFC payment terminal.
  * - Dynamic keypad (shows when tapping amount)
  * - NFC toggle switch
@@ -81,6 +90,8 @@ fun HomeScreen(
     val nfcState by viewModel.nfcState.collectAsState()
     val isNfcActive = nfcState.isActive()
     val isSuccess = nfcState is NfcState.Success
+    // Track if user is interacting with amount input
+    var isAmountFocused by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -151,6 +162,9 @@ fun HomeScreen(
                         onActivate = viewModel::activatePayment,
                         onToggleNfc = viewModel::toggleNfcEnabled,
                         onNavigateToSettings = onNavigateToSettings,
+                        onNfcWriterToggle = viewModel::toggleNfcWriter,
+                        onAmountFocused = { isAmountFocused = it },
+                        isAmountFocused = isAmountFocused,
                         isValid = viewModel.isAmountValid() && viewModel.isNfcAvailable()
                     )
                 }
@@ -168,6 +182,9 @@ private fun PaymentInputContent(
     onActivate: () -> Unit,
     onToggleNfc: (Boolean) -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNfcWriterToggle: (Boolean) -> Unit,
+    onAmountFocused: (Boolean) -> Unit,
+    isAmountFocused: Boolean,
     isValid: Boolean
 ) {
     Column(
@@ -188,6 +205,49 @@ private fun PaymentInputContent(
                 animationSpec = tween(MomoAnimation.DURATION_FAST)
             ) + fadeOut()
         ) {
+            // NFC Writer Toggle
+            NfcWriterToggle(
+                isEnabled = uiState.isNfcWriterEnabled,
+                onToggle = onNfcWriterToggle,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            
+            // Configuration warning with slide animation
+            AnimatedVisibility(
+                visible = !uiState.isConfigured,
+                enter = slideInVertically(
+                    initialOffsetY = { -it },
+                    animationSpec = tween(MomoAnimation.DURATION_MEDIUM, easing = MomoAnimation.EaseOutExpo)
+                ) + fadeIn(),
+                exit = slideOutVertically(
+                    targetOffsetY = { -it },
+                    animationSpec = tween(MomoAnimation.DURATION_FAST)
+                ) + fadeOut()
+            ) {
+                ConfigurationBanner(
+                    onConfigureClick = onNavigateToSettings,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+            }
+
+            // Amount display with tap to focus - clickable area
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        onAmountFocused(true)
+                    }
+            ) {
+                AmountDisplay(
+                    amount = uiState.amount,
+                    currency = uiState.currency,
+                    label = stringResource(R.string.amount_to_receive),
+                    isActive = uiState.amount.isNotEmpty() || isAmountFocused
+                )
+            }
             ConfigurationBanner(
                 onConfigureClick = onNavigateToSettings,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -209,6 +269,86 @@ private fun PaymentInputContent(
             isActive = uiState.amount.isNotEmpty()
         )
 
+            // Provider info (auto-selected based on country)
+            if (uiState.isConfigured) {
+                ProviderInfoCard(
+                    providerName = uiState.providerDisplayName,
+                    countryName = uiState.countryName
+                )
+            }
+        }
+
+        // Bottom section - Keypad and button (only show when focused or has amount)
+        AnimatedVisibility(
+            visible = isAmountFocused || uiState.amount.isNotEmpty(),
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = tween(MomoAnimation.DURATION_MEDIUM)
+            ) + fadeIn(),
+            exit = slideOutVertically(
+                targetOffsetY = { it },
+                animationSpec = tween(MomoAnimation.DURATION_FAST)
+            ) + fadeOut()
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Keypad with consistent spacing
+                AmountKeypad(
+                    onDigitClick = onDigitClick,
+                    onBackspaceClick = onBackspaceClick,
+                    onClearClick = onClearClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Activate NFC button with animated enabled state
+                val buttonScale by animateFloatAsState(
+                    targetValue = if (isValid) 1f else 0.98f,
+                    animationSpec = tween(MomoAnimation.DURATION_MEDIUM),
+                    label = "buttonScale"
+                )
+                
+                MomoButton(
+                    text = stringResource(R.string.activate_nfc),
+                    onClick = onActivate,
+                    enabled = isValid,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .scale(buttonScale)
+                )
+            }
+        }
+        
+        // Show instruction when keypad is hidden
+        AnimatedVisibility(
+            visible = !isAmountFocused && uiState.amount.isEmpty(),
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(vertical = 48.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.tap_amount_to_start),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+/**
+ * NFC Writer toggle component for the home screen.
+ */
+@Composable
+private fun NfcWriterToggle(
         // Provider info (from user's MoMo country)
         if (uiState.providerName.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
@@ -260,6 +400,13 @@ private fun NfcToggleCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
+            containerColor = if (isEnabled) {
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            }
+        ),
+        shape = MaterialTheme.shapes.small
             containerColor = if (isEnabled) 
                 MomoYellow.copy(alpha = 0.15f) 
             else 
@@ -270,6 +417,7 @@ private fun NfcToggleCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -277,11 +425,18 @@ private fun NfcToggleCard(
                 imageVector = Icons.Outlined.Nfc,
                 contentDescription = null,
                 tint = if (isEnabled) MomoYellow else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp)
                 modifier = Modifier.size(28.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
+                    text = stringResource(R.string.nfc_writer),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = if (isEnabled) stringResource(R.string.nfc_writer_on) else stringResource(R.string.nfc_writer_off),
                     text = stringResource(R.string.nfc_terminal),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
@@ -302,6 +457,49 @@ private fun NfcToggleCard(
                     checkedThumbColor = MomoYellow,
                     checkedTrackColor = MomoYellow.copy(alpha = 0.5f)
                 )
+            )
+        }
+    }
+}
+
+/**
+ * Provider info card showing the auto-selected provider.
+ */
+@Composable
+private fun ProviderInfoCard(
+    providerName: String,
+    countryName: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        ),
+        shape = MaterialTheme.shapes.small
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = providerName,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = " • ",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = countryName,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
