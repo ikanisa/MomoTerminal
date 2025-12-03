@@ -174,3 +174,19 @@ private val sampleTransactions = listOf(
     Transaction("TXN-003", "25,000", TransactionDirection.CREDIT, TransactionSource.SMS, "Merchant Payment", "Shop: Kigali Store", "Yesterday"),
     Transaction("TXN-004", "2,500", TransactionDirection.DEBIT, TransactionSource.MANUAL, "Airtime Purchase", "MTN Rwanda", "Yesterday")
 )
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+private fun WalletScreenLightPreview() {
+    com.momoterminal.designsystem.theme.MomoTerminalTheme(darkTheme = false) {
+        WalletScreen()
+    }
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun WalletScreenDarkPreview() {
+    com.momoterminal.designsystem.theme.MomoTerminalTheme(darkTheme = true) {
+        WalletScreen()
+    }
+}
