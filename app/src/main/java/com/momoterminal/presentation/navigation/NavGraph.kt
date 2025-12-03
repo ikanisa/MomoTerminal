@@ -1,5 +1,9 @@
 package com.momoterminal.presentation.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -16,7 +20,6 @@ import com.momoterminal.presentation.screens.home.HomeScreen
 import com.momoterminal.presentation.screens.settings.SettingsScreen
 import com.momoterminal.presentation.screens.transaction.TransactionDetailScreen
 import com.momoterminal.presentation.screens.transactions.TransactionsScreen
-import com.momoterminal.presentation.theme.MomoAnimation
 
 /**
  * Main navigation graph for the app.
@@ -36,10 +39,30 @@ fun NavGraph(
         navController = navController,
         startDestination = actualStartDestination,
         modifier = modifier,
-        enterTransition = { MomoAnimation.screenEnter },
-        exitTransition = { MomoAnimation.screenExit },
-        popEnterTransition = { MomoAnimation.screenPopEnter },
-        popExitTransition = { MomoAnimation.screenPopExit }
+        enterTransition = {
+            fadeIn(animationSpec = tween(300)) + slideIntoContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                animationSpec = tween(300)
+            )
+        },
+        exitTransition = {
+            fadeOut(animationSpec = tween(300)) + slideOutOfContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                animationSpec = tween(300)
+            )
+        },
+        popEnterTransition = {
+            fadeIn(animationSpec = tween(300)) + slideIntoContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.End,
+                animationSpec = tween(300)
+            )
+        },
+        popExitTransition = {
+            fadeOut(animationSpec = tween(300)) + slideOutOfContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.End,
+                animationSpec = tween(300)
+            )
+        }
     ) {
         // Login screen
         composable(route = Screen.Login.route) {
@@ -144,15 +167,9 @@ fun NavGraph(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onNavigateToCapabilitiesDemo = {
-                    navController.navigate(Screen.CapabilitiesDemo.route)
-                },
                 onLogout = {
-                    // Clear back stack and navigate to login
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(0) {
-                            saveState = false
-                        }
+                        popUpTo(0) { saveState = false }
                         launchSingleTop = true
                         restoreState = false
                     }

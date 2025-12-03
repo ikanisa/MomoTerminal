@@ -54,12 +54,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.momoterminal.R
-import com.momoterminal.nfc.NfcPaymentData
 import com.momoterminal.nfc.NfcState
 import com.momoterminal.presentation.components.MomoButton
 import com.momoterminal.presentation.components.ButtonType
@@ -75,6 +73,10 @@ import com.momoterminal.presentation.theme.MomoYellow
  * Unified Home screen with integrated payment terminal.
  * Features modern animations and fluid transitions.
  * Provider is automatically selected based on the user's mobile money country.
+ * Home screen with NFC payment terminal.
+ * - Dynamic keypad (shows when tapping amount)
+ * - NFC toggle switch
+ * - No provider selector (determined by user's MoMo country)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -154,11 +156,11 @@ fun HomeScreen(
                 } else {
                     PaymentInputContent(
                         uiState = uiState,
-                        nfcState = nfcState,
                         onDigitClick = viewModel::onDigitClick,
                         onBackspaceClick = viewModel::onBackspaceClick,
                         onClearClick = viewModel::onClearClick,
                         onActivate = viewModel::activatePayment,
+                        onToggleNfc = viewModel::toggleNfcEnabled,
                         onNavigateToSettings = onNavigateToSettings,
                         onNfcWriterToggle = viewModel::toggleNfcWriter,
                         onAmountFocused = { isAmountFocused = it },
@@ -174,11 +176,11 @@ fun HomeScreen(
 @Composable
 private fun PaymentInputContent(
     uiState: HomeViewModel.HomeUiState,
-    nfcState: NfcState,
     onDigitClick: (String) -> Unit,
     onBackspaceClick: () -> Unit,
     onClearClick: () -> Unit,
     onActivate: () -> Unit,
+    onToggleNfc: (Boolean) -> Unit,
     onNavigateToSettings: () -> Unit,
     onNfcWriterToggle: (Boolean) -> Unit,
     onAmountFocused: (Boolean) -> Unit,
@@ -189,12 +191,19 @@ private fun PaymentInputContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 20.dp, vertical = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Top section with staggered animation
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+        // Configuration warning
+        AnimatedVisibility(
+            visible = !uiState.isConfigured,
+            enter = slideInVertically(
+                initialOffsetY = { -it },
+                animationSpec = tween(MomoAnimation.DURATION_MEDIUM, easing = MomoAnimation.EaseOutExpo)
+            ) + fadeIn(),
+            exit = slideOutVertically(
+                targetOffsetY = { -it },
+                animationSpec = tween(MomoAnimation.DURATION_FAST)
+            ) + fadeOut()
         ) {
             // NFC Writer Toggle
             NfcWriterToggle(
@@ -239,8 +248,26 @@ private fun PaymentInputContent(
                     isActive = uiState.amount.isNotEmpty() || isAmountFocused
                 )
             }
+            ConfigurationBanner(
+                onConfigureClick = onNavigateToSettings,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
+        // NFC Toggle
+        NfcToggleCard(
+            isEnabled = uiState.isNfcEnabled,
+            onToggle = onToggleNfc,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        // Amount display
+        AmountDisplay(
+            amount = uiState.amount,
+            currency = uiState.currency,
+            label = stringResource(R.string.amount_to_receive),
+            isActive = uiState.amount.isNotEmpty()
+        )
 
             // Provider info (auto-selected based on country)
             if (uiState.isConfigured) {
@@ -322,6 +349,50 @@ private fun PaymentInputContent(
  */
 @Composable
 private fun NfcWriterToggle(
+        // Provider info (from user's MoMo country)
+        if (uiState.providerName.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = uiState.providerName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Keypad - always visible
+        AmountKeypad(
+            onDigitClick = onDigitClick,
+            onBackspaceClick = onBackspaceClick,
+            onClearClick = onClearClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Activate NFC button
+        val buttonScale by animateFloatAsState(
+            targetValue = if (isValid && uiState.isNfcEnabled) 1f else 0.98f,
+            animationSpec = tween(MomoAnimation.DURATION_MEDIUM),
+            label = "buttonScale"
+        )
+        
+        MomoButton(
+            text = stringResource(R.string.activate_nfc),
+            onClick = onActivate,
+            enabled = isValid && uiState.isNfcEnabled,
+            modifier = Modifier
+                .fillMaxWidth()
+                .scale(buttonScale)
+        )
+    }
+}
+
+@Composable
+private fun NfcToggleCard(
     isEnabled: Boolean,
     onToggle: (Boolean) -> Unit,
     modifier: Modifier = Modifier
@@ -336,11 +407,18 @@ private fun NfcWriterToggle(
             }
         ),
         shape = MaterialTheme.shapes.small
+            containerColor = if (isEnabled) 
+                MomoYellow.copy(alpha = 0.15f) 
+            else 
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        shape = MaterialTheme.shapes.medium
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -348,6 +426,7 @@ private fun NfcWriterToggle(
                 contentDescription = null,
                 tint = if (isEnabled) MomoYellow else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(28.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -358,6 +437,15 @@ private fun NfcWriterToggle(
                 )
                 Text(
                     text = if (isEnabled) stringResource(R.string.nfc_writer_on) else stringResource(R.string.nfc_writer_off),
+                    text = stringResource(R.string.nfc_terminal),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = if (isEnabled) 
+                        stringResource(R.string.nfc_ready) 
+                    else 
+                        stringResource(R.string.nfc_disabled),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -464,7 +552,6 @@ private fun NfcActiveContent(
     val isSuccess = nfcState is NfcState.Success
     val message = nfcState.getDisplayMessage()
 
-    // Gradient background for NFC mode
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -488,7 +575,6 @@ private fun NfcActiveContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Amount display
             AmountDisplay(
                 amount = amount,
                 currency = currency,
@@ -498,7 +584,6 @@ private fun NfcActiveContent(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // NFC pulse animation
             NfcPulseAnimation(
                 isActive = nfcState.isActive(),
                 isSuccess = isSuccess,
@@ -507,7 +592,6 @@ private fun NfcActiveContent(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Cancel button with fade animation
             AnimatedVisibility(
                 visible = !isSuccess,
                 enter = fadeIn(tween(MomoAnimation.DURATION_MEDIUM)) + 

@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MomoTerminal</string>
-    <string name="service_description">Terminal de Paiement Mobile Money NFC</string>
-    <string name="hce_service_description">Service Terminal de Paiement Mobile Money NFC</string>
-    <string name="aid_group_description">Groupe AID Paiement Mobile Money</string>
+    <string name="service_description">Terminal de paiement mobile NFC</string>
+    <string name="hce_service_description">Service de terminal de paiement mobile NFC</string>
     
     <!-- Main Activity -->
     <string name="amount_hint">Entrer le montant</string>
@@ -99,40 +98,55 @@
     <string name="foreground_service_title">Service de Démo des Capacités</string>
     <string name="foreground_service_channel_name">Service de Démo des Capacités</string>
     <string name="foreground_service_channel_description">Canal de notification pour le service de démo</string>
+    <string name="activate_nfc">Activer le terminal NFC</string>
+    <string name="deactivate_nfc">Désactiver le terminal</string>
+    <string name="nfc_active">Terminal NFC actif - Prêt pour le tap</string>
+    <string name="nfc_inactive">Terminal NFC inactif</string>
+    <string name="merchant_code_hint">Code marchand</string>
     
     <!-- Home Screen -->
     <string name="home_title">Accueil</string>
-    <string name="today_overview">Aperçu du Jour</string>
-    <string name="today_revenue">Revenus du Jour</string>
-    <string name="weekly_revenue">Revenus Hebdomadaires</string>
-    <string name="success_rate">Taux de Réussite</string>
+    <string name="nfc_terminal">Terminal NFC</string>
+    <string name="nfc_ready">Prêt à recevoir des paiements</string>
+    <string name="nfc_disabled">Activer pour recevoir des paiements</string>
+    <string name="today_overview">Aperçu du jour</string>
+    <string name="today_revenue">Revenus du jour</string>
+    <string name="weekly_revenue">Revenus de la semaine</string>
+    <string name="success_rate">Taux de réussite</string>
     <string name="transactions">transactions</string>
     <string name="last_7_days">7 derniers jours</string>
     <string name="failed">Échoué</string>
-    <string name="need_attention">Nécessite attention</string>
+    <string name="need_attention">Attention requise</string>
+    <string name="status">Statut</string>
     <string name="all_good">Tout va bien</string>
     <string name="no_failed_transactions">Aucune transaction échouée</string>
-    <string name="setup_required">Configuration Requise</string>
-    <string name="configure_merchant_details">Configurez vos détails marchand pour commencer à accepter les paiements</string>
+    <string name="setup_required">Configuration requise</string>
+    <string name="configure_merchant_details">Configurez vos informations marchand pour commencer</string>
     <string name="setup">Configurer</string>
-    <string name="start_nfc_payment">Démarrer Paiement NFC</string>
-    <string name="accept_payments_via_nfc">Accepter les paiements mobile money via NFC</string>
-    <string name="tap_to_configure">Appuyez pour configurer et commencer</string>
-    <string name="recent_transactions">Transactions Récentes</string>
-    <string name="view_all">Voir Tout</string>
-    <string name="no_transactions_yet">Aucune transaction pour le moment</string>
-    <string name="amount_to_receive">Montant à Recevoir</string>
-    <string name="payment_received">Paiement Reçu</string>
-    <string name="cancel_payment">Annuler le Paiement</string>
-    <string name="today">Aujourd\'hui</string>
-    <string name="amount">Montant</string>
+    <string name="tap_to_configure">Appuyez pour configurer et commencer à recevoir des paiements</string>
+    <string name="recent_transactions">Transactions récentes</string>
+    <string name="view_all">Voir tout</string>
+    <string name="no_transactions_yet">Aucune transaction</string>
+    
+    <!-- Terminal Screen -->
+    <string name="amount_to_receive">Montant à recevoir</string>
+    <string name="payment_received">Paiement reçu</string>
+    <string name="cancel_payment">Annuler le paiement</string>
     
     <!-- Settings -->
     <string name="settings_title">Paramètres</string>
-    <string name="merchant_settings">Paramètres Marchand</string>
+    <string name="user_profile">Profil utilisateur</string>
+    <string name="mobile_money_setup">Configuration Mobile Money</string>
+    <string name="momo_country">Pays Mobile Money</string>
+    <string name="momo_phone_label">Numéro Mobile Money</string>
+    <string name="profile_country_badge">(Profil)</string>
+    <string name="provider_auto_selected">Opérateur: %1$s (auto-sélectionné)</string>
+    <string name="invalid_phone_format">Format de numéro invalide</string>
+    <string name="not_set">Non défini</string>
+    <string name="merchant_settings">Paramètres marchand</string>
     <string name="security">Sécurité</string>
-    <string name="biometric_auth">Authentification Biométrique</string>
-    <string name="biometric_description">Utiliser l\'empreinte ou le visage pour confirmer les paiements</string>
+    <string name="biometric_auth">Authentification biométrique</string>
+    <string name="biometric_description">Utiliser l\'empreinte ou le visage pour confirmer</string>
     <string name="not_available_device">Non disponible sur cet appareil</string>
     <string name="logout">Déconnexion</string>
     <string name="merchant_profile">Profil Marchand</string>
@@ -142,10 +156,17 @@
     <string name="privacy_policy">Politique de Confidentialité</string>
     <string name="terms_of_service">Conditions d\'Utilisation</string>
     <string name="save_configuration">Enregistrer la Configuration</string>
+    <string name="merchant_profile">Profil marchand</string>
+    <string name="merchant_phone_label">Numéro de téléphone marchand</string>
+    <string name="about">À propos</string>
+    <string name="app_version">Version de l\'app</string>
+    <string name="privacy_policy">Politique de confidentialité</string>
+    <string name="terms_of_service">Conditions d\'utilisation</string>
+    <string name="save_configuration">Enregistrer la configuration</string>
     <string name="configuration_saved">Configuration enregistrée</string>
-    <string name="settings_saved">Paramètres enregistrés avec succès</string>
+    <string name="settings_saved">Paramètres enregistrés</string>
     <string name="logout_confirm_title">Déconnexion</string>
-    <string name="logout_confirm_message">Êtes-vous sûr de vouloir vous déconnecter? Vous devrez vous reconnecter pour accéder à l\'app.</string>
+    <string name="logout_confirm_message">Êtes-vous sûr de vouloir vous déconnecter?</string>
     
     <!-- User Profile Section -->
     <string name="user_profile">Profil Utilisateur</string>
@@ -175,76 +196,71 @@
     <string name="sms_permission_optional_desc">Activez l\'accès SMS pour capturer automatiquement les confirmations de transaction.</string>
     <string name="grant_permission">Autoriser</string>
     <string name="select_date_range">Sélectionner Période</string>
+    <string name="select_date_range">Sélectionner une période</string>
     <string name="clear_date_range">Effacer la période</string>
     <string name="filter_all">Tout</string>
-    <string name="filter_pending">En Attente</string>
+    <string name="filter_pending">En attente</string>
     <string name="filter_sent">Envoyé</string>
     <string name="filter_failed">Échoué</string>
     <string name="no_transactions_with_filters">Aucune transaction ne correspond à vos filtres. Essayez d\'ajuster les filtres ou la période.</string>
     
-    <!-- Registration Screen -->
+    <!-- Authentication -->
+    <string name="auth_login_title">Bon retour</string>
+    <string name="auth_login_subtitle">Connectez-vous pour continuer</string>
+    <string name="auth_register_title">Créer un compte</string>
+    <string name="auth_phone_number">Numéro de téléphone</string>
+    <string name="auth_pin">PIN à 6 chiffres</string>
+    <string name="auth_confirm_pin">Confirmer le PIN</string>
+    <string name="auth_merchant_name">Nom de l\'entreprise</string>
+    <string name="auth_forgot_pin">PIN oublié?</string>
+    <string name="auth_sign_in">Se connecter</string>
+    <string name="auth_sign_up">Créer un compte</string>
+    <string name="auth_no_account">Pas de compte?</string>
+    <string name="auth_has_account">Déjà un compte?</string>
+    <string name="auth_register">S\'inscrire</string>
+    
+    <!-- Registration -->
     <string name="reg_welcome">Bienvenue sur MoMo Terminal</string>
-    <string name="reg_phone_subtitle">Entrez votre numéro de téléphone pour commencer</string>
-    <string name="reg_whatsapp_info">Nous vous enverrons un code de vérification via WhatsApp</string>
-    <string name="reg_send_code">Envoyer le Code WhatsApp</string>
-    <string name="reg_verify_phone">Vérifier Votre Téléphone</string>
+    <string name="reg_phone_subtitle">Entrez votre numéro pour commencer</string>
+    <string name="reg_whatsapp_info">Nous vous enverrons un code via WhatsApp</string>
+    <string name="reg_send_code">Envoyer le code WhatsApp</string>
+    <string name="reg_verify_phone">Vérifier votre téléphone</string>
     <string name="reg_otp_instruction">Entrez le code à 6 chiffres envoyé sur WhatsApp</string>
     <string name="reg_code_expires">Le code expire dans %1$d:%2$s</string>
     <string name="reg_code_expired">Code expiré</string>
-    <string name="reg_code_expired_message">Code expiré. Veuillez en demander un nouveau.</string>
     <string name="reg_change">Modifier</string>
-    <string name="reg_resend_code">Pas reçu le code? Renvoyer</string>
-    <string name="reg_resend_countdown">Renvoyer dans %ds</string>
+    <string name="reg_resend_code">Code non reçu? Renvoyer</string>
     <string name="reg_verify">Vérifier</string>
-    <string name="reg_secure_account">Sécurisez Votre Compte</string>
+    <string name="reg_secure_account">Sécurisez votre compte</string>
     <string name="reg_pin_instruction">Créez un PIN à 6 chiffres pour protéger vos transactions</string>
     <string name="reg_pins_not_match">Les PINs ne correspondent pas</string>
     <string name="reg_continue">Continuer</string>
-    <string name="reg_business_profile">Profil Entreprise</string>
+    <string name="reg_business_profile">Profil entreprise</string>
     <string name="reg_business_subtitle">Parlez-nous de votre entreprise</string>
-    <string name="reg_step_phone">Tél</string>
-    <string name="reg_step_otp">OTP</string>
-    <string name="reg_step_pin">PIN</string>
-    <string name="reg_step_info">Info</string>
-    <string name="reg_step_terms">CGU</string>
     
-    <!-- Forgot PIN Screen -->
-    <string name="forgot_pin_title">Réinitialiser PIN</string>
-    <string name="forgot_pin_enter_phone">Entrez Votre Numéro de Téléphone</string>
-    <string name="forgot_pin_whatsapp_info">Nous vous enverrons un code de vérification via WhatsApp</string>
-    <string name="forgot_pin_send_code">Envoyer le Code</string>
-    <string name="forgot_pin_verify_code">Vérifier le Code</string>
-    <string name="forgot_pin_otp_sent">Entrez le code à 6 chiffres envoyé à\n%1$s %2$s</string>
-    <string name="forgot_pin_resend_code">Renvoyer le Code</string>
-    <string name="forgot_pin_create_new">Créer un Nouveau PIN</string>
-    <string name="forgot_pin_4digit_instruction">Entrez un PIN à 4 chiffres pour votre compte</string>
-    <string name="forgot_pin_confirm">Confirmer Votre PIN</string>
-    <string name="forgot_pin_confirm_instruction">Entrez à nouveau votre PIN à 4 chiffres</string>
-    <string name="forgot_pin_mismatch">Les PINs ne correspondent pas. Réessayez.</string>
-    <string name="forgot_pin_reset_button">Réinitialiser PIN</string>
-    <string name="forgot_pin_success">PIN Réinitialisé!</string>
-    <string name="forgot_pin_success_message">Vous pouvez maintenant vous connecter avec votre nouveau PIN</string>
+    <!-- Forgot PIN -->
+    <string name="forgot_pin_title">Réinitialiser le PIN</string>
+    <string name="forgot_pin_enter_phone">Entrez votre numéro</string>
+    <string name="forgot_pin_send_code">Envoyer le code</string>
+    <string name="forgot_pin_verify_code">Vérifier le code</string>
+    <string name="forgot_pin_create_new">Créer un nouveau PIN</string>
+    <string name="forgot_pin_confirm">Confirmer votre PIN</string>
+    <string name="forgot_pin_mismatch">Les PINs ne correspondent pas</string>
+    <string name="forgot_pin_reset_button">Réinitialiser le PIN</string>
+    <string name="forgot_pin_success">PIN réinitialisé!</string>
     
     <!-- PIN Screen -->
     <string name="pin_title">Entrer le PIN</string>
-    <string name="pin_subtitle">Entrez votre PIN à 6 chiffres pour continuer</string>
+    <string name="pin_subtitle">Entrez votre PIN à 6 chiffres</string>
     <string name="pin_attempts_left">%d tentatives restantes</string>
     
-    <!-- Transaction Detail Screen -->
+    <!-- Transaction Detail -->
     <string name="transaction_not_found">Transaction non trouvée</string>
     <string name="go_back">Retour</string>
-    <string name="transaction_details">Détails de la Transaction</string>
-    <string name="raw_sms_message">Message SMS Brut</string>
-    <string name="copy_id">Copier ID</string>
+    <string name="transaction_details">Détails de la transaction</string>
+    <string name="copy_id">Copier l\'ID</string>
     <string name="share">Partager</string>
-    <string name="retry_sync">Réessayer Sync</string>
-    <string name="status">Statut</string>
-    
-    <!-- Login Screen -->
-    <string name="enter_otp">Entrez le code OTP à 6 chiffres</string>
-    <string name="too_many_attempts">Trop de tentatives échouées. Réessayez plus tard.</string>
-    <string name="send_otp">Envoyer OTP via WhatsApp</string>
-    <string name="resend_code">Pas reçu le code? Renvoyer</string>
+    <string name="retry_sync">Réessayer la sync</string>
     
     <!-- Common -->
     <string name="ok">OK</string>
@@ -253,22 +269,34 @@
     <string name="loading">Chargement…</string>
     <string name="error">Erreur</string>
     <string name="success">Succès</string>
-    <string name="pending">En Attente</string>
+    <string name="pending">En attente</string>
     <string name="sent">Envoyé</string>
+    <string name="today">Aujourd\'hui</string>
+    <string name="amount">Montant</string>
     <string name="dismiss">Fermer</string>
-    <string name="offline">Hors Ligne</string>
+    <string name="offline">Hors ligne</string>
     <string name="active">Actif</string>
     <string name="inactive">Inactif</string>
-    <string name="testing">Test</string>
     
     <!-- Components -->
-    <string name="filter_transactions">Filtrer les Transactions</string>
-    <string name="provider">Fournisseur</string>
-    <string name="sync_status">Statut de Sync</string>
+    <string name="filter_transactions">Filtrer les transactions</string>
+    <string name="provider">Opérateur</string>
+    <string name="sync_status">Statut de sync</string>
     <string name="date_range">Période</string>
-    <string name="no_transactions_title">Aucune Transaction</string>
-    <string name="no_transactions_description">Votre historique de transactions apparaîtra ici une fois que vous recevrez ou enverrez des paiements.</string>
-    <string name="select_provider">Sélectionner Fournisseur</string>
+    <string name="no_transactions_title">Aucune transaction</string>
+    <string name="no_transactions_description">Votre historique apparaîtra ici une fois que vous recevrez des paiements.</string>
+    <string name="select_provider">Sélectionner l\'opérateur</string>
     <string name="nfc_hold_device">Approchez votre appareil du terminal</string>
     <string name="nfc_processing">Traitement du paiement…</string>
+    
+    <!-- Errors -->
+    <string name="error_nfc_not_supported">NFC non supporté sur cet appareil</string>
+    <string name="error_nfc_disabled">Veuillez activer le NFC dans les paramètres</string>
+    <string name="error_invalid_amount">Veuillez entrer un montant valide</string>
+    <string name="error_sync_failed">Échec de la synchronisation</string>
+    
+    <!-- Actions -->
+    <string name="action_settings">Paramètres</string>
+    <string name="action_history">Historique</string>
+    <string name="action_sync">Synchroniser</string>
 </resources>

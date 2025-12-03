@@ -90,8 +90,9 @@ sealed class Screen(
     companion object {
         /**
          * All screens that appear in the bottom navigation bar.
+         * Terminal is now integrated into Home screen.
          */
-        val bottomNavItems = listOf(Home, Terminal, Transactions, Settings)
+        val bottomNavItems = listOf(Home, Transactions, Settings)
         
         /**
          * Authentication screens.
