@@ -1,47 +1,43 @@
 package com.momoterminal.core.common.model
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-
 /**
  * Complete country configuration from Supabase.
  * Each country has exactly ONE accepted mobile money provider.
  */
-@Serializable
 data class CountryConfig(
-    @SerialName("id") val id: String,
-    @SerialName("code") val code: String,
-    @SerialName("code_alpha3") val codeAlpha3: String? = null,
-    @SerialName("name") val name: String,
-    @SerialName("name_local") val nameLocal: String? = null,
-    @SerialName("name_french") val nameFrench: String? = null,
-    @SerialName("currency") val currency: String,
-    @SerialName("currency_symbol") val currencySymbol: String,
-    @SerialName("currency_name") val currencyName: String? = null,
-    @SerialName("currency_decimals") val currencyDecimals: Int = 2,
-    @SerialName("phone_prefix") val phonePrefix: String,
-    @SerialName("phone_length") val phoneLength: Int = 9,
-    @SerialName("phone_format") val phoneFormat: String? = null,
-    @SerialName("flag_emoji") val flagEmoji: String = "",
-    @SerialName("primary_language") val primaryLanguage: String = "en",
-    @SerialName("supported_languages") val supportedLanguages: List<String> = listOf("en"),
-    @SerialName("timezone") val timezone: String? = null,
-    @SerialName("provider_name") val providerName: String,
-    @SerialName("provider_code") val providerCode: String,
-    @SerialName("provider_color") val providerColor: String = "#FFCC00",
-    @SerialName("provider_logo_url") val providerLogoUrl: String? = null,
-    @SerialName("ussd_base_code") val ussdBaseCode: String? = null,
-    @SerialName("ussd_send_to_phone") val ussdSendToPhone: String? = null,
-    @SerialName("ussd_pay_merchant") val ussdPayMerchant: String? = null,
-    @SerialName("ussd_check_balance") val ussdCheckBalance: String? = null,
-    @SerialName("ussd_notes") val ussdNotes: String? = null,
-    @SerialName("has_ussd_support") val hasUssdSupport: Boolean = true,
-    @SerialName("has_app_support") val hasAppSupport: Boolean = false,
-    @SerialName("has_qr_support") val hasQrSupport: Boolean = false,
-    @SerialName("requires_pin_prompt") val requiresPinPrompt: Boolean = true,
-    @SerialName("is_active") val isActive: Boolean = true,
-    @SerialName("is_primary_market") val isPrimaryMarket: Boolean = false,
-    @SerialName("launch_priority") val launchPriority: Int = 99
+    val id: String,
+    val code: String,
+    val codeAlpha3: String? = null,
+    val name: String,
+    val nameLocal: String? = null,
+    val nameFrench: String? = null,
+    val currency: String,
+    val currencySymbol: String,
+    val currencyName: String? = null,
+    val currencyDecimals: Int = 2,
+    val phonePrefix: String,
+    val phoneLength: Int = 9,
+    val phoneFormat: String? = null,
+    val flagEmoji: String = "",
+    val primaryLanguage: String = "en",
+    val supportedLanguages: List<String> = listOf("en"),
+    val timezone: String? = null,
+    val providerName: String,
+    val providerCode: String,
+    val providerColor: String = "#FFCC00",
+    val providerLogoUrl: String? = null,
+    val ussdBaseCode: String? = null,
+    val ussdSendToPhone: String? = null,
+    val ussdPayMerchant: String? = null,
+    val ussdCheckBalance: String? = null,
+    val ussdNotes: String? = null,
+    val hasUssdSupport: Boolean = true,
+    val hasAppSupport: Boolean = false,
+    val hasQrSupport: Boolean = false,
+    val requiresPinPrompt: Boolean = true,
+    val isActive: Boolean = true,
+    val isPrimaryMarket: Boolean = false,
+    val launchPriority: Int = 99
 ) {
     fun formatPhoneNumber(number: String): String {
         val cleaned = number.replace(Regex("[^0-9]"), "")
@@ -115,15 +111,14 @@ data class CountryConfig(
 /**
  * Simplified country info for selection lists.
  */
-@Serializable
 data class CountryListItem(
-    @SerialName("code") val code: String,
-    @SerialName("name") val name: String,
-    @SerialName("flag_emoji") val flagEmoji: String,
-    @SerialName("provider_name") val providerName: String,
-    @SerialName("currency") val currency: String,
-    @SerialName("phone_prefix") val phonePrefix: String,
-    @SerialName("has_ussd_support") val hasUssdSupport: Boolean
+    val code: String,
+    val name: String,
+    val flagEmoji: String,
+    val providerName: String,
+    val currency: String,
+    val phonePrefix: String,
+    val hasUssdSupport: Boolean
 ) {
     fun toDisplayString(): String = "$flagEmoji $name"
     fun toDetailedDisplayString(): String = "$flagEmoji $name ($providerName)"
@@ -132,12 +127,11 @@ data class CountryListItem(
 /**
  * User's mobile money configuration.
  */
-@Serializable
 data class UserMomoConfig(
-    @SerialName("user_id") val userId: String,
-    @SerialName("whatsapp_country_code") val whatsappCountryCode: String,
-    @SerialName("momo_country_code") val momoCountryCode: String,
-    @SerialName("momo_phone_number") val momoPhoneNumber: String,
-    @SerialName("merchant_name") val merchantName: String = "",
-    @SerialName("is_verified") val isVerified: Boolean = false
+    val userId: String,
+    val whatsappCountryCode: String,
+    val momoCountryCode: String,
+    val momoPhoneNumber: String,
+    val merchantName: String = "",
+    val isVerified: Boolean = false
 )

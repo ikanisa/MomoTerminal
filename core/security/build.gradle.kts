@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.momoterminal.core.network"
+    namespace = "com.momoterminal.core.security"
     compileSdk = 35
 
     defaultConfig {
@@ -24,18 +24,9 @@ android {
 }
 
 dependencies {
-    implementation(project(":core:common"))
-    
     implementation(libs.androidx.core.ktx)
-    implementation(libs.coroutines.android)
+    implementation(libs.security.crypto)
     
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
-    
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.gson)
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.logging)
-    
-    implementation(libs.gson)
 }
