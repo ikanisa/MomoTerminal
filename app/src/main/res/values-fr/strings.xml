@@ -171,6 +171,8 @@
     <string name="transactions_title">Transactions</string>
     <string name="sms_access_required">Accès SMS Requis</string>
     <string name="sms_access_description">Pour enregistrer automatiquement les transactions, veuillez autoriser l\'accès SMS.</string>
+    <string name="sms_permission_optional">Permission SMS (Optionnel)</string>
+    <string name="sms_permission_optional_desc">Activez l\'accès SMS pour capturer automatiquement les confirmations de transaction.</string>
     <string name="grant_permission">Autoriser</string>
     <string name="select_date_range">Sélectionner Période</string>
     <string name="clear_date_range">Effacer la période</string>
@@ -178,6 +180,7 @@
     <string name="filter_pending">En Attente</string>
     <string name="filter_sent">Envoyé</string>
     <string name="filter_failed">Échoué</string>
+    <string name="no_transactions_with_filters">Aucune transaction ne correspond à vos filtres. Essayez d\'ajuster les filtres ou la période.</string>
     
     <!-- Registration Screen -->
     <string name="reg_welcome">Bienvenue sur MoMo Terminal</string>

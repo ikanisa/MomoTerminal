@@ -235,6 +235,8 @@
     <string name="transactions_title">Transactions</string>
     <string name="sms_access_required">SMS Access Required</string>
     <string name="sms_access_description">To automatically record transactions, please allow SMS access.</string>
+    <string name="sms_permission_optional">SMS Permission (Optional)</string>
+    <string name="sms_permission_optional_desc">Enable SMS access to automatically capture transaction confirmations.</string>
     <string name="grant_permission">Grant Permission</string>
     <string name="select_date_range">Select Date Range</string>
     <string name="clear_date_range">Clear date range</string>
@@ -242,6 +244,7 @@
     <string name="filter_pending">Pending</string>
     <string name="filter_sent">Sent</string>
     <string name="filter_failed">Failed</string>
+    <string name="no_transactions_with_filters">No transactions match your filters. Try adjusting the filters or date range.</string>
     
     <!-- Common -->
     <string name="ok">OK</string>
