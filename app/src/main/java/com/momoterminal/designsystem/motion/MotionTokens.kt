@@ -2,9 +2,6 @@ package com.momoterminal.designsystem.motion
 
 import androidx.compose.animation.core.*
 import androidx.compose.animation.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalView
 
 /**
  * Motion Design System for MomoTerminal
@@ -13,6 +10,8 @@ import androidx.compose.ui.platform.LocalView
  * - Financial confirmations: Slightly slower (450-500ms), reassuring easing
  * - Quick utilities: Fast (150-250ms), snappy response
  * - NFC interactions: Immediate feedback with sustained visual confirmation
+ * 
+ * All animations designed to feel "money-safe" - solid, trustworthy, responsive.
  */
 object MotionTokens {
     
@@ -131,8 +130,8 @@ object ScreenTransitions {
  * Tween animation specs for common use cases
  */
 object TweenSpecs {
-    fun quick() = tween<Float>(MotionTokens.QUICK, easing = MotionTokens.EaseOut)
-    fun standard() = tween<Float>(MotionTokens.STANDARD, easing = MotionTokens.EaseOutExpo)
-    fun financial() = tween<Float>(MotionTokens.FINANCIAL, easing = MotionTokens.EaseFinancial)
-    fun emphasis() = tween<Float>(MotionTokens.EMPHASIS, easing = MotionTokens.EaseOutBack)
+    fun <T> quick() = tween<T>(MotionTokens.QUICK, easing = MotionTokens.EaseOut)
+    fun <T> standard() = tween<T>(MotionTokens.STANDARD, easing = MotionTokens.EaseOutExpo)
+    fun <T> financial() = tween<T>(MotionTokens.FINANCIAL, easing = MotionTokens.EaseFinancial)
+    fun <T> emphasis() = tween<T>(MotionTokens.EMPHASIS, easing = MotionTokens.EaseOutBack)
 }

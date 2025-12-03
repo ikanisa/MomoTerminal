@@ -14,6 +14,7 @@ import com.momoterminal.data.model.CountryConfig
 import com.momoterminal.data.preferences.UserPreferences
 import com.momoterminal.data.repository.CountryRepository
 import com.momoterminal.security.BiometricHelper
+import com.momoterminal.util.LocaleManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +32,8 @@ class SettingsViewModel @Inject constructor(
     private val userPreferences: UserPreferences,
     private val authRepository: AuthRepository,
     private val biometricHelper: BiometricHelper,
-    private val countryRepository: CountryRepository
+    private val countryRepository: CountryRepository,
+    private val localeManager: LocaleManager
 ) : ViewModel() {
 
     data class PermissionState(
@@ -69,7 +71,8 @@ class SettingsViewModel @Inject constructor(
         val isConfigured: Boolean = false,
         val showSaveSuccess: Boolean = false,
         val showLogoutDialog: Boolean = false,
-        val permissions: PermissionState = PermissionState()
+        val permissions: PermissionState = PermissionState(),
+        val currentLanguage: String = "en"
     )
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -81,6 +84,21 @@ class SettingsViewModel @Inject constructor(
         checkBiometricAvailability()
         loadAppVersion()
         refreshPermissionStates()
+        loadLanguage()
+    }
+
+    private fun loadLanguage() {
+        viewModelScope.launch {
+            userPreferences.languageFlow.collect { lang ->
+                _uiState.update { it.copy(currentLanguage = lang.ifEmpty { "en" }) }
+            }
+        }
+    }
+
+    fun setLanguage(languageCode: String) {
+        viewModelScope.launch {
+            localeManager.setLanguage(languageCode)
+        }
     }
 
     fun refreshPermissionStates() {

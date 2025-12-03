@@ -350,4 +350,17 @@
     <string name="terms_subtitle">Please read and accept our terms to continue</string>
     <string name="terms_content">By creating an account, you agree to:\n\n• Process mobile money transactions through your terminal\n• Keep your PIN confidential and secure\n• Comply with all applicable mobile money regulations\n• Allow transaction data synchronization\n• Receive notifications about your transactions\n\nYour data will be encrypted and stored securely.</string>
     <string name="terms_accept_checkbox">I accept the Terms and Conditions and Privacy Policy</string>
+    
+    <!-- Wallet -->
+    <string name="wallet_title">Token Wallet</string>
+    <string name="wallet_balance">Your Balance</string>
+    <string name="wallet_history">Transaction History</string>
+    <string name="wallet_no_transactions">No transactions yet</string>
+    <string name="wallet_credit_from_sms">Credit from MoMo</string>
+    <string name="nav_wallet">Wallet</string>
+    
+    <!-- Language Settings -->
+    <string name="settings_language">Language</string>
+    <string name="settings_language_subtitle">Choose your preferred language</string>
+    <string name="settings_language_system">System default</string>
 </resources>

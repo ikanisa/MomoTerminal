@@ -149,7 +149,7 @@ fun TransactionFilterSheet(
                                 tempFilter.withStatus(status)
                             }
                         },
-                        label = { Text(status.value) },
+                        label = { Text(status.name) },
                         modifier = Modifier.minTouchTarget()
                     )
                 }

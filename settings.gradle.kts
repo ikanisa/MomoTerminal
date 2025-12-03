@@ -21,5 +21,27 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "MomoTerminal"
+
+// Main app module
 include(":app")
+
+// Core modules
+include(":core:common")
+include(":core:designsystem")
+include(":core:ui")
+include(":core:network")
+include(":core:database")
+include(":core:data")
+include(":core:domain")
+include(":core:os-integration")
+include(":core:performance")
+include(":core:i18n")
+
+// Feature modules
+include(":feature:payment")
+include(":feature:transactions")
+include(":feature:auth")
+include(":feature:settings")
+
+// Baseline profile
 include(":baselineprofile")

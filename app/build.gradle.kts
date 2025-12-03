@@ -311,6 +311,24 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
 }
 
 dependencies {
+    // Core modules
+    implementation(project(":core:common"))
+    implementation(project(":core:designsystem"))
+    implementation(project(":core:ui"))
+    implementation(project(":core:network"))
+    implementation(project(":core:database"))
+    implementation(project(":core:data"))
+    implementation(project(":core:domain"))
+    implementation(project(":core:os-integration"))
+    implementation(project(":core:performance"))
+    implementation(project(":core:i18n"))
+    
+    // Feature modules
+    implementation(project(":feature:payment"))
+    implementation(project(":feature:transactions"))
+    implementation(project(":feature:auth"))
+    implementation(project(":feature:settings"))
+    
     // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -393,6 +411,9 @@ dependencies {
 
     // Coroutines
     implementation(libs.coroutines.android)
+
+    // Kotlinx Collections Immutable (for Compose stability)
+    implementation(libs.kotlinx.collections.immutable)
 
     // Lifecycle
     implementation(libs.lifecycle.runtime.ktx)

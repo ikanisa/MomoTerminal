@@ -50,6 +50,10 @@ enum class MomoHaptic {
     Warning
 }
 
+/**
+ * Haptic engine for triggering vibration patterns.
+ * Inject this into ViewModels or use the Compose extension functions.
+ */
 @Singleton
 class MomoHapticEngine @Inject constructor(
     @ApplicationContext private val context: Context
@@ -115,6 +119,8 @@ class MomoHapticEngine @Inject constructor(
             }
         }
     }
+    
+    fun isAvailable(): Boolean = vibrator?.hasVibrator() == true
 }
 
 /**

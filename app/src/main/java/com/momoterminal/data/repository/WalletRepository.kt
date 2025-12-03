@@ -1,13 +1,13 @@
 package com.momoterminal.data.repository
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.momoterminal.data.local.dao.WalletDao
 import com.momoterminal.data.local.entity.TokenTransactionEntity
 import com.momoterminal.data.local.entity.TokenWalletEntity
 import com.momoterminal.domain.model.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
@@ -33,6 +33,8 @@ interface WalletRepository {
 class WalletRepositoryImpl @Inject constructor(
     private val walletDao: WalletDao
 ) : WalletRepository {
+    
+    private val gson = Gson()
     
     override fun observeWallet(userId: String): Flow<TokenWallet?> {
         return walletDao.observeByUserId(userId).map { it?.toDomain() }
@@ -85,7 +87,7 @@ class WalletRepositoryImpl @Inject constructor(
                 reference = reference,
                 referenceType = referenceType?.name,
                 description = description,
-                metadata = if (metadata.isNotEmpty()) Json.encodeToString(metadata) else null
+                metadata = if (metadata.isNotEmpty()) gson.toJson(metadata) else null
             )
             
             val updated = walletDao.applyTransaction(wallet, transaction)
@@ -98,31 +100,33 @@ class WalletRepositoryImpl @Inject constructor(
     override suspend fun getBalance(userId: String): Long {
         return walletDao.getByUserId(userId)?.balance ?: 0
     }
+    
+    private fun TokenWalletEntity.toDomain() = TokenWallet(
+        id = id,
+        userId = userId,
+        balance = balance,
+        currency = currency,
+        walletType = WalletType.valueOf(walletType),
+        createdAt = Instant.ofEpochMilli(createdAt),
+        updatedAt = Instant.ofEpochMilli(updatedAt),
+        syncStatus = SyncStatus.valueOf(syncStatus)
+    )
+    
+    private fun TokenTransactionEntity.toDomain(): TokenTransaction {
+        val type = object : TypeToken<Map<String, String>>() {}.type
+        return TokenTransaction(
+            id = id,
+            walletId = walletId,
+            amount = amount,
+            type = TokenTransactionType.valueOf(this.type),
+            balanceBefore = balanceBefore,
+            balanceAfter = balanceAfter,
+            reference = reference,
+            referenceType = referenceType?.let { ReferenceType.valueOf(it) },
+            description = description,
+            metadata = metadata?.let { gson.fromJson<Map<String, String>>(it, type) } ?: emptyMap(),
+            createdAt = Instant.ofEpochMilli(createdAt),
+            syncStatus = SyncStatus.valueOf(syncStatus)
+        )
+    }
 }
-
-// Mappers
-private fun TokenWalletEntity.toDomain() = TokenWallet(
-    id = id,
-    userId = userId,
-    balance = balance,
-    currency = currency,
-    walletType = WalletType.valueOf(walletType),
-    createdAt = Instant.ofEpochMilli(createdAt),
-    updatedAt = Instant.ofEpochMilli(updatedAt),
-    syncStatus = SyncStatus.valueOf(syncStatus)
-)
-
-private fun TokenTransactionEntity.toDomain() = TokenTransaction(
-    id = id,
-    walletId = walletId,
-    amount = amount,
-    type = TokenTransactionType.valueOf(type),
-    balanceBefore = balanceBefore,
-    balanceAfter = balanceAfter,
-    reference = reference,
-    referenceType = referenceType?.let { ReferenceType.valueOf(it) },
-    description = description,
-    metadata = metadata?.let { Json.decodeFromString(it) } ?: emptyMap(),
-    createdAt = Instant.ofEpochMilli(createdAt),
-    syncStatus = SyncStatus.valueOf(syncStatus)
-)

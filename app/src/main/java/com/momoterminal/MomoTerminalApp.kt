@@ -9,6 +9,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.momoterminal.monitoring.AnalyticsHelper
 import com.momoterminal.monitoring.CrashlyticsHelper
 import com.momoterminal.monitoring.PerformanceHelper
+import com.momoterminal.offline.OfflineFirstManager
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 import javax.inject.Inject
@@ -33,6 +34,9 @@ class MomoTerminalApp : Application(), Configuration.Provider {
     @Inject
     lateinit var performanceHelper: PerformanceHelper
 
+    @Inject
+    lateinit var offlineFirstManager: OfflineFirstManager
+
     lateinit var sharedPreferences: SharedPreferences
         private set
 
@@ -44,6 +48,7 @@ class MomoTerminalApp : Application(), Configuration.Provider {
         initializeCrashRecovery()
         initializeFirebase()
         initializeTimber()
+        initializeOfflineSync()
     }
 
     /**
@@ -87,6 +92,14 @@ class MomoTerminalApp : Application(), Configuration.Provider {
             // Plant a Crashlytics tree for production
             Timber.plant(CrashlyticsTree(crashlyticsHelper))
         }
+    }
+
+    /**
+     * Initialize offline-first sync strategy.
+     */
+    private fun initializeOfflineSync() {
+        offlineFirstManager.schedulePeriodicSync()
+        Timber.d("Offline-first sync initialized")
     }
 
     override val workManagerConfiguration: Configuration

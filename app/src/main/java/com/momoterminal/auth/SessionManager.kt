@@ -225,4 +225,10 @@ class SessionManager @Inject constructor(
 
         return false
     }
+
+    /**
+     * Get the current user ID from the token.
+     */
+    val currentUserId: String?
+        get() = tokenManager.getUserId()
 }

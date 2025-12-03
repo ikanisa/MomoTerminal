@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.momoterminal.R
 import com.momoterminal.config.SupportedCountries
+import com.momoterminal.i18n.LanguageSettingsRow
 import com.momoterminal.presentation.components.MomoButton
 import com.momoterminal.presentation.components.MomoTextField
 import com.momoterminal.presentation.components.common.MomoTopAppBar
@@ -248,6 +249,19 @@ fun SettingsScreen(
                 onCheckedChange = viewModel::toggleBiometric,
                 enabled = uiState.isBiometricAvailable
             )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Language Selection
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+            ) {
+                LanguageSettingsRow(
+                    currentLanguage = uiState.currentLanguage,
+                    onLanguageChange = viewModel::setLanguage
+                )
+            }
             
             Spacer(modifier = Modifier.height(24.dp))
             HorizontalDivider()

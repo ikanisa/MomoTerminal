@@ -61,6 +61,8 @@ import com.momoterminal.R
 import com.momoterminal.nfc.NfcState
 import com.momoterminal.presentation.components.MomoButton
 import com.momoterminal.presentation.components.ButtonType
+import com.momoterminal.presentation.components.OfflineBanner
+import com.momoterminal.presentation.components.SyncStatusIndicator
 import com.momoterminal.presentation.components.common.MomoTopAppBar
 import com.momoterminal.presentation.components.terminal.AmountDisplay
 import com.momoterminal.presentation.components.terminal.AmountKeypad
@@ -85,7 +87,9 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val nfcState by viewModel.nfcState.collectAsState()
-    val isNfcActive = nfcState.isActive()
+    val syncState by viewModel.syncState.collectAsState()
+    val pendingCount by viewModel.pendingCount.collectAsState()
+    val isNfcActive = nfcState.isWorking()
     val isSuccess = nfcState is NfcState.Success
     var isAmountFocused by remember { mutableStateOf(false) }
 
@@ -113,6 +117,11 @@ fun HomeScreen(
                         exit = fadeOut(tween(MomoAnimation.DURATION_FAST))
                     ) {
                         Row {
+                            SyncStatusIndicator(
+                                syncState = syncState,
+                                pendingCount = pendingCount,
+                                onSyncClick = { viewModel.triggerSync() }
+                            )
                             IconButton(onClick = onNavigateToTransactions) {
                                 Icon(Icons.Filled.History, contentDescription = stringResource(R.string.nav_history))
                             }
@@ -479,7 +488,7 @@ private fun NfcActiveContent(
             Spacer(modifier = Modifier.height(48.dp))
 
             NfcPulseAnimation(
-                isActive = nfcState.isActive(),
+                isActive = nfcState.isWorking(),
                 isSuccess = isSuccess,
                 message = message
             )

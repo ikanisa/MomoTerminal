@@ -160,6 +160,9 @@ class SyncManager @Inject constructor(
             ExistingPeriodicWorkPolicy.KEEP,
             periodicSyncRequest
         )
+        
+        // Also schedule wallet sync
+        WalletSyncWorker.enqueuePeriodicSync(context)
     }
     
     /**

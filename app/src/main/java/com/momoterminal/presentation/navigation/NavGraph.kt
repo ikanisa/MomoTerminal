@@ -4,26 +4,39 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.momoterminal.capabilities.CapabilitiesDemoScreen
+import com.momoterminal.designsystem.motion.MotionTokens
 import com.momoterminal.presentation.screens.auth.ForgotPinScreen
 import com.momoterminal.presentation.screens.auth.LoginScreen
 import com.momoterminal.presentation.screens.auth.PinScreen
 import com.momoterminal.presentation.screens.auth.RegisterScreen
 import com.momoterminal.presentation.screens.home.HomeScreen
+import com.momoterminal.presentation.screens.home.HomeViewModel
+import com.momoterminal.presentation.screens.nfc.NfcTerminalScreen
 import com.momoterminal.presentation.screens.settings.SettingsScreen
 import com.momoterminal.presentation.screens.transaction.TransactionDetailScreen
 import com.momoterminal.presentation.screens.transactions.TransactionsScreen
 
 /**
  * Main navigation graph for the app.
- * Defines all navigation destinations and transitions.
+ * Uses MomoTerminal motion system for polished, "money-safe" transitions.
+ * 
+ * Transition principles:
+ * - Standard screens: 300ms horizontal slide with fade
+ * - Financial screens: 450ms with scale for emphasis
+ * - Quick utilities: 200ms for snappy response
  */
 @Composable
 fun NavGraph(
@@ -39,33 +52,47 @@ fun NavGraph(
         navController = navController,
         startDestination = actualStartDestination,
         modifier = modifier,
+        // Standard screen transitions using motion tokens
         enterTransition = {
-            fadeIn(animationSpec = tween(300)) + slideIntoContainer(
+            fadeIn(animationSpec = tween(MotionTokens.STANDARD, easing = MotionTokens.EaseOut)) + 
+            slideIntoContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.Start,
-                animationSpec = tween(300)
+                animationSpec = tween(MotionTokens.STANDARD, easing = MotionTokens.EaseOutExpo)
             )
         },
         exitTransition = {
-            fadeOut(animationSpec = tween(300)) + slideOutOfContainer(
+            fadeOut(animationSpec = tween(MotionTokens.QUICK, easing = MotionTokens.EaseIn)) + 
+            slideOutOfContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.Start,
-                animationSpec = tween(300)
+                animationSpec = tween(MotionTokens.QUICK, easing = MotionTokens.EaseIn)
             )
         },
         popEnterTransition = {
-            fadeIn(animationSpec = tween(300)) + slideIntoContainer(
+            fadeIn(animationSpec = tween(MotionTokens.STANDARD, easing = MotionTokens.EaseOut)) + 
+            slideIntoContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.End,
-                animationSpec = tween(300)
+                animationSpec = tween(MotionTokens.STANDARD, easing = MotionTokens.EaseOutExpo)
             )
         },
         popExitTransition = {
-            fadeOut(animationSpec = tween(300)) + slideOutOfContainer(
+            fadeOut(animationSpec = tween(MotionTokens.QUICK, easing = MotionTokens.EaseIn)) + 
+            slideOutOfContainer(
                 towards = AnimatedContentTransitionScope.SlideDirection.End,
-                animationSpec = tween(300)
+                animationSpec = tween(MotionTokens.QUICK, easing = MotionTokens.EaseIn)
             )
         }
     ) {
-        // Login screen
-        composable(route = Screen.Login.route) {
+        // Login screen - uses financial transition (slower, more deliberate)
+        composable(
+            route = Screen.Login.route,
+            enterTransition = {
+                fadeIn(tween(MotionTokens.FINANCIAL, easing = MotionTokens.EaseFinancial)) +
+                scaleIn(initialScale = 0.95f, animationSpec = tween(MotionTokens.FINANCIAL, easing = MotionTokens.EaseFinancial))
+            },
+            exitTransition = {
+                fadeOut(tween(MotionTokens.STANDARD))
+            }
+        ) {
             LoginScreen(
                 onNavigateToRegister = {
                     navController.navigate(Screen.Register.route)
@@ -100,8 +127,14 @@ fun NavGraph(
             )
         }
         
-        // PIN entry screen
-        composable(route = Screen.PinEntry.route) {
+        // PIN entry screen - uses financial transition
+        composable(
+            route = Screen.PinEntry.route,
+            enterTransition = {
+                fadeIn(tween(MotionTokens.FINANCIAL, easing = MotionTokens.EaseFinancial)) +
+                scaleIn(initialScale = 0.95f, animationSpec = tween(MotionTokens.FINANCIAL, easing = MotionTokens.EaseFinancial))
+            }
+        ) {
             PinScreen(
                 title = "Unlock App",
                 subtitle = "Enter your PIN to continue",
@@ -138,7 +171,7 @@ fun NavGraph(
         composable(route = Screen.Home.route) {
             HomeScreen(
                 onNavigateToTerminal = {
-                    // Terminal is now integrated into Home, no navigation needed
+                    navController.navigate(Screen.NfcTerminal.route)
                 },
                 onNavigateToTransactions = {
                     navController.navigate(Screen.Transactions.route)
@@ -149,8 +182,54 @@ fun NavGraph(
             )
         }
         
-        // Transactions screen (History)
-        composable(route = Screen.Transactions.route) {
+        // NFC Terminal screen - dedicated NFC payment flow with motion system
+        composable(
+            route = Screen.NfcTerminal.route,
+            enterTransition = {
+                fadeIn(tween(MotionTokens.FINANCIAL, easing = MotionTokens.EaseFinancial)) +
+                scaleIn(initialScale = 0.95f, animationSpec = tween(MotionTokens.FINANCIAL, easing = MotionTokens.EaseFinancial))
+            },
+            exitTransition = {
+                fadeOut(tween(MotionTokens.STANDARD)) +
+                scaleOut(targetScale = 0.95f, animationSpec = tween(MotionTokens.STANDARD))
+            }
+        ) {
+            val viewModel: HomeViewModel = hiltViewModel()
+            val uiState by viewModel.uiState.collectAsState()
+            val nfcState by viewModel.nfcState.collectAsState()
+            
+            NfcTerminalScreen(
+                amount = uiState.amount.toDoubleOrNull() ?: 0.0,
+                currencySymbol = uiState.currencySymbol,
+                nfcState = nfcState,
+                onActivate = { viewModel.activatePayment() },
+                onCancel = { 
+                    viewModel.cancelPayment()
+                    navController.popBackStack()
+                },
+                onComplete = {
+                    viewModel.cancelPayment()
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        // Transactions screen (History) - quick transition
+        composable(
+            route = Screen.Transactions.route,
+            enterTransition = {
+                fadeIn(tween(MotionTokens.QUICK)) + slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(MotionTokens.STANDARD, easing = MotionTokens.EaseOutExpo)
+                )
+            },
+            exitTransition = {
+                fadeOut(tween(MotionTokens.QUICK)) + slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = tween(MotionTokens.QUICK, easing = MotionTokens.EaseIn)
+                )
+            }
+        ) {
             TransactionsScreen(
                 onNavigateBack = {
                     navController.popBackStack()
@@ -177,16 +256,42 @@ fun NavGraph(
             )
         }
         
-        // Transaction detail screen
+        // Transaction detail screen - financial transition (important info)
         composable(
             route = Screen.TransactionDetail.route,
             arguments = listOf(
                 navArgument("transactionId") { type = NavType.LongType }
-            )
+            ),
+            enterTransition = {
+                fadeIn(tween(MotionTokens.FINANCIAL, easing = MotionTokens.EaseFinancial)) +
+                scaleIn(initialScale = 0.92f, animationSpec = tween(MotionTokens.FINANCIAL, easing = MotionTokens.EaseOutBack))
+            },
+            exitTransition = {
+                fadeOut(tween(MotionTokens.STANDARD)) +
+                scaleOut(targetScale = 0.92f, animationSpec = tween(MotionTokens.STANDARD))
+            }
         ) { backStackEntry ->
             val transactionId = backStackEntry.arguments?.getLong("transactionId") ?: 0L
             TransactionDetailScreen(
                 transactionId = transactionId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        // Wallet screen - financial transition
+        composable(
+            route = Screen.Wallet.route,
+            enterTransition = {
+                fadeIn(tween(MotionTokens.FINANCIAL, easing = MotionTokens.EaseFinancial)) +
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(MotionTokens.FINANCIAL, easing = MotionTokens.EaseOutExpo)
+                )
+            }
+        ) {
+            com.momoterminal.presentation.screens.wallet.WalletScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -52,17 +53,10 @@ fun TransactionsScreen(
     viewModel: TransactionsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val transactions by viewModel.transactions.collectAsState()
+    val recentTransactions by viewModel.recentTransactions.collectAsState()
     
     // Check SMS permission - note: SMS permission is OPTIONAL
     val smsPermissionState = rememberPermissionState(Manifest.permission.RECEIVE_SMS)
-    
-    val filteredTransactions = viewModel.getFilteredTransactions(
-        transactions = transactions,
-        filter = uiState.filter,
-        dateRangeStart = uiState.dateRangeStart,
-        dateRangeEnd = uiState.dateRangeEnd
-    )
     
     Scaffold(
         topBar = {
@@ -79,9 +73,9 @@ fun TransactionsScreen(
                 .padding(paddingValues)
         ) {
             // Stats Summary Card
-            if (transactions.isNotEmpty()) {
+            if (recentTransactions.isNotEmpty()) {
                 TransactionSummaryCard(
-                    totalCount = transactions.size,
+                    totalCount = uiState.totalCount,
                     pendingCount = uiState.pendingCount,
                     todayRevenue = uiState.todayRevenue,
                     currency = uiState.currency,
@@ -91,7 +85,7 @@ fun TransactionsScreen(
 
             // Filter chips
             FilterChipsRow(
-                selectedFilter = uiState.filter,
+                selectedFilter = uiState.filterType,
                 onFilterSelected = viewModel::setFilter,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
@@ -116,15 +110,15 @@ fun TransactionsScreen(
             }
             
             // Transaction list or empty state
-            if (filteredTransactions.isEmpty() && !uiState.isRefreshing) {
+            if (recentTransactions.isEmpty() && !uiState.isRefreshing) {
                 EmptyTransactionsState(
-                    hasFilters = uiState.filter != TransactionsViewModel.TransactionFilter.ALL ||
+                    hasFilters = uiState.filterType != TransactionsViewModel.FilterType.ALL ||
                             uiState.dateRangeStart != null,
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
                 TransactionList(
-                    transactions = filteredTransactions,
+                    transactions = recentTransactions,
                     onTransactionClick = { transaction ->
                         onTransactionClick(transaction.id)
                     },
@@ -209,118 +203,6 @@ private fun StatItem(
 }
 
 /**
- * Filter section with chips and date range.
- */
-@Composable
-private fun FilterSection(
-    selectedFilter: TransactionsViewModel.TransactionFilter,
-    onFilterSelected: (TransactionsViewModel.TransactionFilter) -> Unit,
-    dateRangeStart: Long?,
-    dateRangeEnd: Long?,
-    onClearDateRange: () -> Unit,
-    onShowDatePicker: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier) {
-        // Filter chips row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.FilterList,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            
-            TransactionsViewModel.TransactionFilter.entries.forEach { filter ->
-                FilterChip(
-                    selected = filter == selectedFilter,
-                    onClick = { onFilterSelected(filter) },
-                    label = {
-                        Text(
-                            text = stringResource(
-                                when (filter) {
-                                    TransactionsViewModel.TransactionFilter.ALL -> R.string.filter_all
-                                    TransactionsViewModel.TransactionFilter.PENDING -> R.string.filter_pending
-                                    TransactionsViewModel.TransactionFilter.SENT -> R.string.filter_sent
-                                    TransactionsViewModel.TransactionFilter.FAILED -> R.string.filter_failed
-                                }
-                            ),
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MomoYellow,
-                        selectedLabelColor = Color.Black,
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    border = FilterChipDefaults.filterChipBorder(
-                        enabled = true,
-                        selected = filter == selectedFilter,
-                        borderColor = if (filter == selectedFilter) Color.Transparent else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                    )
-                )
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        // Date range chip
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            if (dateRangeStart != null && dateRangeEnd != null) {
-                FilterChip(
-                    selected = true,
-                    onClick = onClearDateRange,
-                    label = {
-                        Text(
-                            "${formatDate(dateRangeStart)} - ${formatDate(dateRangeEnd)}",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    },
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.clear_date_range),
-                            modifier = Modifier.size(16.dp)
-                        )
-                    },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                )
-            } else {
-                FilterChip(
-                    selected = false,
-                    onClick = onShowDatePicker,
-                    label = { 
-                        Text(
-                            stringResource(R.string.select_date_range),
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.CalendarToday,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                )
-            }
-        }
-    }
-}
-
-/**
  * SMS permission info card - optional, dismissable.
  */
 @Composable
@@ -377,15 +259,15 @@ private fun SmsPermissionInfoCard(
  */
 @Composable
 private fun FilterChipsRow(
-    selectedFilter: TransactionsViewModel.TransactionFilter,
-    onFilterSelected: (TransactionsViewModel.TransactionFilter) -> Unit,
+    selectedFilter: TransactionsViewModel.FilterType,
+    onFilterSelected: (TransactionsViewModel.FilterType) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier.horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        TransactionsViewModel.TransactionFilter.entries.forEach { filter ->
+        TransactionsViewModel.FilterType.entries.forEach { filter ->
             FilterChip(
                 selected = filter == selectedFilter,
                 onClick = { onFilterSelected(filter) },
@@ -393,10 +275,10 @@ private fun FilterChipsRow(
                     Text(
                         text = stringResource(
                             when (filter) {
-                                TransactionsViewModel.TransactionFilter.ALL -> R.string.filter_all
-                                TransactionsViewModel.TransactionFilter.PENDING -> R.string.filter_pending
-                                TransactionsViewModel.TransactionFilter.SENT -> R.string.filter_sent
-                                TransactionsViewModel.TransactionFilter.FAILED -> R.string.filter_failed
+                                TransactionsViewModel.FilterType.ALL -> R.string.filter_all
+                                TransactionsViewModel.FilterType.PENDING -> R.string.filter_pending
+                                TransactionsViewModel.FilterType.SENT -> R.string.filter_sent
+                                TransactionsViewModel.FilterType.FAILED -> R.string.filter_failed
                             }
                         )
                     )

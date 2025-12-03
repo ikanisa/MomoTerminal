@@ -295,4 +295,17 @@
     <string name="terms_subtitle">Veuillez lire et accepter nos conditions pour continuer</string>
     <string name="terms_content">En créant un compte, vous acceptez de :\n\n• Traiter les transactions mobile money via votre terminal\n• Garder votre PIN confidentiel et sécurisé\n• Respecter toutes les réglementations mobile money applicables\n• Permettre la synchronisation des données de transaction\n• Recevoir des notifications sur vos transactions\n\nVos données seront cryptées et stockées en toute sécurité.</string>
     <string name="terms_accept_checkbox">J\'accepte les conditions générales et la politique de confidentialité</string>
+    
+    <!-- Language Settings -->
+    <string name="settings_language">Langue</string>
+    <string name="settings_language_subtitle">Choisissez votre langue préférée</string>
+    <string name="settings_language_system">Par défaut du système</string>
+    
+    <!-- Wallet -->
+    <string name="wallet_title">Portefeuille</string>
+    <string name="wallet_balance">Votre solde</string>
+    <string name="wallet_history">Historique des transactions</string>
+    <string name="wallet_no_transactions">Aucune transaction</string>
+    <string name="wallet_credit_from_sms">Crédit MoMo</string>
+    <string name="nav_wallet">Portefeuille</string>
 </resources>

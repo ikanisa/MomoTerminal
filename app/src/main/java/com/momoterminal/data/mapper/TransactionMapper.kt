@@ -50,7 +50,7 @@ object TransactionMapper {
             currency = transaction.currency,
             transactionId = transaction.transactionId,
             timestamp = transaction.timestamp,
-            status = transaction.status.value,
+            status = transaction.status.name,
             merchantCode = transaction.merchantCode
         )
     }

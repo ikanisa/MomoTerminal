@@ -57,7 +57,7 @@ class TransactionRepositoryImpl @Inject constructor(
     
     override suspend fun updateTransactionStatus(id: Long, status: SyncStatus): Result<Unit> {
         return try {
-            transactionDao.updateStatus(id, status.value)
+            transactionDao.updateStatus(id, status.name)
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Error(e)
@@ -86,7 +86,7 @@ class TransactionRepositoryImpl @Inject constructor(
                     val response = apiService.syncTransaction(request)
                     
                     if (response.isSuccessful && response.body()?.success == true) {
-                        transactionDao.updateStatus(entity.id, SyncStatus.SENT.value)
+                        transactionDao.updateStatus(entity.id, SyncStatus.SENT.name)
                         syncedCount++
                     } else {
                         // Keep as pending for retry
@@ -123,8 +123,8 @@ class TransactionRepositoryImpl @Inject constructor(
             ),
             pagingSourceFactory = {
                 transactionDao.getFilteredTransactionsPagingSource(
-                    status = filter.status?.value,
-                    provider = filter.provider?.displayName,
+                    status = filter.status?.name,
+                    provider = filter.provider?.name,
                     startTimestamp = filter.startDate?.time,
                     endTimestamp = filter.endDate?.time,
                     searchQuery = filter.searchQuery?.takeIf { it.isNotBlank() },
@@ -141,8 +141,8 @@ class TransactionRepositoryImpl @Inject constructor(
     
     override fun getFilteredTransactionCount(filter: TransactionFilter): Flow<Int> {
         return transactionDao.getFilteredTransactionCount(
-            status = filter.status?.value,
-            provider = filter.provider?.displayName,
+            status = filter.status?.name,
+            provider = filter.provider?.name,
             startTimestamp = filter.startDate?.time,
             endTimestamp = filter.endDate?.time,
             searchQuery = filter.searchQuery?.takeIf { it.isNotBlank() },

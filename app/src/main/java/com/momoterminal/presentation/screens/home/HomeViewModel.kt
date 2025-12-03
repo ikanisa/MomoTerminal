@@ -2,16 +2,17 @@ package com.momoterminal.presentation.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.momoterminal.data.local.dao.TransactionDao
 import com.momoterminal.data.preferences.UserPreferences
 import com.momoterminal.data.repository.CountryRepository
+import com.momoterminal.data.repository.WalletRepository
 import com.momoterminal.nfc.NfcManager
 import com.momoterminal.nfc.NfcPaymentData
 import com.momoterminal.nfc.NfcState
+import com.momoterminal.offline.OfflineFirstManager
+import com.momoterminal.offline.SyncState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,7 +20,10 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val nfcManager: NfcManager,
     private val userPreferences: UserPreferences,
-    private val countryRepository: CountryRepository
+    private val countryRepository: CountryRepository,
+    private val offlineFirstManager: OfflineFirstManager,
+    private val transactionDao: TransactionDao,
+    private val walletRepository: WalletRepository
 ) : ViewModel() {
 
     data class HomeUiState(
@@ -32,17 +36,22 @@ class HomeViewModel @Inject constructor(
         val merchantPhone: String = "",
         val isConfigured: Boolean = false,
         val isNfcEnabled: Boolean = true,
-        val isNfcAvailable: Boolean = false
+        val isNfcAvailable: Boolean = false,
+        val walletBalance: Long = 0,
+        val recentTransactionCount: Int = 0
     )
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     val nfcState: StateFlow<NfcState> = nfcManager.nfcState
+    val syncState: StateFlow<SyncState> = offlineFirstManager.syncState
+    val pendingCount: StateFlow<Int> = offlineFirstManager.pendingCount
 
     init {
         loadUserConfig()
         checkNfcAvailability()
+        observeLocalData()
     }
 
     private fun loadUserConfig() {
@@ -68,6 +77,29 @@ class HomeViewModel @Inject constructor(
 
     private fun checkNfcAvailability() {
         _uiState.update { it.copy(isNfcAvailable = nfcManager.isNfcAvailable()) }
+    }
+
+    private fun observeLocalData() {
+        // Observe wallet balance (offline-first: always available)
+        viewModelScope.launch {
+            userPreferences.userPreferencesFlow.flatMapLatest { prefs ->
+                val userId = prefs.merchantPhone.ifBlank { prefs.phoneNumber.ifBlank { "default" } }
+                if (userId.isNotBlank()) {
+                    walletRepository.observeWallet(userId).map { it?.balance ?: 0 }
+                } else {
+                    flowOf(0L)
+                }
+            }.collect { balance ->
+                _uiState.update { it.copy(walletBalance = balance) }
+            }
+        }
+
+        // Observe recent transaction count
+        viewModelScope.launch {
+            transactionDao.getRecentTransactions(10).collect { transactions ->
+                _uiState.update { it.copy(recentTransactionCount = transactions.size) }
+            }
+        }
     }
 
     fun onDigitClick(digit: String) {
@@ -112,6 +144,10 @@ class HomeViewModel @Inject constructor(
     fun cancelPayment() {
         nfcManager.cancelPayment()
         _uiState.update { it.copy(amount = "") }
+    }
+
+    fun triggerSync() {
+        offlineFirstManager.triggerImmediateSync()
     }
 
     fun isAmountValid(): Boolean {

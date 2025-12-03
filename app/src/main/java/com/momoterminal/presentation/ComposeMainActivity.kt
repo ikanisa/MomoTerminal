@@ -25,6 +25,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.momoterminal.auth.AuthViewModel
 import com.momoterminal.auth.SessionManager
+import com.momoterminal.data.preferences.UserPreferences
+import com.momoterminal.i18n.LocaleProvider
 import com.momoterminal.presentation.components.error.AppErrorBoundary
 import com.momoterminal.presentation.navigation.NavGraph
 import com.momoterminal.presentation.navigation.Screen
@@ -45,19 +47,23 @@ class ComposeMainActivity : ComponentActivity() {
     @Inject
     lateinit var sessionManager: SessionManager
     
+    @Inject
+    lateinit var userPreferences: UserPreferences
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
         setContent {
             MomoTerminalTheme {
-                // Wrap the entire app with error boundary for crash recovery
-                AppErrorBoundary(
-                    onError = { throwable ->
-                        Timber.e(throwable, "Error caught by AppErrorBoundary")
+                LocaleProvider(userPreferences = userPreferences) {
+                    AppErrorBoundary(
+                        onError = { throwable ->
+                            Timber.e(throwable, "Error caught by AppErrorBoundary")
+                        }
+                    ) {
+                        MomoTerminalApp(sessionManager = sessionManager)
                     }
-                ) {
-                    MomoTerminalApp(sessionManager = sessionManager)
                 }
             }
         }

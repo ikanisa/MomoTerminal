@@ -1,9 +1,11 @@
 package com.momoterminal.presentation.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Animation
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.outlined.Animation
 import androidx.compose.material.icons.outlined.Nfc
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Build
@@ -79,12 +81,33 @@ sealed class Screen(
         fun createRoute(transactionId: Long): String = "transaction/$transactionId"
     }
     
+    data object Wallet : Screen(
+        route = "wallet",
+        title = "Wallet"
+    )
+    
     // Capabilities Demo screen - demonstrates various Android app capabilities
     data object CapabilitiesDemo : Screen(
         route = "capabilities_demo",
         title = "Capabilities Demo",
         selectedIcon = Icons.Filled.Build,
         unselectedIcon = Icons.Outlined.Build
+    )
+    
+    // Motion System Showcase - demonstrates motion design system
+    data object MotionShowcase : Screen(
+        route = "motion_showcase",
+        title = "Motion System",
+        selectedIcon = Icons.Filled.Animation,
+        unselectedIcon = Icons.Outlined.Animation
+    )
+    
+    // NFC Terminal - dedicated NFC payment screen
+    data object NfcTerminal : Screen(
+        route = "nfc_terminal",
+        title = "NFC Terminal",
+        selectedIcon = Icons.Outlined.Nfc,
+        unselectedIcon = Icons.Outlined.Nfc
     )
     
     companion object {
@@ -114,6 +137,8 @@ sealed class Screen(
                 route == Transactions.route -> Transactions
                 route == Settings.route -> Settings
                 route == CapabilitiesDemo.route -> CapabilitiesDemo
+                route == MotionShowcase.route -> MotionShowcase
+                route == NfcTerminal.route -> NfcTerminal
                 route.startsWith("transaction/") -> TransactionDetail
                 else -> null
             }

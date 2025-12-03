@@ -179,4 +179,9 @@ class UserPreferences @Inject constructor(
     suspend fun setLanguage(languageCode: String) {
         context.dataStore.edit { it[KEY_LANGUAGE] = languageCode }
     }
+    
+    // MoMo country flow
+    val momoCountryFlow: Flow<String> = context.dataStore.data.map { 
+        it[KEY_MOMO_COUNTRY_CODE] ?: it[KEY_COUNTRY_CODE] ?: "RW" 
+    }
 }
