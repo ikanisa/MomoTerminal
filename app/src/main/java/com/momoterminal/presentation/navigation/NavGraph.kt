@@ -167,15 +167,9 @@ fun NavGraph(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onNavigateToCapabilitiesDemo = {
-                    navController.navigate(Screen.CapabilitiesDemo.route)
-                },
                 onLogout = {
-                    // Clear back stack and navigate to login
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(0) {
-                            saveState = false
-                        }
+                        popUpTo(0) { saveState = false }
                         launchSingleTop = true
                         restoreState = false
                     }

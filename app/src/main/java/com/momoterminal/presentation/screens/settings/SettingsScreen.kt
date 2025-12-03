@@ -37,8 +37,6 @@ import com.momoterminal.presentation.theme.SuccessGreen
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToWebhooks: () -> Unit = {},
-    onNavigateToCapabilitiesDemo: () -> Unit = {},
     onLogout: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
