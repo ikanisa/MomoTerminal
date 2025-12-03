@@ -2,148 +2,122 @@ package com.momoterminal.presentation.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.momoterminal.config.AppConfig
-import com.momoterminal.data.local.MomoDatabase
+import com.momoterminal.data.preferences.UserPreferences
+import com.momoterminal.data.repository.CountryRepository
 import com.momoterminal.nfc.NfcManager
 import com.momoterminal.nfc.NfcPaymentData
 import com.momoterminal.nfc.NfcState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val nfcManager: NfcManager,
-    private val database: MomoDatabase,
-    private val appConfig: AppConfig
+    private val userPreferences: UserPreferences,
+    private val countryRepository: CountryRepository
 ) : ViewModel() {
 
-    companion object {
-        private const val MAX_AMOUNT_LENGTH = 10
-    }
-
     data class HomeUiState(
-        val isConfigured: Boolean = false,
-        val merchantPhone: String = "",
-        val pendingCount: Int = 0,
-        val todayRevenue: Double = 0.0,
-        val todayTransactionCount: Int = 0,
-        // Terminal state
         val amount: String = "",
         val currency: String = "RWF",
+        val currencySymbol: String = "FRw",
+        val providerName: String = "",
+        val providerCode: String = "MTN",
         val countryCode: String = "RW",
-        val selectedProvider: NfcPaymentData.Provider = NfcPaymentData.Provider.MTN,
-        val isPaymentActive: Boolean = false
+        val merchantPhone: String = "",
+        val isConfigured: Boolean = false,
+        val isNfcEnabled: Boolean = true,
+        val isNfcAvailable: Boolean = false
     )
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     val nfcState: StateFlow<NfcState> = nfcManager.nfcState
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = NfcState.Ready
-        )
 
     init {
-        loadConfig()
-        observePendingCount()
-        loadTodayStats()
+        loadUserConfig()
+        checkNfcAvailability()
     }
 
-    private fun loadConfig() {
-        _uiState.value = _uiState.value.copy(
-            isConfigured = appConfig.isConfigured(),
-            merchantPhone = appConfig.getMerchantPhone(),
-            currency = appConfig.getCurrency(),
-            countryCode = appConfig.getCountryCode()
-        )
-    }
-
-    private fun observePendingCount() {
+    private fun loadUserConfig() {
         viewModelScope.launch {
-            database.transactionDao().getPendingCount().collect { count ->
-                _uiState.value = _uiState.value.copy(pendingCount = count)
+            userPreferences.userPreferencesFlow.collect { prefs ->
+                val country = countryRepository.getByCode(prefs.momoCountryCode)
+                    ?: countryRepository.getCurrentCountry()
+                
+                _uiState.update {
+                    it.copy(
+                        merchantPhone = prefs.merchantPhone,
+                        countryCode = prefs.momoCountryCode.ifEmpty { country.code },
+                        currency = country.currency,
+                        currencySymbol = country.currencySymbol,
+                        providerName = country.providerName,
+                        providerCode = country.providerCode,
+                        isConfigured = prefs.merchantPhone.isNotBlank()
+                    )
+                }
             }
         }
     }
 
-    private fun loadTodayStats() {
-        viewModelScope.launch {
-            val todayStart = System.currentTimeMillis() - (System.currentTimeMillis() % 86400000)
-            val transactions = database.transactionDao()
-                .getTransactionsByDateRange(todayStart, System.currentTimeMillis())
-            val successful = transactions.filter { it.status == "completed" || it.status == "success" }
+    private fun checkNfcAvailability() {
+        _uiState.update { it.copy(isNfcAvailable = nfcManager.isNfcAvailable()) }
+    }
 
-            _uiState.value = _uiState.value.copy(
-                todayRevenue = successful.sumOf { (it.amount ?: 0.0).toLong() }.toDouble(),
-                todayTransactionCount = transactions.size
-            )
+    fun onDigitClick(digit: String) {
+        val currentAmount = _uiState.value.amount
+        if (currentAmount.length < 10) {
+            _uiState.update { it.copy(amount = currentAmount + digit) }
         }
     }
 
-    // Terminal functions
-    fun onDigitClick(digit: String) {
-        android.util.Log.d("HomeViewModel", "onDigitClick: $digit")
-        val current = _uiState.value.amount
-        if (digit == "0" && current.isEmpty()) return
-        if (current.length >= MAX_AMOUNT_LENGTH) return
-        _uiState.value = _uiState.value.copy(amount = current + digit)
-        android.util.Log.d("HomeViewModel", "Amount now: ${_uiState.value.amount}")
-    }
-
     fun onBackspaceClick() {
-        android.util.Log.d("HomeViewModel", "onBackspaceClick")
-        val current = _uiState.value.amount
-        if (current.isNotEmpty()) {
-            _uiState.value = _uiState.value.copy(amount = current.dropLast(1))
+        val currentAmount = _uiState.value.amount
+        if (currentAmount.isNotEmpty()) {
+            _uiState.update { it.copy(amount = currentAmount.dropLast(1)) }
         }
     }
 
     fun onClearClick() {
-        android.util.Log.d("HomeViewModel", "onClearClick")
-        _uiState.value = _uiState.value.copy(amount = "")
+        _uiState.update { it.copy(amount = "") }
     }
 
-    fun onProviderSelected(provider: NfcPaymentData.Provider) {
-        _uiState.value = _uiState.value.copy(selectedProvider = provider)
+    fun toggleNfcEnabled(enabled: Boolean) {
+        _uiState.update { it.copy(isNfcEnabled = enabled) }
     }
 
     fun activatePayment() {
         val state = _uiState.value
-        if (state.amount.isEmpty() || state.merchantPhone.isEmpty()) return
+        if (!isAmountValid() || !state.isNfcEnabled) return
 
-        val amountDouble = state.amount.toDoubleOrNull() ?: return
-        val amountInMinorUnits = (amountDouble * 100).toLong()
-
-        val paymentData = NfcPaymentData(
+        val amountValue = state.amount.toDoubleOrNull() ?: return
+        
+        val paymentData = NfcPaymentData.fromAmount(
             merchantPhone = state.merchantPhone,
-            amountInMinorUnits = amountInMinorUnits,
+            amount = amountValue,
             currency = state.currency,
             countryCode = state.countryCode,
-            provider = state.selectedProvider
+            provider = NfcPaymentData.Provider.fromString(state.providerCode)
         )
-
+        
         nfcManager.activatePayment(paymentData)
-        _uiState.value = _uiState.value.copy(isPaymentActive = true)
     }
 
     fun cancelPayment() {
         nfcManager.cancelPayment()
-        _uiState.value = _uiState.value.copy(isPaymentActive = false, amount = "")
+        _uiState.update { it.copy(amount = "") }
     }
-
-    fun isNfcAvailable(): Boolean = nfcManager.isNfcAvailable()
 
     fun isAmountValid(): Boolean {
-        val amount = _uiState.value.amount
-        return amount.isNotEmpty() && _uiState.value.isConfigured &&
-                amount.toDoubleOrNull()?.let { it > 0 } ?: false
+        val amount = _uiState.value.amount.toDoubleOrNull() ?: return false
+        return amount > 0
     }
+
+    fun isNfcAvailable(): Boolean = _uiState.value.isNfcAvailable
 }

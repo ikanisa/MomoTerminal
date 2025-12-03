@@ -1,70 +1,38 @@
 package com.momoterminal.presentation.screens.settings
 
+import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.automirrored.filled.Message
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.momoterminal.R
-import com.momoterminal.config.SupportedCountries
 import com.momoterminal.presentation.components.MomoButton
 import com.momoterminal.presentation.components.MomoTextField
 import com.momoterminal.presentation.components.common.MomoTopAppBar
-import com.momoterminal.presentation.theme.MomoTerminalTheme
 import com.momoterminal.presentation.theme.SuccessGreen
 
-/**
- * Settings screen for configuring the app.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -77,8 +45,20 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
     
-    // Show snackbar for save success
+    val smsPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { viewModel.refreshPermissionStates() }
+    
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { viewModel.refreshPermissionStates() }
+    
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { viewModel.refreshPermissionStates() }
+    
     LaunchedEffect(uiState.showSaveSuccess) {
         if (uiState.showSaveSuccess) {
             snackbarHostState.showSnackbar("Settings saved successfully")
@@ -102,466 +82,348 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
-            // Webhook Configuration Section
-            SectionHeader(
-                title = stringResource(R.string.webhook_configuration),
-                icon = Icons.Default.Link
-            )
-            
+            // ==================== PERMISSIONS SECTION ====================
+            SectionHeader(title = "Permissions & Controls", icon = Icons.Default.Security)
             Spacer(modifier = Modifier.height(16.dp))
             
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Merchant Configuration Section
-            SectionHeader(
-                title = stringResource(R.string.merchant_profile),
-                icon = Icons.Default.Person
+            // SMS Permission
+            PermissionItem(
+                icon = Icons.AutoMirrored.Filled.Message,
+                title = "SMS Access",
+                description = if (uiState.permissions.smsGranted) "Granted - Can receive MoMo SMS" else "Required for SMS relay",
+                isGranted = uiState.permissions.smsGranted,
+                onRequestPermission = {
+                    smsPermissionLauncher.launch(arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS))
+                }
             )
             
+            // NFC Control
+            PermissionItem(
+                icon = Icons.Default.Nfc,
+                title = "NFC Control",
+                description = when {
+                    !uiState.permissions.nfcAvailable -> "Not available on this device"
+                    uiState.permissions.nfcEnabled -> "Enabled - Ready for tap payments"
+                    else -> "Disabled - Enable in system settings"
+                },
+                isGranted = uiState.permissions.nfcEnabled,
+                isAvailable = uiState.permissions.nfcAvailable,
+                onRequestPermission = { context.startActivity(Intent(Settings.ACTION_NFC_SETTINGS)) }
+            )
+            
+            // Camera Permission
+            PermissionItem(
+                icon = Icons.Default.CameraAlt,
+                title = "Camera Access",
+                description = if (uiState.permissions.cameraGranted) "Granted - Can scan QR codes" else "Required for QR scanning",
+                isGranted = uiState.permissions.cameraGranted,
+                onRequestPermission = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
+            )
+            
+            // Notifications (Android 13+)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                PermissionItem(
+                    icon = Icons.Default.Notifications,
+                    title = "Notifications",
+                    description = if (uiState.permissions.notificationsGranted) "Granted - Will receive alerts" else "Required for payment alerts",
+                    isGranted = uiState.permissions.notificationsGranted,
+                    onRequestPermission = { notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
+                )
+            }
+            
+            // Battery Optimization
+            PermissionItem(
+                icon = Icons.Default.BatteryChargingFull,
+                title = "Battery Optimization",
+                description = if (uiState.permissions.batteryOptimizationIgnored) "Unrestricted - App won't be killed" else "Restricted - May miss SMS in background",
+                isGranted = uiState.permissions.batteryOptimizationIgnored,
+                onRequestPermission = {
+                    context.startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                        data = Uri.parse("package:${context.packageName}")
+                    })
+                }
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // ==================== APP CONTROLS ====================
+            SectionHeader(title = "App Controls", icon = Icons.Default.Tune)
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Merchant Phone
+            SettingsToggle(
+                icon = Icons.Default.ScreenLockPortrait,
+                title = "Keep Screen On",
+                description = "Prevent phone from sleeping during transactions",
+                checked = uiState.permissions.keepScreenOnEnabled,
+                onCheckedChange = viewModel::toggleKeepScreenOn
+            )
+            
+            SettingsToggle(
+                icon = Icons.Default.Vibration,
+                title = "Vibration Feedback",
+                description = "Vibrate on payment received",
+                checked = uiState.permissions.vibrationEnabled,
+                onCheckedChange = viewModel::toggleVibration
+            )
+            
+            SettingsToggle(
+                icon = Icons.Default.Fingerprint,
+                title = "Biometric Login",
+                description = if (uiState.isBiometricAvailable) "Use fingerprint or face to unlock" else "Not available on this device",
+                checked = uiState.isBiometricEnabled,
+                onCheckedChange = viewModel::toggleBiometric,
+                enabled = uiState.isBiometricAvailable
+            )
+            
+            SettingsToggle(
+                icon = Icons.AutoMirrored.Filled.Message,
+                title = "Auto-Sync SMS",
+                description = "Automatically sync MoMo messages",
+                checked = uiState.smsAutoSyncEnabled,
+                onCheckedChange = viewModel::toggleSmsAutoSync
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // ==================== MERCHANT PROFILE ====================
+            SectionHeader(title = stringResource(R.string.merchant_profile), icon = Icons.Default.Person)
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Display registered WhatsApp number (read-only)
+            if (uiState.whatsappNumber.isNotBlank()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                ) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Phone, null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text("Registered Number", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(uiState.whatsappNumber, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            
+            // MoMo Phone Number
             MomoTextField(
-                value = uiState.merchantPhone,
-                onValueChange = viewModel::updateMerchantPhone,
-                label = stringResource(R.string.merchant_phone_label),
-                placeholder = "0201234567",
+                value = uiState.momoPhoneNumber,
+                onValueChange = viewModel::updateMomoPhone,
+                label = "MoMo Phone Number",
+                placeholder = uiState.momoPhonePlaceholder,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                isError = uiState.merchantPhone.isNotBlank() && !viewModel.isPhoneValid()
+                isError = !uiState.isMomoPhoneValid,
+                leadingIcon = { Text(uiState.momoPhonePrefix, style = MaterialTheme.typography.bodyLarge) }
             )
-
+            
             Spacer(modifier = Modifier.height(16.dp))
-
+            
             // Country Selector
-            CountrySelector(
-                selectedCountryCode = uiState.countryCode,
-                onCountrySelected = viewModel::updateCountryCode
-            )
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            // Security Section
-            SectionHeader(
-                title = stringResource(R.string.security),
-                icon = Icons.Default.Fingerprint
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Biometric toggle
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                ),
-                shape = MaterialTheme.shapes.small
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Fingerprint,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    
-                    Spacer(modifier = Modifier.width(16.dp))
-                    
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.biometric_auth),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
+            if (uiState.availableCountries.isNotEmpty()) {
+                Text("MoMo Country", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.height(8.dp))
+                uiState.availableCountries.forEach { country ->
+                    val isSelected = country.code == uiState.momoCountryCode
+                    Card(
+                        onClick = { viewModel.updateMomoCountry(country.code) },
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                         )
-                        Text(
-                            text = stringResource(
-                                if (uiState.isBiometricAvailable) R.string.biometric_description
-                                else R.string.not_available_device
-                            ),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(country.name, style = MaterialTheme.typography.bodyLarge, fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal)
+                                Text("${country.currency} • ${country.providerName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            if (isSelected) Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.primary)
+                        }
                     }
-                    
-                    Switch(
-                        checked = uiState.isBiometricEnabled,
-                        onCheckedChange = viewModel::toggleBiometric,
-                        enabled = uiState.isBiometricAvailable
-                    )
                 }
             }
             
-            Spacer(modifier = Modifier.height(32.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
             
-            // Developer Section - App Capabilities Demo
-            SectionHeader(
-                title = stringResource(R.string.developer_options),
-                icon = Icons.Default.Build
-            )
-            
+            // ==================== DEVELOPER OPTIONS ====================
+            SectionHeader(title = stringResource(R.string.developer_options), icon = Icons.Default.Build)
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Capabilities Demo Button
             Card(
                 onClick = onNavigateToCapabilitiesDemo,
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                ),
-                shape = MaterialTheme.shapes.small
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Build,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    
+                Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Build, null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(16.dp))
-                    
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = stringResource(R.string.app_capabilities_demo),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = stringResource(R.string.capabilities_description),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Text(stringResource(R.string.app_capabilities_demo), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.capabilities_description), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = "Open",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, "Open", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
             
-            // SMS Auto-Sync Section
-            SectionHeader(
-                title = stringResource(R.string.sms_synchronization),
-                icon = Icons.AutoMirrored.Filled.Message
-            )
+            // ==================== ABOUT ====================
+            SectionHeader(title = stringResource(R.string.about), icon = Icons.Default.Info)
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(stringResource(R.string.app_version), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(uiState.appVersion, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+            }
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // SMS Auto-Sync Toggle
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.auto_sync_sms),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.auto_sync_description),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Switch(
-                    checked = uiState.smsAutoSyncEnabled,
-                    onCheckedChange = viewModel::toggleSmsAutoSync
-                )
+            TextButton(onClick = { uriHandler.openUri("https://momoterminal.app/privacy") }, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.privacy_policy), modifier = Modifier.weight(1f))
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
             }
             
-            if (!uiState.smsAutoSyncEnabled) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.sms_sync_warning),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.padding(12.dp)
-                    )
-                }
+            TextButton(onClick = { uriHandler.openUri("https://momoterminal.app/terms") }, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.terms_of_service), modifier = Modifier.weight(1f))
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
             }
             
             Spacer(modifier = Modifier.height(32.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Spacer(modifier = Modifier.height(32.dp))
             
-            // About Section
-            SectionHeader(
-                title = stringResource(R.string.about),
-                icon = Icons.Default.Info
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // App Version
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = stringResource(R.string.app_version),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = uiState.appVersion,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Privacy Policy Link
-            TextButton(
-                onClick = { uriHandler.openUri("https://momoterminal.app/privacy") },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = stringResource(R.string.privacy_policy),
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null
-                )
-            }
-            
-            // Terms of Service Link
-            TextButton(
-                onClick = { uriHandler.openUri("https://momoterminal.app/terms") },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = stringResource(R.string.terms_of_service),
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null
-                )
-            }
-            
-            // Open Source Licenses
-            TextButton(
-                onClick = { uriHandler.openUri("https://momoterminal.app/licenses") },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = stringResource(R.string.open_source_licenses),
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(48.dp))
-            
-            // Save Button
             MomoButton(
                 text = stringResource(R.string.save_configuration),
                 onClick = { viewModel.saveSettings() },
-                enabled = viewModel.isPhoneValid()
+                enabled = uiState.isMomoPhoneValid
             )
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Logout Button
             OutlinedButton(
                 onClick = { viewModel.showLogoutDialog() },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Logout,
-                    contentDescription = null
-                )
+                Icon(Icons.AutoMirrored.Filled.Logout, null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(R.string.logout))
             }
             
-            // Status indicator
             AnimatedVisibility(visible = uiState.isConfigured) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = SuccessGreen
-                    )
+                    Icon(Icons.Default.Check, null, tint = SuccessGreen)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.configuration_saved),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = SuccessGreen,
-                        fontWeight = FontWeight.Medium
-                    )
+                    Text(stringResource(R.string.configuration_saved), style = MaterialTheme.typography.bodyMedium, color = SuccessGreen, fontWeight = FontWeight.Medium)
                 }
             }
+            
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
     
-    // Logout Confirmation Dialog
     if (uiState.showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { viewModel.hideLogoutDialog() },
-            title = {
-                Text(stringResource(R.string.logout_confirm_title))
-            },
-            text = {
-                Text(stringResource(R.string.logout_confirm_message))
-            },
+            title = { Text(stringResource(R.string.logout_confirm_title)) },
+            text = { Text(stringResource(R.string.logout_confirm_message)) },
             confirmButton = {
                 Button(
-                    onClick = {
-                        viewModel.logout()
-                        viewModel.hideLogoutDialog()
-                        onLogout()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text(stringResource(R.string.logout))
-                }
+                    onClick = { viewModel.logout(); viewModel.hideLogoutDialog(); onLogout() },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text(stringResource(R.string.logout)) }
             },
-            dismissButton = {
-                TextButton(onClick = { viewModel.hideLogoutDialog() }) {
-                    Text(stringResource(R.string.cancel))
-                }
+            dismissButton = { TextButton(onClick = { viewModel.hideLogoutDialog() }) { Text(stringResource(R.string.cancel)) } }
+        )
+    }
+}
+
+@Composable
+private fun SectionHeader(title: String, icon: ImageVector) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+    }
+}
+
+@Composable
+private fun PermissionItem(
+    icon: ImageVector,
+    title: String,
+    description: String,
+    isGranted: Boolean,
+    isAvailable: Boolean = true,
+    onRequestPermission: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = when {
+                !isAvailable -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                isGranted -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                else -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
             }
         )
-    }
-}
-
-@Composable
-private fun SectionHeader(
-    title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary
-        )
-    }
-}
-
-@Composable
-private fun CountrySelector(
-    selectedCountryCode: String,
-    onCountrySelected: (String) -> Unit
-) {
-    val countries = SupportedCountries.PRIMARY_LAUNCH
-    val selectedCountry = SupportedCountries.getByCode(selectedCountryCode)
-
-    Column {
-        Text(
-            text = "Country / Currency",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        countries.forEach { country ->
-            val isSelected = country.code == selectedCountryCode
-            Card(
-                onClick = { onCountrySelected(country.code) },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isSelected) 
-                        MaterialTheme.colorScheme.primaryContainer 
-                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                )
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = country.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                        )
-                        Text(
-                            text = "${country.currency} (${country.currencySymbol})",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    if (isSelected) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, tint = when {
+                !isAvailable -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                isGranted -> SuccessGreen
+                else -> MaterialTheme.colorScheme.error
+            })
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (isAvailable && !isGranted) {
+                TextButton(onClick = onRequestPermission) { Text("Grant") }
+            } else if (isGranted) {
+                Icon(Icons.Default.CheckCircle, "Granted", tint = SuccessGreen)
             }
         }
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-private fun SettingsScreenPreview() {
-    MomoTerminalTheme {
-        SettingsScreen(
-            onNavigateBack = {},
-            onNavigateToWebhooks = {},
-            onNavigateToCapabilitiesDemo = {}
-        )
+private fun SettingsToggle(
+    icon: ImageVector,
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+    ) {
+        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Switch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
+        }
     }
 }
