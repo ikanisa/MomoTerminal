@@ -9,10 +9,7 @@ import android.os.PowerManager
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.momoterminal.config.AppConfig
-import com.momoterminal.config.SupportedCountries
 import com.momoterminal.auth.AuthRepository
-import com.momoterminal.auth.SessionManager
 import com.momoterminal.data.model.CountryConfig
 import com.momoterminal.data.preferences.UserPreferences
 import com.momoterminal.data.repository.CountryRepository
@@ -25,13 +22,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-/**
- * ViewModel for the Settings screen.
- * Supports separate profile country (from WhatsApp registration) and 
- * mobile money country (for transactions).
- */
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
@@ -43,27 +33,6 @@ class SettingsViewModel @Inject constructor(
     private val biometricHelper: BiometricHelper,
     private val countryRepository: CountryRepository
 ) : ViewModel() {
-    
-    /**
-     * UI state for the Settings screen.
-     */
-    data class SettingsUiState(
-        // Profile info (from WhatsApp registration - read only)
-        val authPhone: String = "",
-        val profileCountryCode: String = "RW",
-        val profileCountryName: String = "Rwanda",
-        // Mobile Money configuration (user can change country)
-        val momoCountryCode: String = "RW",
-        val momoCountryName: String = "Rwanda",
-        val momoCurrency: String = "RWF",
-        val momoProviderName: String = "MTN MoMo",
-        val merchantPhone: String = "",
-        // Legacy compatibility
-        val countryCode: String = "RW",
-        // Other settings
-        val isConfigured: Boolean = false,
-        val isBiometricEnabled: Boolean = false,
-        val isBiometricAvailable: Boolean = false,
 
     data class PermissionState(
         val smsGranted: Boolean = false,
@@ -79,15 +48,19 @@ class SettingsViewModel @Inject constructor(
     data class SettingsUiState(
         val userName: String = "",
         val whatsappNumber: String = "",
+        val authPhone: String = "",
         val profileCountryCode: String = "RW",
         val profileCountryName: String = "Rwanda",
         val momoCountryCode: String = "RW",
+        val momoCountryName: String = "Rwanda",
+        val momoCurrency: String = "RWF",
         val momoPhonePlaceholder: String = "78XXXXXXX",
         val momoProviderName: String = "MTN MoMo",
-        // MoMo identifier can be phone number or code
         val useMomoCode: Boolean = false,
         val momoIdentifier: String = "",
+        val merchantPhone: String = "",
         val isMomoIdentifierValid: Boolean = true,
+        val isMomoPhoneValid: Boolean = true,
         val availableCountries: List<CountryConfig> = emptyList(),
         val isBiometricEnabled: Boolean = false,
         val isBiometricAvailable: Boolean = false,
@@ -101,7 +74,6 @@ class SettingsViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
-    
 
     init {
         loadSettings()
@@ -110,60 +82,14 @@ class SettingsViewModel @Inject constructor(
         loadAppVersion()
         refreshPermissionStates()
     }
-    
-    private fun loadSettings() {
-        viewModelScope.launch {
-            val biometricEnabled = userPreferences.biometricEnabledFlow.first()
-            
-            val profileCountryCode = appConfig.getProfileCountryCode()
-            val profileCountry = SupportedCountries.getByCode(profileCountryCode)
-            
-            val momoCountryCode = appConfig.getMomoCountryCode().ifBlank { profileCountryCode }
-            val momoCountry = SupportedCountries.getByCode(momoCountryCode)
-            val providerName = appConfig.getMomoProvider()
-            
-            _uiState.value = _uiState.value.copy(
-                authPhone = appConfig.getAuthPhone(),
-                profileCountryCode = profileCountryCode,
-                profileCountryName = profileCountry?.name ?: "Rwanda",
-                momoCountryCode = momoCountryCode,
-                momoCountryName = momoCountry?.name ?: "Rwanda",
-                momoCurrency = momoCountry?.currency ?: "RWF",
-                momoProviderName = getProviderDisplayName(providerName),
-                merchantPhone = appConfig.getMerchantPhone(),
-                countryCode = momoCountryCode,
-                isConfigured = appConfig.isConfigured(),
-                isBiometricAvailable = biometricHelper.isBiometricAvailable(),
-                isBiometricEnabled = biometricEnabled
-            )
-        }
-    }
-    
-    private fun getProviderDisplayName(providerCode: String): String {
-        return when (providerCode.uppercase()) {
-            "MTN" -> "MTN MoMo"
-            "AIRTEL" -> "Airtel Money"
-            "VODACOM" -> "M-Pesa"
-            "VODAFONE" -> "Vodafone Cash"
-            "ORANGE" -> "Orange Money"
-            "TIGO" -> "Tigo Pesa"
-            "WAVE" -> "Wave"
-            "MOOV" -> "Moov Money"
-            "ECOCASH" -> "EcoCash"
-            "TMONEY" -> "T-Money"
-            "MVOLA" -> "MVola"
-            else -> providerCode
-        }
-    }
-    
 
     fun refreshPermissionStates() {
         val nfcAdapter = NfcAdapter.getDefaultAdapter(context)
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-        
+
         val keepScreenOn = runBlocking { userPreferences.keepScreenOnEnabledFlow.first() }
         val vibration = runBlocking { userPreferences.vibrationEnabledFlow.first() }
-        
+
         val permissions = PermissionState(
             smsGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED,
             cameraGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED,
@@ -176,7 +102,7 @@ class SettingsViewModel @Inject constructor(
             vibrationEnabled = vibration,
             batteryOptimizationIgnored = powerManager.isIgnoringBatteryOptimizations(context.packageName)
         )
-        
+
         _uiState.update { it.copy(permissions = permissions) }
     }
 
@@ -194,53 +120,37 @@ class SettingsViewModel @Inject constructor(
             userPreferences.userPreferencesFlow.collect { prefs ->
                 val profileCountry = countryRepository.getByCode(prefs.countryCode) ?: CountryConfig.DEFAULT
                 val momoCountry = countryRepository.getByCode(prefs.momoCountryCode.ifEmpty { prefs.countryCode }) ?: profileCountry
-                
+
                 _uiState.update {
                     it.copy(
                         userName = prefs.merchantName,
+                        authPhone = prefs.phoneNumber,
                         whatsappNumber = formatPhoneDisplay(prefs.phoneNumber, profileCountry.phonePrefix),
                         profileCountryCode = prefs.countryCode.ifEmpty { "RW" },
                         profileCountryName = profileCountry.name,
                         momoCountryCode = prefs.momoCountryCode.ifEmpty { prefs.countryCode },
+                        momoCountryName = momoCountry.name,
+                        momoCurrency = momoCountry.currency,
                         momoIdentifier = prefs.merchantPhone,
+                        merchantPhone = prefs.merchantPhone,
                         useMomoCode = prefs.useMomoCode,
                         momoPhonePlaceholder = "X".repeat(momoCountry.phoneLength),
                         momoProviderName = momoCountry.providerName,
                         isBiometricEnabled = prefs.biometricEnabled,
                         isConfigured = prefs.merchantPhone.isNotBlank(),
-                        isMomoIdentifierValid = prefs.merchantPhone.isBlank() || validateMomoIdentifier(prefs.merchantPhone, prefs.useMomoCode, momoCountry)
+                        isMomoIdentifierValid = prefs.merchantPhone.isBlank() || validateMomoIdentifier(prefs.merchantPhone, prefs.useMomoCode, momoCountry),
+                        isMomoPhoneValid = prefs.merchantPhone.isBlank() || validateMomoIdentifier(prefs.merchantPhone, prefs.useMomoCode, momoCountry)
                     )
                 }
             }
         }
-        
+
         viewModelScope.launch {
             userPreferences.smsAutoSyncEnabledFlow.collect { enabled ->
                 _uiState.update { it.copy(smsAutoSyncEnabled = enabled) }
             }
         }
     }
-    
-    fun updateMerchantPhone(phone: String) {
-        _uiState.value = _uiState.value.copy(merchantPhone = phone)
-    }
-
-    fun updateMomoCountryCode(code: String) {
-        val country = SupportedCountries.getByCode(code)
-        
-        _uiState.value = _uiState.value.copy(
-            momoCountryCode = code,
-            momoCountryName = country?.name ?: "Rwanda",
-            momoCurrency = country?.currency ?: "RWF",
-            momoProviderName = country?.providerDisplayName ?: "MTN MoMo",
-            countryCode = code
-        )
-        appConfig.saveMomoCountryCode(code)
-    }
-    
-    // Legacy method for compatibility
-    fun updateCountryCode(code: String) {
-        updateMomoCountryCode(code)
 
     private fun validateMomoIdentifier(identifier: String, isCode: Boolean, country: CountryConfig?): Boolean {
         return if (isCode) {
@@ -264,7 +174,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setUseMomoCode(useCode: Boolean) {
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 useMomoCode = useCode,
                 momoIdentifier = "",
@@ -275,12 +185,16 @@ class SettingsViewModel @Inject constructor(
 
     fun updateMomoCountry(countryCode: String) {
         val country = countryRepository.getByCode(countryCode) ?: return
+        val isValid = _uiState.value.momoIdentifier.isBlank() || validateMomoIdentifier(_uiState.value.momoIdentifier, _uiState.value.useMomoCode, country)
         _uiState.update {
             it.copy(
                 momoCountryCode = countryCode,
+                momoCountryName = country.name,
+                momoCurrency = country.currency,
                 momoPhonePlaceholder = "X".repeat(country.phoneLength),
                 momoProviderName = country.providerName,
-                isMomoIdentifierValid = it.momoIdentifier.isBlank() || validateMomoIdentifier(it.momoIdentifier, it.useMomoCode, country)
+                isMomoIdentifierValid = isValid,
+                isMomoPhoneValid = isValid
             )
         }
     }
@@ -289,38 +203,27 @@ class SettingsViewModel @Inject constructor(
         val cleaned = value.filter { it.isDigit() }
         val country = countryRepository.getByCode(_uiState.value.momoCountryCode)
         val isCode = _uiState.value.useMomoCode
+        val isValid = cleaned.isBlank() || validateMomoIdentifier(cleaned, isCode, country)
         _uiState.update {
             it.copy(
                 momoIdentifier = cleaned,
-                isMomoIdentifierValid = cleaned.isBlank() || validateMomoIdentifier(cleaned, isCode, country)
+                merchantPhone = cleaned,
+                isMomoIdentifierValid = isValid,
+                isMomoPhoneValid = isValid
             )
         }
     }
+
+    // Alias for backward compatibility
+    fun updateMerchantPhone(value: String) = updateMomoIdentifier(value)
+    
+    // Alias for backward compatibility
+    fun updateMomoCountryCode(code: String) = updateMomoCountry(code)
 
     fun toggleBiometric(enabled: Boolean) {
         if (enabled && !_uiState.value.isBiometricAvailable) return
         _uiState.update { it.copy(isBiometricEnabled = enabled) }
     }
-    
-    fun saveSettings(): Boolean {
-        val state = _uiState.value
-        
-        // Validate phone
-        if (state.merchantPhone.isBlank()) return false
-        
-        // Save mobile money configuration
-        appConfig.saveMerchantConfig(
-            merchantCode = state.merchantPhone,
-            mobileMoneyNumber = state.merchantPhone,
-            momoCountryCode = state.momoCountryCode
-        )
-        
-        _uiState.value = _uiState.value.copy(
-            isConfigured = true,
-            showSaveSuccess = true
-        )
-        
-        // Hide success message after delay
 
     fun toggleKeepScreenOn(enabled: Boolean) {
         viewModelScope.launch {
@@ -328,11 +231,6 @@ class SettingsViewModel @Inject constructor(
             _uiState.update { it.copy(permissions = it.permissions.copy(keepScreenOnEnabled = enabled)) }
         }
     }
-    
-    fun isPhoneValid(): Boolean {
-        return _uiState.value.merchantPhone.isNotBlank()
-    }
-    
 
     fun toggleVibration(enabled: Boolean) {
         viewModelScope.launch {
@@ -357,7 +255,7 @@ class SettingsViewModel @Inject constructor(
                 useMomoCode = state.useMomoCode
             )
             userPreferences.updateBiometricEnabled(state.isBiometricEnabled)
-            
+
             _uiState.update { it.copy(showSaveSuccess = true, isConfigured = state.momoIdentifier.isNotBlank()) }
             kotlinx.coroutines.delay(100)
             _uiState.update { it.copy(showSaveSuccess = false) }
@@ -374,16 +272,12 @@ class SettingsViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
-            // Clear user preferences
             userPreferences.clearAll()
-            // App config should also be cleared
-            appConfig.clearConfig()
-            // Navigation will be handled by the screen
         }
         authRepository.logout()
     }
 
-    fun isPhoneValid(): Boolean = _uiState.value.isMomoPhoneValid
+    fun isPhoneValid(): Boolean = _uiState.value.isMomoIdentifierValid && _uiState.value.momoIdentifier.isNotBlank()
 
     private fun formatPhoneDisplay(phone: String, prefix: String): String {
         return if (phone.isNotBlank()) "$prefix $phone" else ""

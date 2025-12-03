@@ -1,47 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App Identity -->
     <string name="app_name">MomoTerminal</string>
     <string name="service_description">Mobile Money NFC Payment Terminal</string>
     <string name="hce_service_description">Mobile Money NFC Payment Terminal Service</string>
     <string name="aid_group_description">Mobile Money Payment AID Group</string>
-    
-    <!-- Main Activity -->
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_terminal">Terminal</string>
+    <string name="nav_transactions">Transactions</string>
+    <string name="nav_history">History</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">Home</string>
+    <string name="home_welcome">Welcome, %1$s</string>
+    <string name="nfc_terminal">NFC Terminal</string>
+    <string name="nfc_ready">Ready to receive payments</string>
+    <string name="nfc_disabled">Enable to receive payments</string>
+    <string name="today_overview">Today\'s Overview</string>
+    <string name="today_revenue">Today\'s Revenue</string>
+    <string name="weekly_revenue">Weekly Revenue</string>
+    <string name="success_rate">Success Rate</string>
+    <string name="transactions">transactions</string>
+    <string name="last_7_days">Last 7 days</string>
+    <string name="recent_transactions">Recent Transactions</string>
+    <string name="view_all">View All</string>
+    <string name="no_transactions_yet">No transactions yet</string>
+    <string name="setup_required">Setup Required</string>
+    <string name="configure_merchant_details">Configure your merchant details to start</string>
+    <string name="setup">Setup</string>
+    <string name="tap_to_configure">Tap to configure and start receiving payments</string>
+    <string name="failed">Failed</string>
+    <string name="need_attention">Needs Attention</string>
+    <string name="status">Status</string>
+    <string name="all_good">All Good</string>
+    <string name="no_failed_transactions">No failed transactions</string>
+
+    <!-- Terminal Screen -->
     <string name="amount_hint">Enter Amount</string>
+    <string name="amount_to_receive">Amount to Receive</string>
     <string name="activate_nfc">Activate NFC Terminal</string>
     <string name="deactivate_nfc">Deactivate Terminal</string>
     <string name="nfc_active">NFC Terminal Active - Ready for Tap</string>
     <string name="nfc_inactive">NFC Terminal Inactive</string>
     <string name="merchant_code_hint">Merchant Code</string>
-    <string name="currency_symbol">RWF</string>
-    
-    <!-- NFC Writer Toggle -->
+    <string name="payment_received">Payment Received</string>
+    <string name="cancel_payment">Cancel Payment</string>
+    <string name="waiting_for_payment">Waiting for payment…</string>
+    <string name="tap_phone_to_pay">Ask customer to tap their phone</string>
+    <string name="tap_amount_to_start">Tap the amount field to enter payment amount</string>
     <string name="nfc_writer">NFC Writer</string>
     <string name="nfc_writer_on">Ready to broadcast payments</string>
-    <string name="nfc_writer_off">NFC broadcasting disabled</string>
-    <string name="tap_amount_to_start">Tap the amount field to enter payment amount</string>
-    
-    <!-- SMS Relay -->
-    <string name="sms_relay_status">SMS Relay Status</string>
-    <string name="sms_relay_active">SMS Relay Active</string>
-    <string name="sms_relay_inactive">SMS Relay Inactive</string>
-    <string name="last_transaction">Last Transaction</string>
-    
-    <!-- Permissions -->
-    <string name="permission_sms_title">SMS Permission Required</string>
-    <string name="permission_sms_message">To relay payment confirmations, we need access to SMS messages.</string>
-    <string name="permission_phone_title">Phone Permission Required</string>
-    <string name="permission_phone_message">To initiate USSD payments, we need phone calling permission.</string>
-    
-    <!-- Errors -->
-    <string name="error_nfc_not_supported">NFC is not supported on this device</string>
-    <string name="error_nfc_disabled">Please enable NFC in settings</string>
-    <string name="error_invalid_amount">Please enter a valid amount</string>
-    <string name="error_sync_failed">Failed to sync with server</string>
-    
-    <!-- Actions -->
-    <string name="action_settings">Settings</string>
-    <string name="action_history">Transaction History</string>
-    <string name="action_sync">Sync Now</string>
+    <string name="nfc_writer_off">NFC broadcast disabled</string>
+
+    <!-- USSD Related -->
+    <string name="ussd_generated">USSD Code Generated</string>
+    <string name="ussd_dial_instruction">Dial the code below to complete payment</string>
+    <string name="ussd_copy">Copy Code</string>
+    <string name="ussd_dial">Dial Now</string>
+    <string name="ussd_copied">USSD code copied to clipboard</string>
+    <string name="ussd_not_supported">USSD Not Supported</string>
+    <string name="ussd_use_app_instead">This country uses app-based payments. Please use the %1$s app.</string>
+    <string name="ussd_note">Note: %1$s</string>
+
+    <!-- Country Selection -->
+    <string name="select_country">Select Country</string>
+    <string name="select_momo_country">Select Mobile Money Country</string>
     
     <!-- Webhook Management -->
     <string name="webhooks_title">Webhooks</string>
@@ -57,217 +83,144 @@
     <string name="api_key">API Key</string>
     <string name="hmac_secret">HMAC Secret</string>
     <string name="hmac_secret_helper">Used to sign webhook requests</string>
-    <string name="save">Save</string>
     <string name="test_connection">Test Connection</string>
     <string name="test">Test</string>
-    <string name="delete">Delete</string>
-    <string name="retry">Retry</string>
-    <string name="back">Back</string>
-    <string name="active_webhooks">Active Webhooks</string>
-    
-    <!-- Authentication -->
-    <string name="auth_login_title">Welcome Back</string>
-    <string name="auth_login_subtitle">Sign in to continue</string>
-    <string name="auth_register_title">Create Account</string>
-    <string name="auth_phone_number">Phone Number</string>
-    <string name="auth_pin">6-Digit PIN</string>
-    <string name="auth_confirm_pin">Confirm PIN</string>
-    <string name="auth_merchant_name">Business Name</string>
-    <string name="auth_forgot_pin">Forgot PIN?</string>
-    <string name="auth_sign_in">Sign In</string>
-    <string name="auth_sign_up">Create Account</string>
-    <string name="auth_use_biometrics">Use Biometrics</string>
-    <string name="auth_no_account">Don\'t have an account?</string>
-    <string name="auth_has_account">Already have an account?</string>
-    <string name="auth_register">Register</string>
-    
-    <!-- Registration Screen -->
-    <string name="reg_welcome">Welcome to MoMo Terminal</string>
-    <string name="reg_phone_subtitle">Enter your phone number to get started</string>
-    <string name="reg_whatsapp_info">We\'ll send you a verification code via WhatsApp</string>
-    <string name="reg_send_code">Send WhatsApp Code</string>
-    <string name="reg_verify_phone">Verify Your Phone</string>
-    <string name="reg_otp_instruction">Enter the 6-digit code sent to WhatsApp</string>
-    <string name="reg_code_expires">Code expires in %1$d:%2$s</string>
-    <string name="reg_code_expired">Code expired</string>
-    <string name="reg_code_expired_message">Code expired. Please request a new one.</string>
-    <string name="reg_change">Change</string>
-    <string name="reg_resend_code">Didn\'t receive the code? Resend</string>
-    <string name="reg_resend_countdown">Resend code in %ds</string>
-    <string name="reg_verify">Verify</string>
-    <string name="reg_secure_account">Secure Your Account</string>
-    <string name="reg_pin_instruction">Create a 6-digit PIN to protect your transactions</string>
-    <string name="reg_pins_not_match">PINs do not match</string>
-    <string name="reg_continue">Continue</string>
-    <string name="reg_business_profile">Business Profile</string>
-    <string name="reg_business_subtitle">Tell us about your business</string>
-    <string name="reg_step_phone">Phone</string>
-    <string name="reg_step_otp">OTP</string>
-    <string name="reg_step_pin">PIN</string>
-    <string name="reg_step_info">Info</string>
-    <string name="reg_step_terms">Terms</string>
-    
-    <!-- Forgot PIN Screen -->
-    <string name="forgot_pin_title">Reset PIN</string>
-    <string name="forgot_pin_enter_phone">Enter Your Phone Number</string>
-    <string name="forgot_pin_whatsapp_info">We\'ll send you a verification code via WhatsApp</string>
-    <string name="forgot_pin_send_code">Send Verification Code</string>
-    <string name="forgot_pin_verify_code">Verify Code</string>
-    <string name="forgot_pin_otp_sent">Enter the 6-digit code sent to\n%1$s %2$s</string>
-    <string name="forgot_pin_resend_code">Resend Code</string>
-    <string name="forgot_pin_create_new">Create New PIN</string>
-    <string name="forgot_pin_4digit_instruction">Enter a 4-digit PIN for your account</string>
-    <string name="forgot_pin_confirm">Confirm Your PIN</string>
-    <string name="forgot_pin_confirm_instruction">Re-enter your 4-digit PIN to confirm</string>
-    <string name="forgot_pin_mismatch">PINs do not match. Please try again.</string>
-    <string name="forgot_pin_reset_button">Reset PIN</string>
-    <string name="forgot_pin_success">PIN Reset Successfully!</string>
-    <string name="forgot_pin_success_message">You can now login with your new PIN</string>
-    
-    <!-- PIN Screen -->
-    <string name="pin_title">Enter PIN</string>
-    <string name="pin_subtitle">Enter your 6-digit PIN to continue</string>
-    <string name="pin_attempts_left">%d attempts remaining</string>
-    
-    <!-- Transaction Detail Screen -->
-    <string name="transaction_not_found">Transaction not found</string>
-    <string name="go_back">Go Back</string>
-    <string name="transaction_details">Transaction Details</string>
-    <string name="raw_sms_message">Raw SMS Message</string>
-    <string name="copy_id">Copy ID</string>
-    <string name="share">Share</string>
-    <string name="retry_sync">Retry Sync</string>
-    
-    <!-- Login Screen -->
-    <string name="enter_otp">Enter 6-digit OTP</string>
-    <string name="too_many_attempts">Too many failed attempts. Please try again later.</string>
-    <string name="send_otp">Send OTP via WhatsApp</string>
-    <string name="resend_code">Didn\'t receive code? Resend</string>
-    
-    <!-- Terms and Conditions -->
-    <string name="terms_title">Terms &amp; Conditions</string>
-    <string name="terms_subtitle">Please review and accept our terms to continue</string>
-    <string name="terms_content">By creating an account, you agree to:\n\n• Process mobile money transactions through your terminal\n• Keep your PIN confidential and secure\n• Comply with all applicable mobile money regulations\n• Allow transaction data to be synced for reconciliation\n• Receive notifications about your transactions\n\nYour data will be encrypted and stored securely.</string>
-    <string name="terms_accept_checkbox">I accept the Terms &amp; Conditions and Privacy Policy</string>
-    
-    <!-- PIN Screen -->
-    <string name="pin_enter_title">Enter PIN</string>
-    <string name="pin_unlock_title">Unlock MomoTerminal</string>
-    <string name="pin_confirm_transaction">Confirm Transaction</string>
-    <string name="pin_attempts_remaining">Attempts remaining: %d</string>
-    
-    <!-- Capabilities Demo -->
-    <string name="capabilities_demo_title">App Capabilities Demo</string>
-    <string name="capabilities_demo_description">Demonstrates various Android app capabilities</string>
-    <string name="foreground_service_title">Capabilities Demo Service</string>
-    <string name="foreground_service_channel_name">Capabilities Demo Service</string>
-    <string name="foreground_service_channel_description">Notification channel for the capabilities demo foreground service</string>
-    
-    <!-- Home Screen -->
-    <string name="home_title">Home</string>
-    <string name="nfc_terminal">NFC Terminal</string>
-    <string name="nfc_ready">Ready to accept payments</string>
-    <string name="nfc_disabled">Turn on to accept payments</string>
-    <string name="today_overview">Today\'s Overview</string>
-    <string name="today_revenue">Today\'s Revenue</string>
-    <string name="weekly_revenue">Weekly Revenue</string>
-    <string name="success_rate">Success Rate</string>
-    <string name="transactions">transactions</string>
-    <string name="last_7_days">Last 7 days</string>
-    <string name="failed">Failed</string>
-    <string name="need_attention">Need attention</string>
-    <string name="status">Status</string>
-    <string name="all_good">All Good</string>
-    <string name="no_failed_transactions">No failed transactions</string>
-    <string name="setup_required">Setup Required</string>
-    <string name="configure_merchant_details">Configure your merchant details to start accepting payments</string>
-    <string name="setup">Setup</string>
-    <string name="start_nfc_payment">Start NFC Payment</string>
-    <string name="accept_payments_via_nfc">Accept mobile money payments via NFC tap</string>
-    <string name="tap_to_configure">Tap to configure and start accepting payments</string>
-    <string name="recent_transactions">Recent Transactions</string>
-    <string name="view_all">View All</string>
-    <string name="no_transactions_yet">No transactions yet</string>
-    
-    <!-- Terminal Screen -->
-    <string name="amount_to_receive">Amount to Receive</string>
-    <string name="payment_received">Payment Received</string>
-    <string name="cancel_payment">Cancel Payment</string>
-    
-    <!-- Settings -->
+    <string name="search_country">Search country…</string>
+    <string name="no_countries_found">No countries found</string>
+    <string name="country_not_supported">This country is not yet supported</string>
+    <string name="primary_markets">Primary Markets</string>
+    <string name="all_countries">All Countries</string>
+    <string name="change_country">Change country</string>
+
+    <!-- Mobile Money Provider -->
+    <string name="mobile_money_provider">Mobile Money Provider</string>
+    <string name="provider_auto_selected">Provider: %1$s (auto-selected)</string>
+    <string name="one_provider_per_country">One accepted provider per country</string>
+
+    <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
     <string name="user_profile">User Profile</string>
-    <string name="registered_number">Registered Number</string>
     <string name="mobile_money_setup">Mobile Money Setup</string>
     <string name="momo_country">Mobile Money Country</string>
+    <string name="momo_country_info">Your mobile money country can be different from your profile country</string>
+    <string name="momo_phone_label">Mobile Money Number</string>
     <string name="momo_identifier_type">Identifier Type</string>
     <string name="momo_phone_number">Phone Number</string>
     <string name="momo_code">MoMo Code</string>
-    <string name="momo_phone_label">Mobile Money Number</string>
+    <string name="mobile_money_number">Mobile Money Number</string>
+    <string name="mobile_money_number_placeholder">Enter your mobile money number</string>
+    <string name="profile_country">Profile Country</string>
     <string name="profile_country_badge">(Profile)</string>
-    <string name="provider_auto_selected">Provider: %1$s (auto-selected)</string>
-    <string name="invalid_phone_format">Invalid phone number format</string>
+    <string name="invalid_phone_format">Invalid phone format for %1$s</string>
     <string name="invalid_momo_code">MoMo code must be 4-10 digits</string>
+    <string name="phone_must_be_digits">Phone must be %1$d digits</string>
     <string name="not_set">Not set</string>
+    <string name="registered_number">Registered Number</string>
+    <string name="whatsapp_number">WhatsApp Number</string>
     <string name="merchant_settings">Merchant Settings</string>
-    <string name="security">Security</string>
-    <string name="biometric_auth">Biometric Authentication</string>
-    <string name="biometric_description">Use fingerprint or face to confirm payments</string>
-    <string name="not_available_device">Not available on this device</string>
-    <string name="logout">Logout</string>
     <string name="merchant_profile">Merchant Profile</string>
+    <string name="merchant_name">Merchant Name</string>
+    <string name="merchant_code">Merchant Code</string>
     <string name="merchant_phone_label">Merchant Phone Number</string>
+    <string name="security">Security</string>
+    <string name="biometric_login">Biometric Login</string>
+    <string name="biometric_auth">Biometric Authentication</string>
+    <string name="biometric_description">Use fingerprint or face to confirm</string>
+    <string name="not_available_device">Not available on this device</string>
+    <string name="change_pin">Change PIN</string>
     <string name="about">About</string>
     <string name="app_version">App Version</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="terms_of_service">Terms of Service</string>
+    <string name="logout">Log Out</string>
+    <string name="logout_confirmation">Are you sure you want to log out?</string>
+    <string name="logout_confirm_title">Log Out</string>
+    <string name="logout_confirm_message">Are you sure you want to log out?</string>
     <string name="save_configuration">Save Configuration</string>
     <string name="configuration_saved">Configuration saved</string>
-    <string name="settings_saved">Settings saved successfully</string>
-    <string name="logout_confirm_title">Logout</string>
-    <string name="logout_confirm_message">Are you sure you want to logout? You\'ll need to login again to access the app.</string>
-    
-    <!-- User Profile Section -->
-    <string name="user_profile">User Profile</string>
-    <string name="whatsapp_number">WhatsApp Number</string>
-    <string name="profile_country">Profile Country</string>
-    <string name="not_set">Not set</string>
-    
-    <!-- Mobile Money Setup Section -->
-    <string name="mobile_money_setup">Mobile Money Setup</string>
-    <string name="momo_country_info">Your mobile money country can be different from your profile country. Select the country where your mobile money account is registered.</string>
-    <string name="mobile_money_number">Mobile Money Number</string>
-    <string name="mobile_money_number_placeholder">Enter your mobile money number</string>
-    <string name="select_momo_country">Select Mobile Money Country</string>
-    <string name="change_country">Change country</string>
-    
-    <!-- Navigation -->
-    <string name="nav_home">Home</string>
-    <string name="nav_terminal">Terminal</string>
-    <string name="nav_history">History</string>
-    <string name="nav_settings">Settings</string>
-    
-    <!-- Transactions Screen -->
+    <string name="settings_saved">Settings saved</string>
+
+    <!-- Transactions -->
     <string name="transactions_title">Transactions</string>
-    <string name="sms_access_required">SMS Access Required</string>
-    <string name="sms_access_description">To automatically record transactions, please allow SMS access.</string>
-    <string name="sms_permission_optional">SMS Permission (Optional)</string>
-    <string name="sms_permission_optional_desc">Enable SMS access to automatically capture transaction confirmations.</string>
-    <string name="grant_permission">Grant Permission</string>
-    <string name="select_date_range">Select Date Range</string>
-    <string name="clear_date_range">Clear date range</string>
+    <string name="transaction_details">Transaction Details</string>
+    <string name="transaction_id">Transaction ID</string>
+    <string name="transaction_date">Date</string>
+    <string name="transaction_amount">Amount</string>
+    <string name="transaction_status">Status</string>
+    <string name="transaction_sender">Sender</string>
+    <string name="transaction_provider">Provider</string>
+    <string name="transaction_not_found">Transaction not found</string>
+    <string name="raw_sms_message">Raw SMS Message</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_pending">Pending</string>
+    <string name="status_failed">Failed</string>
     <string name="filter_all">All</string>
     <string name="filter_pending">Pending</string>
     <string name="filter_sent">Sent</string>
     <string name="filter_failed">Failed</string>
+    <string name="filter_today">Today</string>
+    <string name="filter_week">This Week</string>
+    <string name="filter_month">This Month</string>
+    <string name="filter_transactions">Filter Transactions</string>
+    <string name="no_transactions_title">No Transactions</string>
+    <string name="no_transactions_description">Your transaction history will appear here once you receive payments.</string>
     <string name="no_transactions_with_filters">No transactions match your filters. Try adjusting the filters or date range.</string>
-    
+    <string name="select_date_range">Select Date Range</string>
+    <string name="clear_date_range">Clear date range</string>
+    <string name="copy_id">Copy ID</string>
+    <string name="share">Share</string>
+    <string name="retry_sync">Retry Sync</string>
+    <string name="go_back">Go Back</string>
+    <string name="provider">Provider</string>
+    <string name="sync_status">Sync Status</string>
+    <string name="date_range">Date Range</string>
+    <string name="select_provider">Select Provider</string>
+
+    <!-- Permissions -->
+    <string name="permission_sms_title">SMS Permission Required</string>
+    <string name="permission_sms_message">To capture payment confirmations, we need access to SMS messages.</string>
+    <string name="permission_phone_title">Phone Permission Required</string>
+    <string name="permission_phone_message">To initiate USSD payments, we need phone calling permission.</string>
+    <string name="permission_nfc_title">NFC Required</string>
+    <string name="permission_nfc_message">NFC is required for tap-to-pay functionality.</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="permission_denied">Permission denied</string>
+    <string name="sms_access_required">SMS Access Required</string>
+    <string name="sms_access_description">To automatically record transactions, please grant SMS access.</string>
+    <string name="sms_permission_optional">SMS Permission (Optional)</string>
+    <string name="sms_permission_optional_desc">Enable SMS access to automatically capture transaction confirmations.</string>
+
+    <!-- Errors -->
+    <string name="error_nfc_not_supported">NFC is not supported on this device</string>
+    <string name="error_nfc_disabled">Please enable NFC in settings</string>
+    <string name="error_invalid_amount">Please enter a valid amount</string>
+    <string name="error_sync_failed">Failed to sync with server</string>
+    <string name="error_network">Network error. Please check your connection.</string>
+    <string name="error_unknown">An unexpected error occurred</string>
+    <string name="error_country_load_failed">Failed to load countries</string>
+    <string name="error">Error</string>
+
+    <!-- Actions -->
+    <string name="action_settings">Settings</string>
+    <string name="action_history">Transaction History</string>
+    <string name="action_sync">Sync Now</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_save">Save</string>
+    <string name="action_back">Back</string>
+    <string name="action_close">Close</string>
+    <string name="action_continue">Continue</string>
+
     <!-- Common -->
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="confirm">Confirm</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="retry">Retry</string>
+    <string name="back">Back</string>
     <string name="loading">Loading…</string>
-    <string name="error">Error</string>
     <string name="success">Success</string>
     <string name="pending">Pending</string>
     <string name="sent">Sent</string>
@@ -277,16 +230,124 @@
     <string name="offline">Offline</string>
     <string name="active">Active</string>
     <string name="inactive">Inactive</string>
-    <string name="testing">Testing</string>
+
+    <!-- SMS Relay -->
+    <string name="sms_relay_status">SMS Relay Status</string>
+    <string name="sms_relay_active">SMS Relay Active</string>
+    <string name="sms_relay_inactive">SMS Relay Inactive</string>
+    <string name="last_transaction">Last Transaction</string>
+
+    <!-- Currency Display -->
+    <string name="currency_format">%1$s %2$s</string>
+    <string name="currency_symbol">RWF</string>
     
-    <!-- Components -->
-    <string name="filter_transactions">Filter Transactions</string>
-    <string name="provider">Provider</string>
-    <string name="sync_status">Sync Status</string>
-    <string name="date_range">Date Range</string>
-    <string name="no_transactions_title">No Transactions Yet</string>
-    <string name="no_transactions_description">Your transaction history will appear here once you receive or send payments.</string>
-    <string name="select_provider">Select Provider</string>
+    <!-- Date/Time -->
+    <string name="just_now">Just now</string>
+    <string name="minutes_ago">%1$d min ago</string>
+    <string name="hours_ago">%1$d hr ago</string>
+    <string name="days_ago">%1$d d ago</string>
+
+    <!-- Payment Methods -->
+    <string name="payment_method_ussd">USSD Payment</string>
+    <string name="payment_method_app">Mobile App</string>
+    <string name="payment_method_qr">QR Code</string>
+    <string name="payment_method_nfc">NFC Tap</string>
+
+    <!-- Provider Names -->
+    <string name="provider_mtn">MTN MoMo</string>
+    <string name="provider_orange">Orange Money</string>
+    <string name="provider_airtel">Airtel Money</string>
+    <string name="provider_vodacom">Vodacom M-Pesa</string>
+    <string name="provider_ecocash">EcoCash</string>
+    <string name="provider_mvola">MVola</string>
+    <string name="provider_tmoney">T-Money</string>
+    <string name="provider_moov">Moov Money</string>
+    <string name="provider_myt">my.t money</string>
+    <string name="provider_mtc">MTC Maris</string>
+    <string name="provider_dmoney">D-Money</string>
+    <string name="provider_getesa">GETESA</string>
+
+    <!-- NFC Components -->
     <string name="nfc_hold_device">Hold your device near the terminal</string>
     <string name="nfc_processing">Processing payment…</string>
+
+    <!-- Authentication -->
+    <string name="auth_login_title">Welcome Back</string>
+    <string name="auth_login_subtitle">Sign in to continue</string>
+    <string name="auth_register_title">Create Account</string>
+    <string name="auth_phone_number">Phone Number</string>
+    <string name="auth_pin">6-digit PIN</string>
+    <string name="auth_confirm_pin">Confirm PIN</string>
+    <string name="auth_merchant_name">Business Name</string>
+    <string name="auth_forgot_pin">Forgot PIN?</string>
+    <string name="auth_sign_in">Sign In</string>
+    <string name="auth_sign_up">Create Account</string>
+    <string name="auth_use_biometrics">Use Biometrics</string>
+    <string name="auth_no_account">Don\'t have an account?</string>
+    <string name="auth_has_account">Already have an account?</string>
+    <string name="auth_register">Register</string>
+
+    <!-- Registration -->
+    <string name="reg_welcome">Welcome to MoMo Terminal</string>
+    <string name="reg_phone_subtitle">Enter your number to get started</string>
+    <string name="reg_whatsapp_info">We\'ll send you a code via WhatsApp</string>
+    <string name="reg_send_code">Send WhatsApp Code</string>
+    <string name="reg_verify_phone">Verify Your Phone</string>
+    <string name="reg_otp_instruction">Enter the 6-digit code sent to WhatsApp</string>
+    <string name="reg_code_expires">Code expires in %1$d:%2$s</string>
+    <string name="reg_code_expired">Code expired</string>
+    <string name="reg_code_expired_message">Code expired. Please request a new one.</string>
+    <string name="reg_change">Change</string>
+    <string name="reg_resend_code">Didn\'t receive code? Resend</string>
+    <string name="reg_verify">Verify</string>
+    <string name="reg_secure_account">Secure Your Account</string>
+    <string name="reg_pin_instruction">Create a 6-digit PIN to protect your transactions</string>
+    <string name="reg_pins_not_match">PINs don\'t match</string>
+    <string name="reg_continue">Continue</string>
+    <string name="reg_business_profile">Business Profile</string>
+    <string name="reg_business_subtitle">Tell us about your business</string>
+    <string name="reg_step_phone">Phone</string>
+    <string name="reg_step_otp">Verify</string>
+    <string name="reg_step_pin">PIN</string>
+    <string name="reg_step_info">Info</string>
+    <string name="reg_step_terms">Terms</string>
+    <string name="too_many_attempts">Too many attempts. Please try again later.</string>
+    <string name="send_otp">Send OTP</string>
+
+    <!-- Forgot PIN -->
+    <string name="forgot_pin_title">Reset PIN</string>
+    <string name="forgot_pin_enter_phone">Enter your phone number</string>
+    <string name="forgot_pin_whatsapp_info">We\'ll send you a verification code via WhatsApp</string>
+    <string name="forgot_pin_send_code">Send Code</string>
+    <string name="forgot_pin_verify_code">Verify Code</string>
+    <string name="forgot_pin_otp_sent">Enter the 6-digit code sent to\n%1$s %2$s</string>
+    <string name="forgot_pin_resend_code">Resend Code</string>
+    <string name="forgot_pin_create_new">Create New PIN</string>
+    <string name="forgot_pin_4digit_instruction">Enter a 4-digit PIN for your account</string>
+    <string name="forgot_pin_confirm">Confirm Your PIN</string>
+    <string name="forgot_pin_confirm_instruction">Re-enter your 4-digit PIN to confirm</string>
+    <string name="forgot_pin_mismatch">PINs don\'t match</string>
+    <string name="forgot_pin_reset_button">Reset PIN</string>
+    <string name="forgot_pin_success">PIN Reset Successfully!</string>
+    <string name="forgot_pin_success_message">You can now login with your new PIN</string>
+    
+    <!-- Login -->
+    <string name="enter_otp">Enter 6-digit OTP</string>
+    <string name="resend_code">Didn\'t receive code? Resend</string>
+    <string name="reg_resend_countdown">Resend code in %ds</string>
+
+    <!-- PIN Screen -->
+    <string name="pin_enter_title">Enter PIN</string>
+    <string name="pin_unlock_title">Unlock MomoTerminal</string>
+    <string name="pin_confirm_transaction">Confirm Transaction</string>
+    <string name="pin_attempts_remaining">Attempts remaining: %d</string>
+    <string name="pin_title">Enter PIN</string>
+    <string name="pin_subtitle">Enter your 6-digit PIN</string>
+    <string name="pin_attempts_left">%d attempts left</string>
+
+    <!-- Terms -->
+    <string name="terms_title">Terms and Conditions</string>
+    <string name="terms_subtitle">Please read and accept our terms to continue</string>
+    <string name="terms_content">By creating an account, you agree to:\n\n• Process mobile money transactions through your terminal\n• Keep your PIN confidential and secure\n• Comply with all applicable mobile money regulations\n• Allow transaction data synchronization\n• Receive notifications about your transactions\n\nYour data will be encrypted and stored securely.</string>
+    <string name="terms_accept_checkbox">I accept the Terms and Conditions and Privacy Policy</string>
 </resources>

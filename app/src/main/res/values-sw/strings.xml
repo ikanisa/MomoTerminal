@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Identity -->
+    <string name="app_name">MomoTerminal</string>
+    <string name="service_description">Kituo cha Malipo ya Simu ya NFC</string>
+    <string name="hce_service_description">Huduma ya Kituo cha Malipo ya Simu ya NFC</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Nyumbani</string>
+    <string name="nav_terminal">Kituo</string>
+    <string name="nav_transactions">Miamala</string>
+    <string name="nav_history">Historia</string>
+    <string name="nav_settings">Mipangilio</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">Nyumbani</string>
+    <string name="home_welcome">Karibu, %1$s</string>
+    <string name="nfc_terminal">Kituo cha NFC</string>
+    <string name="nfc_ready">Tayari kupokea malipo</string>
+    <string name="nfc_disabled">Washa kupokea malipo</string>
+    <string name="today_overview">Muhtasari wa Leo</string>
+    <string name="today_revenue">Mapato ya Leo</string>
+    <string name="weekly_revenue">Mapato ya Wiki</string>
+    <string name="success_rate">Kiwango cha Mafanikio</string>
+    <string name="transactions">miamala</string>
+    <string name="last_7_days">Siku 7 zilizopita</string>
+    <string name="recent_transactions">Miamala ya Hivi Karibuni</string>
+    <string name="view_all">Tazama Yote</string>
+    <string name="no_transactions_yet">Hakuna miamala bado</string>
+    <string name="setup_required">Usanidi Unahitajika</string>
+    <string name="configure_merchant_details">Sanidi maelezo yako ya mfanyabiashara kuanza</string>
+    <string name="setup">Sanidi</string>
+    <string name="failed">Imeshindwa</string>
+    <string name="all_good">Vyote Sawa</string>
+
+    <!-- Terminal Screen -->
+    <string name="amount_hint">Ingiza Kiasi</string>
+    <string name="amount_to_receive">Kiasi cha Kupokea</string>
+    <string name="activate_nfc">Washa Kituo cha NFC</string>
+    <string name="deactivate_nfc">Zima Kituo</string>
+    <string name="nfc_active">Kituo cha NFC Kimewashwa - Tayari kwa Tap</string>
+    <string name="nfc_inactive">Kituo cha NFC Kimezimwa</string>
+    <string name="payment_received">Malipo Yamepokelewa</string>
+    <string name="cancel_payment">Ghairi Malipo</string>
+    <string name="waiting_for_payment">Inasubiri malipo…</string>
+    <string name="tap_phone_to_pay">Mwambie mteja aguse simu yake</string>
+
+    <!-- USSD Related -->
+    <string name="ussd_generated">Msimbo wa USSD Umetengenezwa</string>
+    <string name="ussd_dial_instruction">Piga msimbo huu kukamilisha malipo</string>
+    <string name="ussd_copy">Nakili Msimbo</string>
+    <string name="ussd_dial">Piga Sasa</string>
+    <string name="ussd_copied">Msimbo wa USSD umenakiliwa</string>
+    <string name="ussd_not_supported">USSD Haipatikani</string>
+    <string name="ussd_use_app_instead">Nchi hii inatumia malipo ya programu. Tafadhali tumia programu ya %1$s.</string>
+
+    <!-- Country Selection -->
+    <string name="select_country">Chagua Nchi</string>
+    <string name="select_momo_country">Chagua Nchi ya Mobile Money</string>
+    <string name="search_country">Tafuta nchi…</string>
+    <string name="no_countries_found">Hakuna nchi zilizopatikana</string>
+    <string name="primary_markets">Masoko Makuu</string>
+    <string name="all_countries">Nchi Zote</string>
+
+    <!-- Mobile Money Provider -->
+    <string name="mobile_money_provider">Mtoa Huduma wa Mobile Money</string>
+    <string name="provider_auto_selected">Mtoa Huduma: %1$s (imechaguliwa kiotomatiki)</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Mipangilio</string>
+    <string name="user_profile">Wasifu wa Mtumiaji</string>
+    <string name="mobile_money_setup">Usanidi wa Mobile Money</string>
+    <string name="momo_country">Nchi ya Mobile Money</string>
+    <string name="momo_phone_label">Nambari ya Mobile Money</string>
+    <string name="profile_country">Nchi ya Wasifu</string>
+    <string name="not_set">Haijawekwa</string>
+    <string name="merchant_settings">Mipangilio ya Mfanyabiashara</string>
+    <string name="merchant_name">Jina la Mfanyabiashara</string>
+    <string name="security">Usalama</string>
+    <string name="biometric_login">Kuingia kwa Biometri</string>
+    <string name="change_pin">Badilisha PIN</string>
+    <string name="about">Kuhusu</string>
+    <string name="app_version">Toleo la Programu</string>
+    <string name="privacy_policy">Sera ya Faragha</string>
+    <string name="terms_of_service">Masharti ya Huduma</string>
+    <string name="logout">Toka</string>
+    <string name="logout_confirmation">Una uhakika unataka kutoka?</string>
+    <string name="save_configuration">Hifadhi Usanidi</string>
+    <string name="settings_saved">Mipangilio imehifadhiwa</string>
+
+    <!-- Transactions -->
+    <string name="transactions_title">Miamala</string>
+    <string name="transaction_details">Maelezo ya Muamala</string>
+    <string name="transaction_id">Kitambulisho cha Muamala</string>
+    <string name="transaction_date">Tarehe</string>
+    <string name="transaction_amount">Kiasi</string>
+    <string name="transaction_status">Hali</string>
+    <string name="transaction_sender">Mtumaji</string>
+    <string name="status_completed">Imekamilika</string>
+    <string name="status_pending">Inasubiri</string>
+    <string name="status_failed">Imeshindwa</string>
+    <string name="filter_all">Zote</string>
+    <string name="filter_pending">Zinasubiri</string>
+    <string name="filter_sent">Zimetumwa</string>
+    <string name="filter_failed">Zimeshindwa</string>
+    <string name="filter_today">Leo</string>
+    <string name="no_transactions_title">Hakuna Miamala</string>
+    <string name="no_transactions_description">Historia yako ya miamala itaonekana hapa ukipokea malipo.</string>
+
+    <!-- Permissions -->
+    <string name="permission_sms_title">Ruhusa ya SMS Inahitajika</string>
+    <string name="permission_sms_message">Ili kunasa uthibitisho wa malipo, tunahitaji kufikia ujumbe wa SMS.</string>
+    <string name="permission_nfc_title">NFC Inahitajika</string>
+    <string name="grant_permission">Toa Ruhusa</string>
+    <string name="permission_denied">Ruhusa imekataliwa</string>
+
+    <!-- Errors -->
+    <string name="error_nfc_not_supported">NFC haipatikani kwenye kifaa hiki</string>
+    <string name="error_nfc_disabled">Tafadhali washa NFC kwenye mipangilio</string>
+    <string name="error_invalid_amount">Tafadhali ingiza kiasi halali</string>
+    <string name="error_sync_failed">Imeshindwa kusawazisha na seva</string>
+    <string name="error_network">Hitilafu ya mtandao. Angalia muunganisho wako.</string>
+    <string name="error">Hitilafu</string>
+
+    <!-- Actions -->
+    <string name="action_retry">Jaribu Tena</string>
+    <string name="action_cancel">Ghairi</string>
+    <string name="action_confirm">Thibitisha</string>
+    <string name="action_save">Hifadhi</string>
+    <string name="action_back">Rudi</string>
+    <string name="action_continue">Endelea</string>
+
+    <!-- Common -->
+    <string name="ok">Sawa</string>
+    <string name="cancel">Ghairi</string>
+    <string name="confirm">Thibitisha</string>
+    <string name="save">Hifadhi</string>
+    <string name="loading">Inapakia…</string>
+    <string name="success">Imefanikiwa</string>
+    <string name="pending">Inasubiri</string>
+    <string name="today">Leo</string>
+    <string name="amount">Kiasi</string>
+    <string name="dismiss">Ondoa</string>
+    <string name="offline">Nje ya mtandao</string>
+
+    <!-- Date/Time -->
+    <string name="just_now">Sasa hivi</string>
+    <string name="minutes_ago">dakika %1$d zilizopita</string>
+    <string name="hours_ago">saa %1$d zilizopita</string>
+    <string name="days_ago">siku %1$d zilizopita</string>
+
+    <!-- Payment Methods -->
+    <string name="payment_method_ussd">Malipo ya USSD</string>
+    <string name="payment_method_app">Programu ya Simu</string>
+    <string name="payment_method_nfc">Tap ya NFC</string>
+
+    <!-- Authentication -->
+    <string name="auth_login_title">Karibu Tena</string>
+    <string name="auth_login_subtitle">Ingia kuendelea</string>
+    <string name="auth_register_title">Fungua Akaunti</string>
+    <string name="auth_phone_number">Nambari ya Simu</string>
+    <string name="auth_pin">PIN ya tarakimu 6</string>
+    <string name="auth_confirm_pin">Thibitisha PIN</string>
+    <string name="auth_forgot_pin">Umesahau PIN?</string>
+    <string name="auth_sign_in">Ingia</string>
+    <string name="auth_sign_up">Fungua Akaunti</string>
+
+    <!-- Registration -->
+    <string name="reg_welcome">Karibu MoMo Terminal</string>
+    <string name="reg_phone_subtitle">Ingiza nambari yako kuanza</string>
+    <string name="reg_send_code">Tuma Msimbo wa WhatsApp</string>
+    <string name="reg_verify_phone">Thibitisha Simu Yako</string>
+    <string name="reg_verify">Thibitisha</string>
+    <string name="reg_continue">Endelea</string>
+
+    <!-- PIN Screen -->
+    <string name="pin_title">Ingiza PIN</string>
+    <string name="pin_subtitle">Ingiza PIN yako ya tarakimu 6</string>
+    <string name="pin_attempts_left">Majaribio %d yamebaki</string>
+</resources>

@@ -1,37 +1,40 @@
 package com.momoterminal.domain.model
 
 /**
- * Domain model for a country with its mobile money provider.
+ * Domain model for country data.
  */
 data class Country(
-    val code: String,                 // ISO 3166-1 alpha-2
+    val code: String,
     val name: String,
     val nameLocal: String,
-    val currency: String,             // ISO 4217
+    val currency: String,
     val currencySymbol: String,
     val phonePrefix: String,
-    val language: String,
-    val providerName: String,         // Single authorized provider code
-    val providerDisplayName: String,  // Human readable provider name
-    val providerColor: String,        // Hex color for UI
-    val isPrimaryMarket: Boolean = false
+    val phoneLength: Int,
+    val primaryLanguage: String,
+    val providerCode: String,
+    val providerName: String,
+    val providerColor: String,
+    val ussdPayMerchant: String?,
+    val ussdSendToPhone: String?,
+    val hasUssdSupport: Boolean,
+    val hasAppSupport: Boolean,
+    val isPrimaryMarket: Boolean,
+    val launchPriority: Int
 ) {
-    companion object {
-        /**
-         * Default country for fallback.
-         */
-        val DEFAULT = Country(
-            code = "RW",
-            name = "Rwanda",
-            nameLocal = "Rwanda",
-            currency = "RWF",
-            currencySymbol = "FRw",
-            phonePrefix = "+250",
-            language = "rw",
-            providerName = "MTN",
-            providerDisplayName = "MTN MoMo",
-            providerColor = "#FFCC00",
-            isPrimaryMarket = true
-        )
+    val displayName: String get() = nameLocal.ifBlank { name }
+
+    fun generateMerchantUssd(merchantCode: String, amount: String): String? {
+        if (!hasUssdSupport || ussdPayMerchant.isNullOrBlank()) return null
+        return ussdPayMerchant
+            .replace("{merchant}", merchantCode)
+            .replace("{amount}", amount)
+    }
+
+    fun generateSendUssd(phone: String, amount: String): String? {
+        if (!hasUssdSupport || ussdSendToPhone.isNullOrBlank()) return null
+        return ussdSendToPhone
+            .replace("{phone}", phone)
+            .replace("{amount}", amount)
     }
 }

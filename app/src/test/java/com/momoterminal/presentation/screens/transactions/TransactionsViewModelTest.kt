@@ -2,6 +2,7 @@ package com.momoterminal.presentation.screens.transactions
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.momoterminal.config.AppConfig
 import com.momoterminal.data.local.MomoDatabase
 import com.momoterminal.data.local.dao.TransactionDao
 import com.momoterminal.data.local.entity.TransactionEntity
@@ -31,6 +32,7 @@ class TransactionsViewModelTest {
     private lateinit var database: MomoDatabase
     private lateinit var transactionDao: TransactionDao
     private lateinit var syncManager: SyncManager
+    private lateinit var appConfig: AppConfig
     private lateinit var viewModel: TransactionsViewModel
     private val testDispatcher = StandardTestDispatcher()
 
@@ -46,11 +48,14 @@ class TransactionsViewModelTest {
             every { transactionDao() } returns transactionDao
         }
         syncManager = mockk(relaxed = true)
+        appConfig = mockk(relaxed = true) {
+            every { getCurrency() } returns "RWF"
+        }
         
         every { transactionDao.getRecentTransactions() } returns transactionsFlow
         every { transactionDao.getPendingCount() } returns pendingCountFlow
         
-        viewModel = TransactionsViewModel(database, syncManager)
+        viewModel = TransactionsViewModel(database, syncManager, appConfig)
     }
 
     @After

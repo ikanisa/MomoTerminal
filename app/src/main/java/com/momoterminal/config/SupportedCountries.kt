@@ -3,334 +3,351 @@ package com.momoterminal.config
 import com.momoterminal.data.model.CountryConfig
 
 /**
- * Supported countries configuration for MomoTerminal.
- * 
- * Target markets: Sub-Saharan French and English speaking countries
- * Excluded: Uganda (UG), Kenya (KE), Nigeria (NG), South Africa (ZA)
- * 
- * Note: Each country has ONE authorized mobile money provider.
- * The primary provider from the list is used for transactions.
- * Fallback country configurations.
+ * Fallback country configurations for offline use.
  * Primary data source is Supabase countries table.
- * This provides offline fallback only.
  */
-@Deprecated("Use CountryRepository for country data from Supabase")
 object SupportedCountries {
-    
-    data class Country(
-        val code: String,        // ISO 3166-1 alpha-2
-        val name: String,
-        val nameLocal: String,
-        val currency: String,    // ISO 4217
-        val currencySymbol: String,
-        val phonePrefix: String,
-        val language: String,    // Primary language
-        val providers: List<String>  // Legacy: list of providers, first is primary
-    ) {
-        /**
-         * Get the primary (authorized) provider for this country.
-         */
-        val primaryProvider: String get() = providers.firstOrNull() ?: "MTN"
-        
-        /**
-         * Get display name for the primary provider.
-         */
-        val providerDisplayName: String get() = getProviderDisplayName(primaryProvider)
-    }
-    
-    /**
-     * Get display name for a provider code.
-     */
-    fun getProviderDisplayName(providerCode: String): String {
-        return when (providerCode.uppercase()) {
-            "MTN" -> "MTN MoMo"
-            "AIRTEL" -> "Airtel Money"
-            "VODACOM" -> "M-Pesa"
-            "VODAFONE" -> "Vodafone Cash"
-            "ORANGE" -> "Orange Money"
-            "TIGO" -> "Tigo Pesa"
-            "WAVE" -> "Wave"
-            "MOOV" -> "Moov Money"
-            "ECOCASH" -> "EcoCash"
-            "TMONEY" -> "T-Money"
-            "MVOLA" -> "MVola"
-            "LUMICASH" -> "LumiCash"
-            "TOGOCEL" -> "Flooz"
-            "FREE" -> "Free Money"
-            "TNM" -> "TNM Mpamba"
-            "MASCOM" -> "MyZaka"
-            "MTC" -> "MTC MoMo"
-            "ECONET" -> "EcoCash"
-            "AFRICELL" -> "Africell Money"
-            "QCELL" -> "QMoney"
-            "HALOTEL" -> "Halopesa"
-            "ZAMTEL" -> "Zamtel Kwacha"
-            "MOVITEL" -> "M-Pesa"
-            "TELECEL" -> "Telecel Money"
-            "ONEMONEY" -> "OneMoney"
-            "AIRTELTIGO" -> "AirtelTigo Money"
-            else -> providerCode
-        }
-    }
-    
-    // Primary launch countries
-    val RWANDA = Country(
-        code = "RW", name = "Rwanda", nameLocal = "Rwanda",
-        currency = "RWF", currencySymbol = "FRw", phonePrefix = "+250",
-        language = "rw", providers = listOf("MTN", "AIRTEL")
-    )
-    
-    val DR_CONGO = Country(
-        code = "CD", name = "DR Congo", nameLocal = "RD Congo",
-        currency = "CDF", currencySymbol = "FC", phonePrefix = "+243",
-        language = "fr", providers = listOf("ORANGE", "VODACOM", "AIRTEL")
-    )
-    
-    val BURUNDI = Country(
-        code = "BI", name = "Burundi", nameLocal = "Burundi",
-        currency = "BIF", currencySymbol = "FBu", phonePrefix = "+257",
-        language = "fr", providers = listOf("ECOCASH", "LUMICASH")
-    )
-    
-    val TANZANIA = Country(
-        code = "TZ", name = "Tanzania", nameLocal = "Tanzania",
-        currency = "TZS", currencySymbol = "TSh", phonePrefix = "+255",
-        language = "sw", providers = listOf("VODACOM", "AIRTEL", "TIGO", "HALOTEL")
-    )
-    
-    val ZAMBIA = Country(
-        code = "ZM", name = "Zambia", nameLocal = "Zambia",
-        currency = "ZMW", currencySymbol = "ZK", phonePrefix = "+260",
-        language = "en", providers = listOf("MTN", "AIRTEL", "ZAMTEL")
-    )
-    
-    // Expansion countries - French speaking
-    val SENEGAL = Country(
-        code = "SN", name = "Senegal", nameLocal = "Sénégal",
-        currency = "XOF", currencySymbol = "CFA", phonePrefix = "+221",
-        language = "fr", providers = listOf("ORANGE", "FREE", "WAVE")
-    )
-    
-    val IVORY_COAST = Country(
-        code = "CI", name = "Ivory Coast", nameLocal = "Côte d'Ivoire",
-        currency = "XOF", currencySymbol = "CFA", phonePrefix = "+225",
-        language = "fr", providers = listOf("ORANGE", "MTN", "MOOV", "WAVE")
-    )
-    
-    val CAMEROON = Country(
-        code = "CM", name = "Cameroon", nameLocal = "Cameroun",
-        currency = "XAF", currencySymbol = "FCFA", phonePrefix = "+237",
-        language = "fr", providers = listOf("MTN", "ORANGE")
-    )
-    
-    val MALI = Country(
-        code = "ML", name = "Mali", nameLocal = "Mali",
-        currency = "XOF", currencySymbol = "CFA", phonePrefix = "+223",
-        language = "fr", providers = listOf("ORANGE", "MOOV")
-    )
-    
-    val BURKINA_FASO = Country(
-        code = "BF", name = "Burkina Faso", nameLocal = "Burkina Faso",
-        currency = "XOF", currencySymbol = "CFA", phonePrefix = "+226",
-        language = "fr", providers = listOf("ORANGE", "MOOV")
-    )
-    
-    val NIGER = Country(
-        code = "NE", name = "Niger", nameLocal = "Niger",
-        currency = "XOF", currencySymbol = "CFA", phonePrefix = "+227",
-        language = "fr", providers = listOf("AIRTEL", "MOOV", "ORANGE")
-    )
-    
-    val BENIN = Country(
-        code = "BJ", name = "Benin", nameLocal = "Bénin",
-        currency = "XOF", currencySymbol = "CFA", phonePrefix = "+229",
-        language = "fr", providers = listOf("MTN", "MOOV")
-    )
-    
-    val TOGO = Country(
-        code = "TG", name = "Togo", nameLocal = "Togo",
-        currency = "XOF", currencySymbol = "CFA", phonePrefix = "+228",
-        language = "fr", providers = listOf("TMONEY", "MOOV")
-    )
-    
-    val GUINEA = Country(
-        code = "GN", name = "Guinea", nameLocal = "Guinée",
-        currency = "GNF", currencySymbol = "FG", phonePrefix = "+224",
-        language = "fr", providers = listOf("ORANGE", "MTN")
-    )
-    
-    val CHAD = Country(
-        code = "TD", name = "Chad", nameLocal = "Tchad",
-        currency = "XAF", currencySymbol = "FCFA", phonePrefix = "+235",
-        language = "fr", providers = listOf("AIRTEL", "TIGO")
-    )
-    
-    val CENTRAL_AFRICAN_REPUBLIC = Country(
-        code = "CF", name = "Central African Republic", nameLocal = "République Centrafricaine",
-        currency = "XAF", currencySymbol = "FCFA", phonePrefix = "+236",
-        language = "fr", providers = listOf("ORANGE", "TELECEL")
-    )
-    
-    val GABON = Country(
-        code = "GA", name = "Gabon", nameLocal = "Gabon",
-        currency = "XAF", currencySymbol = "FCFA", phonePrefix = "+241",
-        language = "fr", providers = listOf("AIRTEL", "MOOV")
-    )
-    
-    val CONGO_BRAZZAVILLE = Country(
-        code = "CG", name = "Congo", nameLocal = "Congo-Brazzaville",
-        currency = "XAF", currencySymbol = "FCFA", phonePrefix = "+242",
-        language = "fr", providers = listOf("MTN", "AIRTEL")
-    )
-    
-    // Expansion countries - English speaking
-    val GHANA = Country(
-        code = "GH", name = "Ghana", nameLocal = "Ghana",
-        currency = "GHS", currencySymbol = "GH₵", phonePrefix = "+233",
-        language = "en", providers = listOf("MTN", "VODAFONE", "AIRTELTIGO")
-    )
-    
-    val MALAWI = Country(
-        code = "MW", name = "Malawi", nameLocal = "Malawi",
-        currency = "MWK", currencySymbol = "MK", phonePrefix = "+265",
-        language = "en", providers = listOf("AIRTEL", "TNM")
-    )
-    
-    val ZIMBABWE = Country(
-        code = "ZW", name = "Zimbabwe", nameLocal = "Zimbabwe",
-        currency = "ZWL", currencySymbol = "Z$", phonePrefix = "+263",
-        language = "en", providers = listOf("ECOCASH", "ONEMONEY")
-    )
-    
-    val MOZAMBIQUE = Country(
-        code = "MZ", name = "Mozambique", nameLocal = "Moçambique",
-        currency = "MZN", currencySymbol = "MT", phonePrefix = "+258",
-        language = "pt", providers = listOf("VODACOM", "MOVITEL")
-    )
-    
-    val BOTSWANA = Country(
-        code = "BW", name = "Botswana", nameLocal = "Botswana",
-        currency = "BWP", currencySymbol = "P", phonePrefix = "+267",
-        language = "en", providers = listOf("ORANGE", "MASCOM")
-    )
-    
-    val NAMIBIA = Country(
-        code = "NA", name = "Namibia", nameLocal = "Namibia",
-        currency = "NAD", currencySymbol = "N$", phonePrefix = "+264",
-        language = "en", providers = listOf("MTC")
-    )
-    
-    val LESOTHO = Country(
-        code = "LS", name = "Lesotho", nameLocal = "Lesotho",
-        currency = "LSL", currencySymbol = "L", phonePrefix = "+266",
-        language = "en", providers = listOf("VODACOM", "ECONET")
-    )
-    
-    val ESWATINI = Country(
-        code = "SZ", name = "Eswatini", nameLocal = "Eswatini",
-        currency = "SZL", currencySymbol = "E", phonePrefix = "+268",
-        language = "en", providers = listOf("MTN")
-    )
-    
-    val LIBERIA = Country(
-        code = "LR", name = "Liberia", nameLocal = "Liberia",
-        currency = "LRD", currencySymbol = "L$", phonePrefix = "+231",
-        language = "en", providers = listOf("ORANGE", "MTN")
-    )
-    
-    val SIERRA_LEONE = Country(
-        code = "SL", name = "Sierra Leone", nameLocal = "Sierra Leone",
-        currency = "SLL", currencySymbol = "Le", phonePrefix = "+232",
-        language = "en", providers = listOf("ORANGE", "AFRICELL")
-    )
-    
-    val GAMBIA = Country(
-        code = "GM", name = "Gambia", nameLocal = "Gambia",
-        currency = "GMD", currencySymbol = "D", phonePrefix = "+220",
-        language = "en", providers = listOf("AFRICELL", "QCELL")
-    )
-    
-    // Excluded countries (for reference - DO NOT ADD TO SUPPORTED LIST)
-    private val EXCLUDED_COUNTRIES = setOf("UG", "KE", "NG", "ZA")
-    
-    // All supported countries
-    val ALL_SUPPORTED: List<Country> = listOf(
-        // Primary launch
-        RWANDA, DR_CONGO, BURUNDI, TANZANIA, ZAMBIA,
-        // French speaking expansion
-        SENEGAL, IVORY_COAST, CAMEROON, MALI, BURKINA_FASO,
-        NIGER, BENIN, TOGO, GUINEA, CHAD, CENTRAL_AFRICAN_REPUBLIC,
-        GABON, CONGO_BRAZZAVILLE,
-        // English speaking expansion
-        GHANA, MALAWI, ZIMBABWE, MOZAMBIQUE, BOTSWANA,
-        NAMIBIA, LESOTHO, ESWATINI, LIBERIA, SIERRA_LEONE, GAMBIA
-    )
-    
-    // Primary launch countries
-    val PRIMARY_LAUNCH: List<Country> = listOf(RWANDA, DR_CONGO, BURUNDI, TANZANIA, ZAMBIA)
-    
-    // Get country by code
-    fun getByCode(code: String): Country? = ALL_SUPPORTED.find { it.code == code.uppercase() }
-    
-    // Check if country is supported
-    fun isSupported(code: String): Boolean {
-        val upperCode = code.uppercase()
-        return upperCode !in EXCLUDED_COUNTRIES && ALL_SUPPORTED.any { it.code == upperCode }
-    }
-    
-    // Get countries by language
-    fun getByLanguage(language: String): List<Country> = 
-        ALL_SUPPORTED.filter { it.language == language.lowercase() }
-    
-    // Get default country (Rwanda)
-    fun getDefault(): Country = RWANDA
 
-    // Get currency for country code
-    fun getCurrencyForCountry(code: String): String = getByCode(code)?.currency ?: "GHS"
-    
-    // Get primary provider for country code
-    fun getPrimaryProviderForCountry(code: String): String = getByCode(code)?.primaryProvider ?: "MTN"
-    // Fallback countries for offline use
     private val FALLBACK_COUNTRIES = listOf(
+        // Primary Markets (launchPriority 1-8)
         CountryConfig(
-            id = "rw", code = "RW", name = "Rwanda", nameLocal = "Rwanda",
-            currency = "RWF", currencySymbol = "FRw", phonePrefix = "+250", phoneLength = 9,
-            flagEmoji = "🇷🇼", providerName = "MTN MoMo", providerCode = "MTN",
-            providerColor = "#FFCC00", ussdTemplate = "*182*8*1*{merchant}*{amount}#"
+            id = "rw", code = "RW", name = "Rwanda", nameLocal = "Rwanda", nameFrench = "Rwanda",
+            currency = "RWF", currencySymbol = "FRw", currencyDecimals = 0,
+            phonePrefix = "+250", phoneLength = 9, flagEmoji = "🇷🇼",
+            primaryLanguage = "rw", providerName = "MTN MoMo", providerCode = "MTN",
+            providerColor = "#FFCC00", ussdBaseCode = "*182#",
+            ussdSendToPhone = "*182*1*1*{phone}*{amount}#",
+            ussdPayMerchant = "*182*8*1*{merchant}*{amount}#",
+            hasUssdSupport = true, isPrimaryMarket = true, launchPriority = 1
         ),
         CountryConfig(
-            id = "cd", code = "CD", name = "DR Congo", nameLocal = "RD Congo",
-            currency = "CDF", currencySymbol = "FC", phonePrefix = "+243", phoneLength = 9,
-            flagEmoji = "🇨🇩", providerName = "Vodacom M-Pesa", providerCode = "VODACOM",
-            providerColor = "#E60000", ussdTemplate = "*150*1*1*{merchant}*{amount}#"
+            id = "bi", code = "BI", name = "Burundi", nameLocal = "Burundi", nameFrench = "Burundi",
+            currency = "BIF", currencySymbol = "FBu", currencyDecimals = 0,
+            phonePrefix = "+257", phoneLength = 8, flagEmoji = "🇧🇮",
+            primaryLanguage = "fr", providerName = "Econet EcoCash", providerCode = "ECOCASH",
+            providerColor = "#00A651", ussdBaseCode = "*151#",
+            ussdSendToPhone = "*151*1*1*{phone}*{amount}#",
+            ussdPayMerchant = "*151*1*2*{phone}*{amount}#",
+            ussdNotes = "EcoCash distinguishes registered vs. unregistered users",
+            hasUssdSupport = true, isPrimaryMarket = true, launchPriority = 2
         ),
         CountryConfig(
-            id = "bi", code = "BI", name = "Burundi", nameLocal = "Burundi",
-            currency = "BIF", currencySymbol = "FBu", phonePrefix = "+257", phoneLength = 8,
-            flagEmoji = "🇧🇮", providerName = "Lumicash", providerCode = "LUMICASH",
-            providerColor = "#00A651", ussdTemplate = "*150*1*{merchant}*{amount}#"
+            id = "cm", code = "CM", name = "Cameroon", nameLocal = "Cameroun", nameFrench = "Cameroun",
+            currency = "XAF", currencySymbol = "FCFA", currencyDecimals = 0,
+            phonePrefix = "+237", phoneLength = 9, flagEmoji = "🇨🇲",
+            primaryLanguage = "fr", providerName = "MTN Mobile Money", providerCode = "MTN",
+            providerColor = "#FFCC00", ussdBaseCode = "*126#",
+            ussdSendToPhone = "*126*2*{phone}*{amount}#",
+            ussdPayMerchant = "*126*4*{merchant}*{amount}#",
+            ussdNotes = "Option 2 for Transfer Money, Option 4 for bills/merchants",
+            hasUssdSupport = true, isPrimaryMarket = true, launchPriority = 3
         ),
         CountryConfig(
-            id = "tz", code = "TZ", name = "Tanzania", nameLocal = "Tanzania",
-            currency = "TZS", currencySymbol = "TSh", phonePrefix = "+255", phoneLength = 9,
-            flagEmoji = "🇹🇿", providerName = "Vodacom M-Pesa", providerCode = "VODACOM",
-            providerColor = "#E60000", ussdTemplate = "*150*00#{merchant}*{amount}#"
+            id = "mg", code = "MG", name = "Madagascar", nameLocal = "Madagasikara", nameFrench = "Madagascar",
+            currency = "MGA", currencySymbol = "Ar", currencyDecimals = 0,
+            phonePrefix = "+261", phoneLength = 9, flagEmoji = "🇲🇬",
+            primaryLanguage = "fr", providerName = "Telma MVola", providerCode = "MVOLA",
+            providerColor = "#E31E24", ussdBaseCode = "#111#",
+            ussdSendToPhone = "#111*2*{phone}*{amount}#",
+            ussdPayMerchant = "#111*4*{merchant}*{amount}#",
+            ussdNotes = "MVola uses # prefix. Option 2 for send, Option 4 for pay",
+            hasUssdSupport = true, hasAppSupport = true, isPrimaryMarket = true, launchPriority = 4
         ),
         CountryConfig(
-            id = "zm", code = "ZM", name = "Zambia", nameLocal = "Zambia",
-            currency = "ZMW", currencySymbol = "ZK", phonePrefix = "+260", phoneLength = 9,
-            flagEmoji = "🇿🇲", providerName = "MTN MoMo", providerCode = "MTN",
-            providerColor = "#FFCC00", ussdTemplate = "*303*{merchant}*{amount}#"
+            id = "mu", code = "MU", name = "Mauritius", nameLocal = "Mauritius", nameFrench = "Maurice",
+            currency = "MUR", currencySymbol = "₨", currencyDecimals = 2,
+            phonePrefix = "+230", phoneLength = 8, flagEmoji = "🇲🇺",
+            primaryLanguage = "en", providerName = "my.t money", providerCode = "MYT",
+            providerColor = "#E4002B",
+            ussdNotes = "App-based only. No USSD. QR code payments supported.",
+            hasUssdSupport = false, hasAppSupport = true, hasQrSupport = true,
+            isPrimaryMarket = true, launchPriority = 5
+        ),
+        CountryConfig(
+            id = "tz", code = "TZ", name = "Tanzania", nameLocal = "Tanzania", nameFrench = "Tanzanie",
+            currency = "TZS", currencySymbol = "TSh", currencyDecimals = 0,
+            phonePrefix = "+255", phoneLength = 9, flagEmoji = "🇹🇿",
+            primaryLanguage = "sw", providerName = "Vodacom M-Pesa", providerCode = "VODACOM",
+            providerColor = "#E60000", ussdBaseCode = "*150*00#",
+            ussdSendToPhone = "*150*00*{phone}*{amount}#",
+            ussdPayMerchant = "*150*00*{merchant}*{amount}#",
+            ussdNotes = "M-Pesa prompts for PIN after dialing",
+            hasUssdSupport = true, hasAppSupport = true, isPrimaryMarket = true, launchPriority = 6
+        ),
+        CountryConfig(
+            id = "zm", code = "ZM", name = "Zambia", nameLocal = "Zambia", nameFrench = "Zambie",
+            currency = "ZMW", currencySymbol = "ZK", currencyDecimals = 2,
+            phonePrefix = "+260", phoneLength = 9, flagEmoji = "🇿🇲",
+            primaryLanguage = "en", providerName = "MTN MoMo", providerCode = "MTN",
+            providerColor = "#FFCC00", ussdBaseCode = "*115#",
+            ussdSendToPhone = "*115*2*{phone}*{amount}#",
+            ussdPayMerchant = "*115*5*{merchant}*{amount}#",
+            ussdNotes = "Option 2 for Send Money, Option 5 for Merchant Pay",
+            hasUssdSupport = true, isPrimaryMarket = true, launchPriority = 7
+        ),
+        CountryConfig(
+            id = "cd", code = "CD", name = "DR Congo", nameLocal = "RD Congo", nameFrench = "République Démocratique du Congo",
+            currency = "CDF", currencySymbol = "FC", currencyDecimals = 2,
+            phonePrefix = "+243", phoneLength = 9, flagEmoji = "🇨🇩",
+            primaryLanguage = "fr", providerName = "Orange Money", providerCode = "ORANGE",
+            providerColor = "#FF6600", ussdBaseCode = "*144#",
+            ussdSendToPhone = "*144*1*{phone}*{amount}#",
+            ussdPayMerchant = "*144*4*{merchant}*{amount}#",
+            ussdNotes = "Option 4 for bill payments",
+            hasUssdSupport = true, hasAppSupport = true, isPrimaryMarket = true, launchPriority = 8
+        ),
+        // Secondary Markets (launchPriority 10+)
+        CountryConfig(
+            id = "zw", code = "ZW", name = "Zimbabwe", nameLocal = "Zimbabwe", nameFrench = "Zimbabwe",
+            currency = "ZWL", currencySymbol = "Z$", currencyDecimals = 2,
+            phonePrefix = "+263", phoneLength = 9, flagEmoji = "🇿🇼",
+            primaryLanguage = "en", providerName = "Econet EcoCash", providerCode = "ECOCASH",
+            providerColor = "#00A651", ussdBaseCode = "*151#",
+            ussdSendToPhone = "*151*1*1*{phone}*{amount}#",
+            ussdPayMerchant = "*151*2*{merchant}*{amount}#",
+            ussdNotes = "PIN-protected after USSD dial",
+            hasUssdSupport = true, launchPriority = 10
+        ),
+        CountryConfig(
+            id = "mw", code = "MW", name = "Malawi", nameLocal = "Malawi", nameFrench = "Malawi",
+            currency = "MWK", currencySymbol = "MK", currencyDecimals = 2,
+            phonePrefix = "+265", phoneLength = 9, flagEmoji = "🇲🇼",
+            primaryLanguage = "en", providerName = "Airtel Money", providerCode = "AIRTEL",
+            providerColor = "#ED1C24", ussdBaseCode = "*211#",
+            ussdSendToPhone = "*211*{phone}*{amount}#",
+            ussdPayMerchant = "*211*{merchant}*{amount}#",
+            hasUssdSupport = true, launchPriority = 11
+        ),
+        CountryConfig(
+            id = "na", code = "NA", name = "Namibia", nameLocal = "Namibia", nameFrench = "Namibie",
+            currency = "NAD", currencySymbol = "N$", currencyDecimals = 2,
+            phonePrefix = "+264", phoneLength = 9, flagEmoji = "🇳🇦",
+            primaryLanguage = "en", providerName = "MTC Money (Maris)", providerCode = "MTC",
+            providerColor = "#0066B3", ussdBaseCode = "*140*682#",
+            ussdSendToPhone = "*140*682*{phone}*{amount}#",
+            ussdPayMerchant = "*140*682*{merchant}*{amount}#",
+            hasUssdSupport = true, launchPriority = 12
+        ),
+        CountryConfig(
+            id = "sc", code = "SC", name = "Seychelles", nameLocal = "Seychelles", nameFrench = "Seychelles",
+            currency = "SCR", currencySymbol = "₨", currencyDecimals = 2,
+            phonePrefix = "+248", phoneLength = 7, flagEmoji = "🇸🇨",
+            primaryLanguage = "en", providerName = "Airtel Money", providerCode = "AIRTEL",
+            providerColor = "#ED1C24", ussdBaseCode = "*202#",
+            ussdSendToPhone = "*202*{phone}*{amount}#",
+            ussdPayMerchant = "*202*{merchant}*{amount}#",
+            hasUssdSupport = true, launchPriority = 13
+        ),
+        CountryConfig(
+            id = "gh", code = "GH", name = "Ghana", nameLocal = "Ghana", nameFrench = "Ghana",
+            currency = "GHS", currencySymbol = "GH₵", currencyDecimals = 2,
+            phonePrefix = "+233", phoneLength = 9, flagEmoji = "🇬🇭",
+            primaryLanguage = "en", providerName = "MTN Mobile Money", providerCode = "MTN",
+            providerColor = "#FFCC00", ussdBaseCode = "*170#",
+            ussdSendToPhone = "*170*1*1*{phone}*{amount}#",
+            ussdPayMerchant = "*170*2*1*{merchant}*{amount}#",
+            ussdNotes = "Option 1-1 for MoMo user, Option 2-1 for MoMoPay merchant",
+            hasUssdSupport = true, hasAppSupport = true, launchPriority = 14
+        ),
+        CountryConfig(
+            id = "bj", code = "BJ", name = "Benin", nameLocal = "Bénin", nameFrench = "Bénin",
+            currency = "XOF", currencySymbol = "CFA", currencyDecimals = 0,
+            phonePrefix = "+229", phoneLength = 8, flagEmoji = "🇧🇯",
+            primaryLanguage = "fr", providerName = "MTN Mobile Money", providerCode = "MTN",
+            providerColor = "#FFCC00", ussdBaseCode = "*880#",
+            ussdSendToPhone = "*880*1*{phone}*{amount}#",
+            ussdPayMerchant = "*880*3*{merchant}*{amount}#",
+            hasUssdSupport = true, launchPriority = 15
+        ),
+        CountryConfig(
+            id = "bf", code = "BF", name = "Burkina Faso", nameLocal = "Burkina Faso", nameFrench = "Burkina Faso",
+            currency = "XOF", currencySymbol = "CFA", currencyDecimals = 0,
+            phonePrefix = "+226", phoneLength = 8, flagEmoji = "🇧🇫",
+            primaryLanguage = "fr", providerName = "Orange Money", providerCode = "ORANGE",
+            providerColor = "#FF6600", ussdBaseCode = "*144#",
+            ussdSendToPhone = "*144*1*{phone}*{amount}#",
+            ussdPayMerchant = "*144*4*{merchant}*{amount}#",
+            hasUssdSupport = true, launchPriority = 16
+        ),
+        CountryConfig(
+            id = "cf", code = "CF", name = "Central African Republic",
+            nameLocal = "Ködörösêse tî Bêafrîka", nameFrench = "République Centrafricaine",
+            currency = "XAF", currencySymbol = "FCFA", currencyDecimals = 0,
+            phonePrefix = "+236", phoneLength = 8, flagEmoji = "🇨🇫",
+            primaryLanguage = "fr", providerName = "Orange Money", providerCode = "ORANGE",
+            providerColor = "#FF6600", ussdBaseCode = "#150#",
+            ussdSendToPhone = "#150*2*{phone}*{amount}#",
+            ussdPayMerchant = "#150*4*{merchant}*{amount}#",
+            ussdNotes = "Uses # prefix",
+            hasUssdSupport = true, launchPriority = 17
+        ),
+        CountryConfig(
+            id = "td", code = "TD", name = "Chad", nameLocal = "Tchad", nameFrench = "Tchad",
+            currency = "XAF", currencySymbol = "FCFA", currencyDecimals = 0,
+            phonePrefix = "+235", phoneLength = 8, flagEmoji = "🇹🇩",
+            primaryLanguage = "fr", providerName = "Airtel Money", providerCode = "AIRTEL",
+            providerColor = "#ED1C24", ussdBaseCode = "*211#",
+            ussdSendToPhone = "*211*{phone}*{amount}#",
+            ussdPayMerchant = "*211*{merchant}*{amount}#",
+            hasUssdSupport = true, launchPriority = 18
+        ),
+        CountryConfig(
+            id = "km", code = "KM", name = "Comoros", nameLocal = "Komori", nameFrench = "Comores",
+            currency = "KMF", currencySymbol = "CF", currencyDecimals = 0,
+            phonePrefix = "+269", phoneLength = 7, flagEmoji = "🇰🇲",
+            primaryLanguage = "fr", providerName = "Telma/YAZ MVola", providerCode = "MVOLA",
+            providerColor = "#E31E24", ussdBaseCode = "*150*01#",
+            ussdSendToPhone = "*150*01*1*1*{phone}*{amount}#",
+            ussdPayMerchant = "*150*01*1*2*{merchant}*{amount}#",
+            hasUssdSupport = true, launchPriority = 19
+        ),
+        CountryConfig(
+            id = "cg", code = "CG", name = "Congo (Republic)",
+            nameLocal = "Congo-Brazzaville", nameFrench = "République du Congo",
+            currency = "XAF", currencySymbol = "FCFA", currencyDecimals = 0,
+            phonePrefix = "+242", phoneLength = 9, flagEmoji = "🇨🇬",
+            primaryLanguage = "fr", providerName = "MTN MoMo", providerCode = "MTN",
+            providerColor = "#FFCC00", ussdBaseCode = "*133#",
+            ussdSendToPhone = "*133*2*{phone}*{amount}#",
+            ussdPayMerchant = "*133*5*{merchant}*{amount}#",
+            hasUssdSupport = true, launchPriority = 20
+        ),
+        CountryConfig(
+            id = "ci", code = "CI", name = "Côte d'Ivoire",
+            nameLocal = "Côte d'Ivoire", nameFrench = "Côte d'Ivoire",
+            currency = "XOF", currencySymbol = "CFA", currencyDecimals = 0,
+            phonePrefix = "+225", phoneLength = 10, flagEmoji = "🇨🇮",
+            primaryLanguage = "fr", providerName = "Orange Money", providerCode = "ORANGE",
+            providerColor = "#FF6600", ussdBaseCode = "*144#",
+            ussdSendToPhone = "*144*1*{phone}*{amount}#",
+            ussdPayMerchant = "*144*4*{merchant}*{amount}#",
+            hasUssdSupport = true, hasAppSupport = true, launchPriority = 21
+        ),
+        CountryConfig(
+            id = "dj", code = "DJ", name = "Djibouti", nameLocal = "Jabuuti", nameFrench = "Djibouti",
+            currency = "DJF", currencySymbol = "Fdj", currencyDecimals = 0,
+            phonePrefix = "+253", phoneLength = 8, flagEmoji = "🇩🇯",
+            primaryLanguage = "fr", providerName = "Djibouti Telecom D-Money", providerCode = "DMONEY",
+            providerColor = "#00A651", ussdBaseCode = "*131#",
+            ussdSendToPhone = "*131*{phone}*{amount}#",
+            ussdPayMerchant = "*133*{merchant}*{amount}#",
+            ussdNotes = "*130# balance, *131# send, *133# bills",
+            hasUssdSupport = true, launchPriority = 22
+        ),
+        CountryConfig(
+            id = "gq", code = "GQ", name = "Equatorial Guinea",
+            nameLocal = "Guinea Ecuatorial", nameFrench = "Guinée Équatoriale",
+            currency = "XAF", currencySymbol = "FCFA", currencyDecimals = 0,
+            phonePrefix = "+240", phoneLength = 9, flagEmoji = "🇬🇶",
+            primaryLanguage = "es", providerName = "GETESA Mobile Money", providerCode = "GETESA",
+            providerColor = "#009639", ussdBaseCode = "*222#",
+            ussdSendToPhone = "*222*2*{phone}*{amount}#",
+            ussdPayMerchant = "*222*4*{merchant}*{amount}#",
+            hasUssdSupport = true, launchPriority = 23
+        ),
+        CountryConfig(
+            id = "ga", code = "GA", name = "Gabon", nameLocal = "Gabon", nameFrench = "Gabon",
+            currency = "XAF", currencySymbol = "FCFA", currencyDecimals = 0,
+            phonePrefix = "+241", phoneLength = 9, flagEmoji = "🇬🇦",
+            primaryLanguage = "fr", providerName = "Airtel Money", providerCode = "AIRTEL",
+            providerColor = "#ED1C24", ussdBaseCode = "*150#",
+            ussdSendToPhone = "*150*2*{phone}*{amount}#",
+            ussdPayMerchant = "*150*4*{merchant}*{amount}#",
+            hasUssdSupport = true, launchPriority = 24
+        ),
+        CountryConfig(
+            id = "gn", code = "GN", name = "Guinea", nameLocal = "Guinée", nameFrench = "Guinée",
+            currency = "GNF", currencySymbol = "FG", currencyDecimals = 0,
+            phonePrefix = "+224", phoneLength = 9, flagEmoji = "🇬🇳",
+            primaryLanguage = "fr", providerName = "Orange Money", providerCode = "ORANGE",
+            providerColor = "#FF6600", ussdBaseCode = "*144#",
+            ussdSendToPhone = "*144*1*{phone}*{amount}#",
+            ussdPayMerchant = "*144*4*{merchant}*{amount}#",
+            hasUssdSupport = true, launchPriority = 25
+        ),
+        CountryConfig(
+            id = "ml", code = "ML", name = "Mali", nameLocal = "Mali", nameFrench = "Mali",
+            currency = "XOF", currencySymbol = "CFA", currencyDecimals = 0,
+            phonePrefix = "+223", phoneLength = 8, flagEmoji = "🇲🇱",
+            primaryLanguage = "fr", providerName = "Orange Money", providerCode = "ORANGE",
+            providerColor = "#FF6600", ussdBaseCode = "#144#",
+            ussdSendToPhone = "#144#*1*{phone}*{amount}#",
+            ussdPayMerchant = "#144#*2*{merchant}*{amount}#",
+            ussdNotes = "Uses #144# code (with # prefix)",
+            hasUssdSupport = true, launchPriority = 26
+        ),
+        CountryConfig(
+            id = "mr", code = "MR", name = "Mauritania", nameLocal = "Mauritanie", nameFrench = "Mauritanie",
+            currency = "MRU", currencySymbol = "UM", currencyDecimals = 2,
+            phonePrefix = "+222", phoneLength = 8, flagEmoji = "🇲🇷",
+            primaryLanguage = "ar", providerName = "Moov Mauritel Money", providerCode = "MOOV",
+            providerColor = "#6F2C91", ussdBaseCode = "*900#",
+            ussdSendToPhone = "*900*2*{phone}*{amount}#",
+            ussdPayMerchant = "*900*4*{merchant}*{amount}#",
+            hasUssdSupport = true, launchPriority = 27
+        ),
+        CountryConfig(
+            id = "ne", code = "NE", name = "Niger", nameLocal = "Niger", nameFrench = "Niger",
+            currency = "XOF", currencySymbol = "CFA", currencyDecimals = 0,
+            phonePrefix = "+227", phoneLength = 8, flagEmoji = "🇳🇪",
+            primaryLanguage = "fr", providerName = "Airtel Money", providerCode = "AIRTEL",
+            providerColor = "#ED1C24", ussdBaseCode = "*400#",
+            ussdSendToPhone = "*400*{phone}*{amount}#",
+            ussdPayMerchant = "*400*{merchant}*{amount}#",
+            hasUssdSupport = true, launchPriority = 28
+        ),
+        CountryConfig(
+            id = "sn", code = "SN", name = "Senegal", nameLocal = "Sénégal", nameFrench = "Sénégal",
+            currency = "XOF", currencySymbol = "CFA", currencyDecimals = 0,
+            phonePrefix = "+221", phoneLength = 9, flagEmoji = "🇸🇳",
+            primaryLanguage = "fr", providerName = "Orange Money", providerCode = "ORANGE",
+            providerColor = "#FF6600", ussdBaseCode = "#144#",
+            ussdSendToPhone = "#144*1*{phone}*{amount}#",
+            ussdPayMerchant = "#144*2*{merchant}*{amount}#",
+            ussdNotes = "Uses #144# code. Option 1 send, Option 2 pay",
+            hasUssdSupport = true, hasAppSupport = true, launchPriority = 29
+        ),
+        CountryConfig(
+            id = "tg", code = "TG", name = "Togo", nameLocal = "Togo", nameFrench = "Togo",
+            currency = "XOF", currencySymbol = "CFA", currencyDecimals = 0,
+            phonePrefix = "+228", phoneLength = 8, flagEmoji = "🇹🇬",
+            primaryLanguage = "fr", providerName = "Togocom T-Money", providerCode = "TMONEY",
+            providerColor = "#00A651", ussdBaseCode = "*145#",
+            ussdSendToPhone = "*145*1*{amount}*{phone}#", // NOTE: Amount BEFORE phone
+            ussdPayMerchant = "*145*3*{merchant}*{amount}#",
+            ussdNotes = "IMPORTANT: Amount entered BEFORE phone number for send",
+            hasUssdSupport = true, launchPriority = 30
         )
     )
-    
-    val PRIMARY_LAUNCH: List<CountryConfig> = FALLBACK_COUNTRIES
-    
-    fun getByCode(code: String): CountryConfig? = 
+
+    val PRIMARY_LAUNCH: List<CountryConfig> = FALLBACK_COUNTRIES.filter { it.isPrimaryMarket }
+
+    fun getByCode(code: String): CountryConfig? =
         FALLBACK_COUNTRIES.find { it.code.equals(code, ignoreCase = true) }
-    
+
     fun getDefault(): CountryConfig = FALLBACK_COUNTRIES.first()
-    
-    fun getCurrencyForCountry(code: String): String = 
+
+    fun getCurrencyForCountry(code: String): String =
         getByCode(code)?.currency ?: "RWF"
+
+    fun getPrimaryProviderForCountry(code: String): String =
+        getByCode(code)?.providerCode ?: "MTN"
+
+    fun getProviderDisplayName(providerCode: String): String = when (providerCode.uppercase()) {
+        "MTN" -> "MTN MoMo"
+        "AIRTEL" -> "Airtel Money"
+        "VODACOM" -> "M-Pesa"
+        "ORANGE" -> "Orange Money"
+        "ECOCASH" -> "EcoCash"
+        "MVOLA" -> "MVola"
+        "TMONEY" -> "T-Money"
+        "MOOV" -> "Moov Money"
+        "MYT" -> "my.t money"
+        "MTC" -> "MTC Money"
+        "DMONEY" -> "D-Money"
+        "GETESA" -> "GETESA Mobile Money"
+        else -> providerCode
+    }
+
+    fun getAllCountries(): List<CountryConfig> = FALLBACK_COUNTRIES
 }

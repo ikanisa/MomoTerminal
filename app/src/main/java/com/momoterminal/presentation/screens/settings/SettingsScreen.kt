@@ -8,16 +8,6 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,37 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.AccountBalance
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Public
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -71,6 +30,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.momoterminal.R
+import com.momoterminal.config.SupportedCountries
 import com.momoterminal.presentation.components.MomoButton
 import com.momoterminal.presentation.components.MomoTextField
 import com.momoterminal.presentation.components.common.MomoTopAppBar
@@ -84,15 +44,7 @@ import com.momoterminal.presentation.theme.SuccessGreen
  * - Mobile Money Setup section (with country selection independent from profile)
  * - Security section
  * - About section
- * 
- * Removed:
- * - Webhook configuration (moved to admin panel)
- * - Developer options
- * - SMS synchronization section
- * - Open source licenses
  */
-import com.momoterminal.presentation.theme.SuccessGreen
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -203,7 +155,7 @@ fun SettingsScreen(
             
             // SMS Permission
             PermissionItem(
-                icon = Icons.AutoMirrored.Filled.Message,
+                icon = Icons.Default.Message,
                 title = "SMS Access",
                 description = if (uiState.permissions.smsGranted) "Granted - Can receive MoMo SMS" else "Required for SMS relay",
                 isGranted = uiState.permissions.smsGranted,
@@ -637,7 +589,7 @@ private fun MomoCountryPickerDialog(
     onCountrySelected: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val countries = SupportedCountries.ALL_SUPPORTED
+    val countries = SupportedCountries.getAllCountries()
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -675,7 +627,7 @@ private fun MomoCountryPickerDialog(
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                                 )
                                 Text(
-                                    text = "${country.providerDisplayName} • ${country.currency}",
+                                    text = "${country.providerName} • ${country.currency}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -709,7 +661,6 @@ private fun SectionHeader(title: String, icon: ImageVector) {
     }
 }
 
-@Preview(showBackground = true)
 @Composable
 private fun PermissionItem(
     icon: ImageVector,

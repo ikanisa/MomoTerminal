@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Identity -->
+    <string name="app_name">MomoTerminal</string>
+    <string name="service_description">Terminal de Pago Móvil NFC</string>
+    <string name="hce_service_description">Servicio de Terminal de Pago Móvil NFC</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_terminal">Terminal</string>
+    <string name="nav_transactions">Transacciones</string>
+    <string name="nav_history">Historial</string>
+    <string name="nav_settings">Configuración</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">Inicio</string>
+    <string name="home_welcome">Bienvenido, %1$s</string>
+    <string name="nfc_terminal">Terminal NFC</string>
+    <string name="nfc_ready">Listo para recibir pagos</string>
+    <string name="nfc_disabled">Activar para recibir pagos</string>
+    <string name="today_overview">Resumen de Hoy</string>
+    <string name="today_revenue">Ingresos de Hoy</string>
+    <string name="weekly_revenue">Ingresos Semanales</string>
+    <string name="success_rate">Tasa de Éxito</string>
+    <string name="transactions">transacciones</string>
+    <string name="last_7_days">Últimos 7 días</string>
+    <string name="recent_transactions">Transacciones Recientes</string>
+    <string name="view_all">Ver Todo</string>
+    <string name="no_transactions_yet">Sin transacciones aún</string>
+    <string name="setup_required">Configuración Requerida</string>
+    <string name="configure_merchant_details">Configure los datos del comerciante para comenzar</string>
+    <string name="setup">Configurar</string>
+    <string name="failed">Fallido</string>
+    <string name="all_good">Todo Bien</string>
+
+    <!-- Terminal Screen -->
+    <string name="amount_hint">Ingresar Monto</string>
+    <string name="amount_to_receive">Monto a Recibir</string>
+    <string name="activate_nfc">Activar Terminal NFC</string>
+    <string name="deactivate_nfc">Desactivar Terminal</string>
+    <string name="nfc_active">Terminal NFC Activo - Listo para Tap</string>
+    <string name="nfc_inactive">Terminal NFC Inactivo</string>
+    <string name="payment_received">Pago Recibido</string>
+    <string name="cancel_payment">Cancelar Pago</string>
+    <string name="waiting_for_payment">Esperando pago…</string>
+    <string name="tap_phone_to_pay">Pida al cliente que acerque su teléfono</string>
+
+    <!-- USSD Related -->
+    <string name="ussd_generated">Código USSD Generado</string>
+    <string name="ussd_dial_instruction">Marque el código de abajo para completar el pago</string>
+    <string name="ussd_copy">Copiar Código</string>
+    <string name="ussd_dial">Marcar Ahora</string>
+    <string name="ussd_copied">Código USSD copiado</string>
+    <string name="ussd_not_supported">USSD No Soportado</string>
+    <string name="ussd_use_app_instead">Este país usa pagos por aplicación. Por favor use la aplicación %1$s.</string>
+
+    <!-- Country Selection -->
+    <string name="select_country">Seleccionar País</string>
+    <string name="select_momo_country">Seleccionar País de Mobile Money</string>
+    <string name="search_country">Buscar país…</string>
+    <string name="no_countries_found">No se encontraron países</string>
+    <string name="primary_markets">Mercados Principales</string>
+    <string name="all_countries">Todos los Países</string>
+
+    <!-- Mobile Money Provider -->
+    <string name="mobile_money_provider">Proveedor de Mobile Money</string>
+    <string name="provider_auto_selected">Proveedor: %1$s (seleccionado automáticamente)</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Configuración</string>
+    <string name="user_profile">Perfil de Usuario</string>
+    <string name="mobile_money_setup">Configuración de Mobile Money</string>
+    <string name="momo_country">País de Mobile Money</string>
+    <string name="momo_phone_label">Número de Mobile Money</string>
+    <string name="profile_country">País del Perfil</string>
+    <string name="not_set">No establecido</string>
+    <string name="merchant_settings">Configuración del Comerciante</string>
+    <string name="merchant_name">Nombre del Comerciante</string>
+    <string name="security">Seguridad</string>
+    <string name="biometric_login">Inicio de Sesión Biométrico</string>
+    <string name="change_pin">Cambiar PIN</string>
+    <string name="about">Acerca de</string>
+    <string name="app_version">Versión de la Aplicación</string>
+    <string name="privacy_policy">Política de Privacidad</string>
+    <string name="terms_of_service">Términos de Servicio</string>
+    <string name="logout">Cerrar Sesión</string>
+    <string name="logout_confirmation">¿Está seguro de que desea cerrar sesión?</string>
+    <string name="save_configuration">Guardar Configuración</string>
+    <string name="settings_saved">Configuración guardada</string>
+
+    <!-- Transactions -->
+    <string name="transactions_title">Transacciones</string>
+    <string name="transaction_details">Detalles de la Transacción</string>
+    <string name="transaction_id">ID de Transacción</string>
+    <string name="transaction_date">Fecha</string>
+    <string name="transaction_amount">Monto</string>
+    <string name="transaction_status">Estado</string>
+    <string name="transaction_sender">Remitente</string>
+    <string name="status_completed">Completado</string>
+    <string name="status_pending">Pendiente</string>
+    <string name="status_failed">Fallido</string>
+    <string name="filter_all">Todos</string>
+    <string name="filter_pending">Pendientes</string>
+    <string name="filter_sent">Enviados</string>
+    <string name="filter_failed">Fallidos</string>
+    <string name="filter_today">Hoy</string>
+    <string name="no_transactions_title">Sin Transacciones</string>
+    <string name="no_transactions_description">Su historial de transacciones aparecerá aquí cuando reciba pagos.</string>
+
+    <!-- Permissions -->
+    <string name="permission_sms_title">Permiso de SMS Requerido</string>
+    <string name="permission_sms_message">Para capturar confirmaciones de pago, necesitamos acceso a los mensajes SMS.</string>
+    <string name="permission_nfc_title">NFC Requerido</string>
+    <string name="grant_permission">Conceder Permiso</string>
+    <string name="permission_denied">Permiso denegado</string>
+
+    <!-- Errors -->
+    <string name="error_nfc_not_supported">NFC no es compatible con este dispositivo</string>
+    <string name="error_nfc_disabled">Por favor active NFC en la configuración</string>
+    <string name="error_invalid_amount">Por favor ingrese un monto válido</string>
+    <string name="error_sync_failed">Error al sincronizar con el servidor</string>
+    <string name="error_network">Error de red. Verifique su conexión.</string>
+    <string name="error">Error</string>
+
+    <!-- Actions -->
+    <string name="action_retry">Reintentar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_confirm">Confirmar</string>
+    <string name="action_save">Guardar</string>
+    <string name="action_back">Volver</string>
+    <string name="action_continue">Continuar</string>
+
+    <!-- Common -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancelar</string>
+    <string name="confirm">Confirmar</string>
+    <string name="save">Guardar</string>
+    <string name="loading">Cargando…</string>
+    <string name="success">Éxito</string>
+    <string name="pending">Pendiente</string>
+    <string name="today">Hoy</string>
+    <string name="amount">Monto</string>
+    <string name="dismiss">Descartar</string>
+    <string name="offline">Sin conexión</string>
+
+    <!-- Date/Time -->
+    <string name="just_now">Ahora mismo</string>
+    <string name="minutes_ago">hace %1$d min</string>
+    <string name="hours_ago">hace %1$d h</string>
+    <string name="days_ago">hace %1$d d</string>
+
+    <!-- Payment Methods -->
+    <string name="payment_method_ussd">Pago USSD</string>
+    <string name="payment_method_app">Aplicación Móvil</string>
+    <string name="payment_method_nfc">Tap NFC</string>
+
+    <!-- Authentication -->
+    <string name="auth_login_title">Bienvenido de Nuevo</string>
+    <string name="auth_login_subtitle">Inicie sesión para continuar</string>
+    <string name="auth_register_title">Crear Cuenta</string>
+    <string name="auth_phone_number">Número de Teléfono</string>
+    <string name="auth_pin">PIN de 6 dígitos</string>
+    <string name="auth_confirm_pin">Confirmar PIN</string>
+    <string name="auth_forgot_pin">¿Olvidó su PIN?</string>
+    <string name="auth_sign_in">Iniciar Sesión</string>
+    <string name="auth_sign_up">Crear Cuenta</string>
+
+    <!-- Registration -->
+    <string name="reg_welcome">Bienvenido a MoMo Terminal</string>
+    <string name="reg_phone_subtitle">Ingrese su número para comenzar</string>
+    <string name="reg_send_code">Enviar Código WhatsApp</string>
+    <string name="reg_verify_phone">Verificar Su Teléfono</string>
+    <string name="reg_verify">Verificar</string>
+    <string name="reg_continue">Continuar</string>
+
+    <!-- PIN Screen -->
+    <string name="pin_title">Ingresar PIN</string>
+    <string name="pin_subtitle">Ingrese su PIN de 6 dígitos</string>
+    <string name="pin_attempts_left">%d intentos restantes</string>
+</resources>

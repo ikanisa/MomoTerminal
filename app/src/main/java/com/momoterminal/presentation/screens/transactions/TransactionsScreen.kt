@@ -1,5 +1,6 @@
 package com.momoterminal.presentation.screens.transactions
 
+import android.Manifest
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -7,34 +8,17 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -43,6 +27,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.momoterminal.R
 import com.momoterminal.presentation.components.common.MomoTopAppBar
 import com.momoterminal.presentation.components.transaction.TransactionList
@@ -54,16 +41,10 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Clean Transactions/History screen showing transaction history.
- * Features:
- * - Clean filter chips for transaction status
- * - Date range filtering
- * - SMS permission banner (optional, not required)
- * - Empty state with helpful message
  * Transaction history screen.
- * Clean, focused UI without SMS permission prompts.
+ * Clean, focused UI with filter chips.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun TransactionsScreen(
     onNavigateBack: () -> Unit,
@@ -108,20 +89,6 @@ fun TransactionsScreen(
                 )
             }
 
-            // Filter Section
-            FilterSection(
-                selectedFilter = uiState.filter,
-                onFilterSelected = viewModel::setFilter,
-                dateRangeStart = uiState.dateRangeStart,
-                dateRangeEnd = uiState.dateRangeEnd,
-                onClearDateRange = viewModel::clearDateRange,
-                onShowDatePicker = viewModel::showDatePicker,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-            
-            // SMS Permission Info (optional, dismissable)
-            AnimatedVisibility(
-                visible = !smsPermissionState.status.isGranted && uiState.showSmsPermissionHint,
             // Filter chips
             FilterChipsRow(
                 selectedFilter = uiState.filter,
@@ -129,9 +96,9 @@ fun TransactionsScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
             
-            // Date Range Filter
+            // SMS Permission Info (optional, dismissable)
             AnimatedVisibility(
-                visible = true,
+                visible = !smsPermissionState.status.isGranted && uiState.showSmsPermissionHint,
                 enter = slideInVertically(
                     initialOffsetY = { -it },
                     animationSpec = tween(MomoAnimation.DURATION_MEDIUM)
@@ -144,11 +111,6 @@ fun TransactionsScreen(
                 SmsPermissionInfoCard(
                     onRequestPermission = { smsPermissionState.launchPermissionRequest() },
                     onDismiss = viewModel::dismissSmsHint,
-                DateRangeChip(
-                    dateRangeStart = uiState.dateRangeStart,
-                    dateRangeEnd = uiState.dateRangeEnd,
-                    onClearDateRange = viewModel::clearDateRange,
-                    onShowDatePicker = viewModel::showDatePicker,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
             }
@@ -365,9 +327,6 @@ private fun FilterSection(
 private fun SmsPermissionInfoCard(
     onRequestPermission: () -> Unit,
     onDismiss: () -> Unit,
-private fun FilterChipsRow(
-    selectedFilter: TransactionsViewModel.TransactionFilter,
-    onFilterSelected: (TransactionsViewModel.TransactionFilter) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -388,6 +347,44 @@ private fun FilterChipsRow(
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.sms_permission_optional),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Text(
+                    text = stringResource(R.string.sms_permission_optional_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                )
+            }
+            TextButton(onClick = onDismiss) {
+                Text(
+                    stringResource(R.string.dismiss),
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Filter chips row for transaction filtering.
+ */
+@Composable
+private fun FilterChipsRow(
+    selectedFilter: TransactionsViewModel.TransactionFilter,
+    onFilterSelected: (TransactionsViewModel.TransactionFilter) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         TransactionsViewModel.TransactionFilter.entries.forEach { filter ->
             FilterChip(
                 selected = filter == selectedFilter,
@@ -419,26 +416,6 @@ private fun FilterChipsRow(
                         MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                 )
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.sms_permission_optional),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-                Text(
-                    text = stringResource(R.string.sms_permission_optional_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
-                )
-            }
-            TextButton(onClick = onDismiss) {
-                Text(
-                    stringResource(R.string.dismiss),
-                    style = MaterialTheme.typography.labelSmall
-                )
-            }
         }
     }
 }

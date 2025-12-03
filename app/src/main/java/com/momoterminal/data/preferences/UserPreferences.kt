@@ -99,9 +99,6 @@ class UserPreferences @Inject constructor(
     }
     
     /**
-    }
-    
-    /**
      * Update biometric setting.
      */
     suspend fun updateBiometricEnabled(enabled: Boolean) {
@@ -171,7 +168,15 @@ class UserPreferences @Inject constructor(
         private val KEY_VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
         private val KEY_AUTO_LOCK_TIMEOUT = intPreferencesKey("auto_lock_timeout_minutes")
         private val KEY_DEVICE_UUID = stringPreferencesKey("device_uuid")
+        private val KEY_LANGUAGE = stringPreferencesKey("app_language")
         
         const val DEFAULT_AUTO_LOCK_TIMEOUT = 5
+    }
+    
+    // Language preference
+    val languageFlow: Flow<String> = context.dataStore.data.map { it[KEY_LANGUAGE] ?: "" }
+    
+    suspend fun setLanguage(languageCode: String) {
+        context.dataStore.edit { it[KEY_LANGUAGE] = languageCode }
     }
 }
