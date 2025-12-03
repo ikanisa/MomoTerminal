@@ -90,13 +90,16 @@ class HomeViewModel @Inject constructor(
 
     // Terminal functions
     fun onDigitClick(digit: String) {
+        android.util.Log.d("HomeViewModel", "onDigitClick: $digit")
         val current = _uiState.value.amount
         if (digit == "0" && current.isEmpty()) return
         if (current.length >= MAX_AMOUNT_LENGTH) return
         _uiState.value = _uiState.value.copy(amount = current + digit)
+        android.util.Log.d("HomeViewModel", "Amount now: ${_uiState.value.amount}")
     }
 
     fun onBackspaceClick() {
+        android.util.Log.d("HomeViewModel", "onBackspaceClick")
         val current = _uiState.value.amount
         if (current.isNotEmpty()) {
             _uiState.value = _uiState.value.copy(amount = current.dropLast(1))
@@ -104,6 +107,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onClearClick() {
+        android.util.Log.d("HomeViewModel", "onClearClick")
         _uiState.value = _uiState.value.copy(amount = "")
     }
 

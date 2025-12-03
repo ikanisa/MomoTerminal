@@ -2,6 +2,11 @@ package com.momoterminal.presentation.screens.transactions
 
 import android.Manifest
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,14 +49,14 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.momoterminal.R
 import com.momoterminal.presentation.components.common.MomoTopAppBar
-import com.momoterminal.presentation.components.status.SyncStatusBadge
 import com.momoterminal.presentation.components.transaction.TransactionList
+import com.momoterminal.presentation.theme.MomoAnimation
 import com.momoterminal.presentation.theme.MomoTerminalTheme
 import com.momoterminal.presentation.theme.MomoYellow
 
 
 /**
- * Transactions screen showing transaction history.
+ * Transactions screen showing transaction history with modern UI.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -80,10 +85,10 @@ fun TransactionsScreen(
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationClick = onNavigateBack,
                 actions = {
-                    SyncStatusBadge(
-                        pendingCount = uiState.pendingCount,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
+                    // Pending count badge
+                    if (uiState.pendingCount > 0) {
+                        PendingCountBadge(count = uiState.pendingCount)
+                    }
                 }
             )
         }
@@ -93,51 +98,21 @@ fun TransactionsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // SMS Permission Warning
-            AnimatedVisibility(visible = !smsPermissionState.status.isGranted) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Warning,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.sms_access_required),
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = stringResource(R.string.sms_access_description),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        TextButton(
-                            onClick = { smsPermissionState.launchPermissionRequest() }
-                        ) {
-                            Text(
-                                stringResource(R.string.grant_permission),
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
+            // SMS Permission Warning with animation
+            AnimatedVisibility(
+                visible = !smsPermissionState.status.isGranted,
+                enter = slideInVertically(
+                    initialOffsetY = { -it },
+                    animationSpec = tween(MomoAnimation.DURATION_MEDIUM)
+                ) + fadeIn(),
+                exit = slideOutVertically(
+                    targetOffsetY = { -it },
+                    animationSpec = tween(MomoAnimation.DURATION_FAST)
+                ) + fadeOut()
+            ) {
+                SmsPermissionBanner(
+                    onRequestPermission = { smsPermissionState.launchPermissionRequest() }
+                )
             }
 
             // Filter chips
@@ -148,49 +123,13 @@ fun TransactionsScreen(
             )
             
             // Date Range Filter Chip
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                val startDate = uiState.dateRangeStart
-                val endDate = uiState.dateRangeEnd
-                
-                if (startDate != null && endDate != null) {
-                    FilterChip(
-                        selected = true,
-                        onClick = { viewModel.clearDateRange() },
-                        label = {
-                            Text(
-                                "${formatDate(startDate)} - ${formatDate(endDate)}"
-                            )
-                        },
-                        trailingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(R.string.clear_date_range)
-                            )
-                        },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    )
-                } else {
-                    FilterChip(
-                        selected = false,
-                        onClick = { viewModel.showDatePicker() },
-                        label = { Text(stringResource(R.string.select_date_range)) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.CalendarToday,
-                                contentDescription = null
-                            )
-                        }
-                    )
-                }
-            }
+            DateRangeChip(
+                dateRangeStart = uiState.dateRangeStart,
+                dateRangeEnd = uiState.dateRangeEnd,
+                onClearDateRange = viewModel::clearDateRange,
+                onShowDatePicker = viewModel::showDatePicker,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
             
             // Transaction list
             TransactionList(
@@ -202,6 +141,72 @@ fun TransactionsScreen(
                 onRefresh = viewModel::refresh,
                 modifier = Modifier.fillMaxSize()
             )
+        }
+    }
+}
+
+@Composable
+private fun PendingCountBadge(count: Int) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MomoYellow.copy(alpha = 0.15f)
+        ),
+        shape = MaterialTheme.shapes.small
+    ) {
+        Text(
+            text = "$count pending",
+            style = MaterialTheme.typography.labelSmall,
+            color = MomoYellow,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+        )
+    }
+}
+
+@Composable
+private fun SmsPermissionBanner(
+    onRequestPermission: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
+        ),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onErrorContainer
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.sms_access_required),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.sms_access_description),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            TextButton(onClick = onRequestPermission) {
+                Text(
+                    stringResource(R.string.grant_permission),
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -236,18 +241,70 @@ private fun FilterChipsRow(
                 },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MomoYellow,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedLabelColor = Color.Black,
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                     labelColor = MaterialTheme.colorScheme.onSurfaceVariant
                 ),
                 border = FilterChipDefaults.filterChipBorder(
                     enabled = true,
                     selected = filter == selectedFilter,
-                    borderColor = if (filter == selectedFilter) Color.Transparent else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                    borderColor = if (filter == selectedFilter) Color.Transparent else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                 )
             )
         }
     }
+}
+
+@Composable
+private fun DateRangeChip(
+    dateRangeStart: Long?,
+    dateRangeEnd: Long?,
+    onClearDateRange: () -> Unit,
+    onShowDatePicker: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        if (dateRangeStart != null && dateRangeEnd != null) {
+            FilterChip(
+                selected = true,
+                onClick = onClearDateRange,
+                label = {
+                    Text("${formatDate(dateRangeStart)} - ${formatDate(dateRangeEnd)}")
+                },
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.clear_date_range)
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            )
+        } else {
+            FilterChip(
+                selected = false,
+                onClick = onShowDatePicker,
+                label = { Text(stringResource(R.string.select_date_range)) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.CalendarToday,
+                        contentDescription = null
+                    )
+                }
+            )
+        }
+    }
+}
+
+private fun formatDate(timestamp: Long): String {
+    val sdf = java.text.SimpleDateFormat("MMM dd", java.util.Locale.getDefault())
+    return sdf.format(java.util.Date(timestamp))
 }
 
 @Preview(showBackground = true)
@@ -259,10 +316,4 @@ private fun TransactionsScreenPreview() {
             onTransactionClick = {}
         )
     }
-}
-
-
-private fun formatDate(timestamp: Long): String {
-    val sdf = java.text.SimpleDateFormat("MMM dd", java.util.Locale.getDefault())
-    return sdf.format(java.util.Date(timestamp))
 }

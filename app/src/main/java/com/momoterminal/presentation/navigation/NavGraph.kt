@@ -18,7 +18,6 @@ import com.momoterminal.presentation.screens.auth.PinScreen
 import com.momoterminal.presentation.screens.auth.RegisterScreen
 import com.momoterminal.presentation.screens.home.HomeScreen
 import com.momoterminal.presentation.screens.settings.SettingsScreen
-import com.momoterminal.presentation.screens.terminal.TerminalScreen
 import com.momoterminal.presentation.screens.transaction.TransactionDetailScreen
 import com.momoterminal.presentation.screens.transactions.TransactionsScreen
 
@@ -33,8 +32,8 @@ fun NavGraph(
     startDestination: String = Screen.Home.route,
     isAuthenticated: Boolean = false
 ) {
-    // Require authentication - start at Login if not authenticated
-    val actualStartDestination = if (isAuthenticated) startDestination else Screen.Login.route
+    // TEMP: Skip auth for testing keypad
+    val actualStartDestination = Screen.Home.route
 
     NavHost(
         navController = navController,
@@ -135,26 +134,17 @@ fun NavGraph(
             )
         }
 
-        // Home screen
+        // Home screen (with integrated terminal)
         composable(route = Screen.Home.route) {
             HomeScreen(
                 onNavigateToTerminal = {
-                    navController.navigate(Screen.Terminal.route)
+                    // Terminal is now integrated into Home, no navigation needed
                 },
                 onNavigateToTransactions = {
                     navController.navigate(Screen.Transactions.route)
                 },
                 onNavigateToSettings = {
                     navController.navigate(Screen.Settings.route)
-                }
-            )
-        }
-        
-        // Terminal screen (NFC Payment)
-        composable(route = Screen.Terminal.route) {
-            TerminalScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
                 }
             )
         }

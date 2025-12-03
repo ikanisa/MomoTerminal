@@ -209,6 +209,29 @@ android {
     }
 }
 
+// Build-time validation: Fail release builds with placeholder certificate pins
+tasks.matching { it.name.contains("Release") && it.name.contains("assemble") }.configureEach {
+    doFirst {
+        val placeholderPatterns = listOf("AAAA", "BBBB", "CCCC", "YOUR_", "PLACEHOLDER")
+        val pins = listOf(certPinPrimary, certPinBackup, certPinRootCa)
+        pins.forEach { pin ->
+            placeholderPatterns.forEach { pattern ->
+                if (pin.contains(pattern)) {
+                    throw GradleException(
+                        "SECURITY ERROR: Placeholder certificate pin detected in release build.\n" +
+                        "Pin: $pin\n" +
+                        "Generate real pins with: openssl s_client -connect lhbowpbcpwoiparwnwgt.supabase.co:443 | " +
+                        "openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64"
+                    )
+                }
+            }
+        }
+        if (allowPlaceholderPins) {
+            throw GradleException("SECURITY ERROR: ALLOW_PLACEHOLDER_PINS=true in release build. Set to false for production.")
+        }
+    }
+}
+
 // JaCoCo configuration for code coverage
 jacoco {
     toolVersion = libs.versions.jacoco.get()

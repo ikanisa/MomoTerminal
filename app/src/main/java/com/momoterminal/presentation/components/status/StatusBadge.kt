@@ -1,179 +1,181 @@
 package com.momoterminal.presentation.components.status
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.Nfc
-import androidx.compose.material.icons.outlined.Nfc
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.momoterminal.presentation.theme.MomoAnimation
 import com.momoterminal.presentation.theme.MomoTerminalTheme
-import com.momoterminal.presentation.theme.PaymentShapes
 import com.momoterminal.presentation.theme.StatusFailed
 import com.momoterminal.presentation.theme.StatusPending
 import com.momoterminal.presentation.theme.StatusSent
 import com.momoterminal.presentation.theme.SuccessGreen
 
 /**
- * Status badge for transaction status.
+ * Compact status badge with animated indicator.
+ * Shows transaction status with appropriate color and optional pulse animation.
  */
 @Composable
 fun StatusBadge(
     status: String,
     modifier: Modifier = Modifier,
-    showIcon: Boolean = true
+    showLabel: Boolean = true
 ) {
-    val (color, icon, label) = getStatusInfo(status)
+    val statusInfo = getStatusInfo(status)
     
-    Surface(
-        modifier = modifier,
-        shape = PaymentShapes.statusBadge,
-        color = color.copy(alpha = 0.15f)
+    // Animated background color
+    val backgroundColor by animateColorAsState(
+        targetValue = statusInfo.color.copy(alpha = 0.12f),
+        animationSpec = tween(MomoAnimation.DURATION_MEDIUM),
+        label = "backgroundColor"
+    )
+    
+    // Pulse animation for pending status
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 0.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseAlpha"
+    )
+    
+    val isPending = status.uppercase() == "PENDING"
+    
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(backgroundColor)
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+            .then(if (isPending) Modifier.alpha(pulseAlpha) else Modifier)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            if (showIcon) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = color
+            // Status dot
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(statusInfo.color)
+            )
+            
+            if (showLabel) {
+                Text(
+                    text = statusInfo.label,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = statusInfo.color
                 )
-                Spacer(modifier = Modifier.width(4.dp))
             }
+        }
+    }
+}
+
+/**
+ * Larger status badge with icon for detail screens.
+ */
+@Composable
+fun StatusBadgeLarge(
+    status: String,
+    modifier: Modifier = Modifier
+) {
+    val statusInfo = getStatusInfo(status)
+    
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(statusInfo.color.copy(alpha = 0.12f))
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = statusInfo.icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = statusInfo.color
+            )
+            
             Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Medium
+                text = statusInfo.label,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = FontWeight.Bold
                 ),
-                color = color
+                color = statusInfo.color
             )
         }
     }
 }
 
 /**
- * Get status info (color, icon, label) from status string.
+ * Status information data class.
  */
-private fun getStatusInfo(status: String): Triple<Color, ImageVector, String> {
+private data class StatusInfo(
+    val label: String,
+    val color: Color,
+    val icon: ImageVector
+)
+
+/**
+ * Get status information based on status string.
+ */
+private fun getStatusInfo(status: String): StatusInfo {
     return when (status.uppercase()) {
-        "SENT" -> Triple(StatusSent, Icons.Filled.CheckCircle, "Sent")
-        "PENDING" -> Triple(StatusPending, Icons.Filled.Schedule, "Pending")
-        "FAILED" -> Triple(StatusFailed, Icons.Filled.Error, "Failed")
-        "PROCESSING" -> Triple(StatusPending, Icons.Filled.Sync, "Processing")
-        else -> Triple(StatusPending, Icons.Filled.Schedule, status)
-    }
-}
-
-/**
- * NFC status indicator.
- */
-@Composable
-fun NfcStatusIndicator(
-    isEnabled: Boolean,
-    isActive: Boolean,
-    modifier: Modifier = Modifier
-) {
-    val color = when {
-        !isEnabled -> StatusFailed
-        isActive -> SuccessGreen
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    
-    val icon = when {
-        !isEnabled -> Icons.Outlined.Nfc
-        isActive -> Icons.Filled.Nfc
-        else -> Icons.Outlined.Nfc
-    }
-    
-    val label = when {
-        !isEnabled -> "NFC Off"
-        isActive -> "Active"
-        else -> "Ready"
-    }
-    
-    Surface(
-        modifier = modifier,
-        shape = PaymentShapes.statusBadge,
-        color = color.copy(alpha = 0.15f)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(14.dp),
-                tint = color
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Medium
-                ),
-                color = color
-            )
-        }
-    }
-}
-
-/**
- * Sync status badge showing pending upload count.
- */
-@Composable
-fun SyncStatusBadge(
-    pendingCount: Int,
-    modifier: Modifier = Modifier
-) {
-    val color = if (pendingCount > 0) StatusPending else SuccessGreen
-    val label = if (pendingCount > 0) "$pendingCount pending" else "Synced"
-    val icon = if (pendingCount > 0) Icons.Filled.Sync else Icons.Filled.CheckCircle
-    
-    Surface(
-        modifier = modifier,
-        shape = PaymentShapes.statusBadge,
-        color = color.copy(alpha = 0.15f)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(14.dp),
-                tint = color
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Medium
-                ),
-                color = color
-            )
-        }
+        "SENT", "SUCCESS", "COMPLETED" -> StatusInfo(
+            label = "Sent",
+            color = SuccessGreen,
+            icon = Icons.Filled.CheckCircle
+        )
+        "PENDING", "PROCESSING" -> StatusInfo(
+            label = "Pending",
+            color = StatusPending,
+            icon = Icons.Filled.Schedule
+        )
+        "FAILED", "ERROR" -> StatusInfo(
+            label = "Failed",
+            color = StatusFailed,
+            icon = Icons.Filled.Error
+        )
+        else -> StatusInfo(
+            label = status,
+            color = StatusPending,
+            icon = Icons.Filled.Schedule
+        )
     }
 }
 
@@ -183,7 +185,7 @@ private fun StatusBadgePreview() {
     MomoTerminalTheme {
         Row(
             modifier = Modifier.padding(16.dp),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             StatusBadge(status = "SENT")
             StatusBadge(status = "PENDING")
@@ -194,29 +196,14 @@ private fun StatusBadgePreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun NfcStatusIndicatorPreview() {
+private fun StatusBadgeLargePreview() {
     MomoTerminalTheme {
         Row(
             modifier = Modifier.padding(16.dp),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            NfcStatusIndicator(isEnabled = true, isActive = true)
-            NfcStatusIndicator(isEnabled = true, isActive = false)
-            NfcStatusIndicator(isEnabled = false, isActive = false)
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun SyncStatusBadgePreview() {
-    MomoTerminalTheme {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
-        ) {
-            SyncStatusBadge(pendingCount = 5)
-            SyncStatusBadge(pendingCount = 0)
+            StatusBadgeLarge(status = "SENT")
+            StatusBadgeLarge(status = "PENDING")
         }
     }
 }

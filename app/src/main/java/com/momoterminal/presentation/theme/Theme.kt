@@ -9,6 +9,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -67,6 +68,11 @@ private val DarkColorScheme = darkColorScheme(
     outline = DarkOutline
 )
 
+/**
+ * MomoTerminal theme with Material 3 design system.
+ * Supports dynamic colors on Android 12+ and provides consistent
+ * dimensions and animations throughout the app.
+ */
 @Composable
 fun MomoTerminalTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -87,14 +93,23 @@ fun MomoTerminalTheme(
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.background.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            window.navigationBarColor = colorScheme.background.toArgb()
+            WindowCompat.getInsetsController(window, view).apply {
+                isAppearanceLightStatusBars = !darkTheme
+                isAppearanceLightNavigationBars = !darkTheme
+            }
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        shapes = Shapes,
-        content = content
-    )
+    // Provide dimensions through CompositionLocal
+    CompositionLocalProvider(
+        LocalDimensions provides Dimensions()
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            shapes = Shapes,
+            content = content
+        )
+    }
 }

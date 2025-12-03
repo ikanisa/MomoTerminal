@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     Network Security Configuration for MomoTerminal
-    
-    IMPORTANT: Before deploying to production, replace the placeholder certificate
-    pins with actual SHA-256 pins from your SSL certificate chain:
-    1. Get your server's certificate: openssl s_client -connect lhbowpbcpwoiparwnwgt.supabase.co:443
-    2. Extract the public key and generate the pin:
-       openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64
-    3. Replace the pins below
+    Certificate pins generated: 2025-12-03
+    Domain: lhbowpbcpwoiparwnwgt.supabase.co
 -->
 <network-security-config>
     <!-- Disable cleartext traffic globally -->
@@ -17,16 +12,18 @@
         </trust-anchors>
     </base-config>
     
-    <!-- Supabase domain - Certificate pinning disabled for debug builds -->
-    <!-- Enable pinning in production by uncommenting the pin-set below -->
+    <!-- Supabase domain with certificate pinning -->
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">lhbowpbcpwoiparwnwgt.supabase.co</domain>
-        <!-- 
-        <pin-set expiration="2026-01-01">
-            <pin digest="SHA-256">YOUR_PRIMARY_PIN_HERE</pin>
-            <pin digest="SHA-256">YOUR_BACKUP_PIN_HERE</pin>
+        <domain includeSubdomains="true">supabase.co</domain>
+        <pin-set expiration="2026-06-01">
+            <!-- Leaf: supabase.co -->
+            <pin digest="SHA-256">PzfKSv758ttsdJwUCkGhW/oxG9Wk1Y4N+NMkB5I7RXc=</pin>
+            <!-- Intermediate: Google Trust Services WE1 -->
+            <pin digest="SHA-256">kIdp6NNEd8wsugYyyIYFsi1ylMCED3hZbSR8ZFsa/A4=</pin>
+            <!-- Root: GTS Root R4 -->
+            <pin digest="SHA-256">mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=</pin>
         </pin-set>
-        -->
     </domain-config>
     
     <!-- Debug configuration for development -->
