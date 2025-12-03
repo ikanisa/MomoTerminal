@@ -27,7 +27,8 @@ data class UserPreferencesData(
     
     // Mobile Money config (can differ from profile country)
     val momoCountryCode: String = "",
-    val merchantPhone: String = "",
+    val merchantPhone: String = "",  // Can be phone number or MoMo code
+    val useMomoCode: Boolean = false,
     
     // Settings
     val biometricEnabled: Boolean = false,
@@ -55,6 +56,7 @@ class UserPreferences @Inject constructor(
             merchantName = prefs[KEY_MERCHANT_NAME] ?: "",
             momoCountryCode = prefs[KEY_MOMO_COUNTRY_CODE] ?: prefs[KEY_COUNTRY_CODE] ?: "RW",
             merchantPhone = prefs[KEY_MERCHANT_PHONE] ?: "",
+            useMomoCode = prefs[KEY_USE_MOMO_CODE] ?: false,
             biometricEnabled = prefs[KEY_BIOMETRIC_ENABLED] ?: false,
             smsAutoSyncEnabled = prefs[KEY_SMS_AUTO_SYNC_ENABLED] ?: true,
             keepScreenOn = prefs[KEY_KEEP_SCREEN_ON] ?: false,
@@ -75,7 +77,6 @@ class UserPreferences @Inject constructor(
             prefs[KEY_PHONE_NUMBER] = phoneNumber
             prefs[KEY_COUNTRY_CODE] = countryCode
             prefs[KEY_MERCHANT_NAME] = merchantName
-            // Default MoMo country to profile country if not set
             if (prefs[KEY_MOMO_COUNTRY_CODE].isNullOrEmpty()) {
                 prefs[KEY_MOMO_COUNTRY_CODE] = countryCode
             }
@@ -84,16 +85,20 @@ class UserPreferences @Inject constructor(
     
     /**
      * Update Mobile Money configuration.
-     * MoMo country can differ from profile country.
      */
     suspend fun updateMomoConfig(
         momoCountryCode: String,
-        momoPhoneNumber: String
+        momoIdentifier: String,
+        useMomoCode: Boolean
     ) {
         context.dataStore.edit { prefs ->
             prefs[KEY_MOMO_COUNTRY_CODE] = momoCountryCode
-            prefs[KEY_MERCHANT_PHONE] = momoPhoneNumber
+            prefs[KEY_MERCHANT_PHONE] = momoIdentifier
+            prefs[KEY_USE_MOMO_CODE] = useMomoCode
         }
+    }
+    
+    /**
     }
     
     /**
@@ -157,6 +162,7 @@ class UserPreferences @Inject constructor(
         // MoMo config keys
         private val KEY_MOMO_COUNTRY_CODE = stringPreferencesKey("momo_country_code")
         private val KEY_MERCHANT_PHONE = stringPreferencesKey("merchant_phone")
+        private val KEY_USE_MOMO_CODE = booleanPreferencesKey("use_momo_code")
         
         // Settings keys
         private val KEY_BIOMETRIC_ENABLED = booleanPreferencesKey("biometric_enabled")

@@ -82,11 +82,12 @@ class SettingsViewModel @Inject constructor(
         val profileCountryCode: String = "RW",
         val profileCountryName: String = "Rwanda",
         val momoCountryCode: String = "RW",
-        val momoPhoneNumber: String = "",
-        val momoPhonePrefix: String = "+250",
         val momoPhonePlaceholder: String = "78XXXXXXX",
         val momoProviderName: String = "MTN MoMo",
-        val isMomoPhoneValid: Boolean = true,
+        // MoMo identifier can be phone number or code
+        val useMomoCode: Boolean = false,
+        val momoIdentifier: String = "",
+        val isMomoIdentifierValid: Boolean = true,
         val availableCountries: List<CountryConfig> = emptyList(),
         val isBiometricEnabled: Boolean = false,
         val isBiometricAvailable: Boolean = false,
@@ -201,13 +202,13 @@ class SettingsViewModel @Inject constructor(
                         profileCountryCode = prefs.countryCode.ifEmpty { "RW" },
                         profileCountryName = profileCountry.name,
                         momoCountryCode = prefs.momoCountryCode.ifEmpty { prefs.countryCode },
-                        momoPhoneNumber = prefs.merchantPhone,
-                        momoPhonePrefix = momoCountry.phonePrefix,
+                        momoIdentifier = prefs.merchantPhone,
+                        useMomoCode = prefs.useMomoCode,
                         momoPhonePlaceholder = "X".repeat(momoCountry.phoneLength),
                         momoProviderName = momoCountry.providerName,
                         isBiometricEnabled = prefs.biometricEnabled,
                         isConfigured = prefs.merchantPhone.isNotBlank(),
-                        isMomoPhoneValid = prefs.merchantPhone.isBlank() || momoCountry.isValidPhoneLength(prefs.merchantPhone)
+                        isMomoIdentifierValid = prefs.merchantPhone.isBlank() || validateMomoIdentifier(prefs.merchantPhone, prefs.useMomoCode, momoCountry)
                     )
                 }
             }
@@ -241,6 +242,14 @@ class SettingsViewModel @Inject constructor(
     fun updateCountryCode(code: String) {
         updateMomoCountryCode(code)
 
+    private fun validateMomoIdentifier(identifier: String, isCode: Boolean, country: CountryConfig?): Boolean {
+        return if (isCode) {
+            identifier.length in 4..10 && identifier.all { it.isDigit() }
+        } else {
+            country?.isValidPhoneLength(identifier) ?: true
+        }
+    }
+
     private fun loadCountries() {
         viewModelScope.launch {
             countryRepository.fetchCountries()
@@ -254,26 +263,36 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(isBiometricAvailable = biometricHelper.isBiometricAvailable()) }
     }
 
+    fun setUseMomoCode(useCode: Boolean) {
+        _uiState.update { 
+            it.copy(
+                useMomoCode = useCode,
+                momoIdentifier = "",
+                isMomoIdentifierValid = true
+            )
+        }
+    }
+
     fun updateMomoCountry(countryCode: String) {
         val country = countryRepository.getByCode(countryCode) ?: return
         _uiState.update {
             it.copy(
                 momoCountryCode = countryCode,
-                momoPhonePrefix = country.phonePrefix,
                 momoPhonePlaceholder = "X".repeat(country.phoneLength),
                 momoProviderName = country.providerName,
-                isMomoPhoneValid = it.momoPhoneNumber.isBlank() || country.isValidPhoneLength(it.momoPhoneNumber)
+                isMomoIdentifierValid = it.momoIdentifier.isBlank() || validateMomoIdentifier(it.momoIdentifier, it.useMomoCode, country)
             )
         }
     }
 
-    fun updateMomoPhone(phone: String) {
-        val cleaned = phone.filter { it.isDigit() }
+    fun updateMomoIdentifier(value: String) {
+        val cleaned = value.filter { it.isDigit() }
         val country = countryRepository.getByCode(_uiState.value.momoCountryCode)
+        val isCode = _uiState.value.useMomoCode
         _uiState.update {
             it.copy(
-                momoPhoneNumber = cleaned,
-                isMomoPhoneValid = cleaned.isBlank() || (country?.isValidPhoneLength(cleaned) ?: true)
+                momoIdentifier = cleaned,
+                isMomoIdentifierValid = cleaned.isBlank() || validateMomoIdentifier(cleaned, isCode, country)
             )
         }
     }
@@ -334,11 +353,12 @@ class SettingsViewModel @Inject constructor(
             val state = _uiState.value
             userPreferences.updateMomoConfig(
                 momoCountryCode = state.momoCountryCode,
-                momoPhoneNumber = state.momoPhoneNumber
+                momoIdentifier = state.momoIdentifier,
+                useMomoCode = state.useMomoCode
             )
             userPreferences.updateBiometricEnabled(state.isBiometricEnabled)
             
-            _uiState.update { it.copy(showSaveSuccess = true, isConfigured = true) }
+            _uiState.update { it.copy(showSaveSuccess = true, isConfigured = state.momoIdentifier.isNotBlank()) }
             kotlinx.coroutines.delay(100)
             _uiState.update { it.copy(showSaveSuccess = false) }
         }

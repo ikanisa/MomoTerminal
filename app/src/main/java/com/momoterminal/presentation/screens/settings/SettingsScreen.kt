@@ -315,7 +315,7 @@ fun SettingsScreen(
                         Icon(Icons.Default.Phone, null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text("Registered Number", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.registered_number), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(uiState.whatsappNumber, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
                         }
                     }
@@ -323,24 +323,50 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
             
-            // MoMo Phone Number
+            // MoMo Input Type Selector (Phone or Code)
+            Text(stringResource(R.string.momo_identifier_type), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = !uiState.useMomoCode,
+                    onClick = { viewModel.setUseMomoCode(false) },
+                    label = { Text(stringResource(R.string.momo_phone_number)) }
+                )
+                FilterChip(
+                    selected = uiState.useMomoCode,
+                    onClick = { viewModel.setUseMomoCode(true) },
+                    label = { Text(stringResource(R.string.momo_code)) }
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // MoMo Phone Number or Code input (no country prefix)
             MomoTextField(
-                value = uiState.momoPhoneNumber,
-                onValueChange = viewModel::updateMomoPhone,
-                label = "MoMo Phone Number",
-                placeholder = uiState.momoPhonePlaceholder,
+                value = uiState.momoIdentifier,
+                onValueChange = viewModel::updateMomoIdentifier,
+                label = if (uiState.useMomoCode) stringResource(R.string.momo_code) else stringResource(R.string.momo_phone_number),
+                placeholder = if (uiState.useMomoCode) "123456" else uiState.momoPhonePlaceholder,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                isError = !uiState.isMomoPhoneValid,
-                leadingIcon = { Text(uiState.momoPhonePrefix, style = MaterialTheme.typography.bodyLarge) }
+                keyboardOptions = KeyboardOptions(keyboardType = if (uiState.useMomoCode) KeyboardType.Number else KeyboardType.Phone),
+                isError = uiState.momoIdentifier.isNotBlank() && !uiState.isMomoIdentifierValid
             )
+            
+            if (uiState.momoIdentifier.isNotBlank() && !uiState.isMomoIdentifierValid) {
+                Text(
+                    text = if (uiState.useMomoCode) stringResource(R.string.invalid_momo_code) else stringResource(R.string.invalid_phone_format),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                )
+            }
             
             Spacer(modifier = Modifier.height(16.dp))
             
             // Country Selector
             if (uiState.availableCountries.isNotEmpty()) {
-                Text("MoMo Country", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.momo_country), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(8.dp))
                 uiState.availableCountries.forEach { country ->
                     val isSelected = country.code == uiState.momoCountryCode

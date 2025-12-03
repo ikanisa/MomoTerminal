@@ -197,12 +197,17 @@
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="user_profile">User Profile</string>
+    <string name="registered_number">Registered Number</string>
     <string name="mobile_money_setup">Mobile Money Setup</string>
     <string name="momo_country">Mobile Money Country</string>
+    <string name="momo_identifier_type">Identifier Type</string>
+    <string name="momo_phone_number">Phone Number</string>
+    <string name="momo_code">MoMo Code</string>
     <string name="momo_phone_label">Mobile Money Number</string>
     <string name="profile_country_badge">(Profile)</string>
     <string name="provider_auto_selected">Provider: %1$s (auto-selected)</string>
     <string name="invalid_phone_format">Invalid phone number format</string>
+    <string name="invalid_momo_code">MoMo code must be 4-10 digits</string>
     <string name="not_set">Not set</string>
     <string name="merchant_settings">Merchant Settings</string>
     <string name="security">Security</string>
