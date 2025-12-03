@@ -42,6 +42,9 @@ include(":feature:payment")
 include(":feature:transactions")
 include(":feature:auth")
 include(":feature:settings")
+include(":feature:nfc")
+include(":feature:sms")
+include(":feature:wallet")
 
 // Baseline profile
 include(":baselineprofile")

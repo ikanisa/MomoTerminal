@@ -328,6 +328,9 @@ dependencies {
     implementation(project(":feature:transactions"))
     implementation(project(":feature:auth"))
     implementation(project(":feature:settings"))
+    implementation(project(":feature:nfc"))
+    implementation(project(":feature:sms"))
+    implementation(project(":feature:wallet"))
     
     // Core Android
     implementation(libs.androidx.core.ktx)

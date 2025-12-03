@@ -14,6 +14,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+import com.momoterminal.core.database.migration.MIGRATION_4_5
+
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
@@ -143,7 +145,7 @@ object DatabaseModule {
         val supportFactory = EncryptedDatabaseFactory.getSupportFactory(context)
         return Room.databaseBuilder(context, MomoDatabase::class.java, DATABASE_NAME)
             .openHelperFactory(supportFactory)
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .build()
     }
 
@@ -170,4 +172,8 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideNfcTagDao(database: MomoDatabase): NfcTagDao = database.nfcTagDao()
+
+    @Provides
+    @Singleton
+    fun provideTokenDao(database: MomoDatabase): TokenDao = database.tokenDao()
 }

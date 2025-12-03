@@ -6,7 +6,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.momoterminal.core.database.entity.TransactionEntity
+import com.momoterminal.data.local.entity.TransactionEntity
 import kotlinx.coroutines.flow.Flow
 
 /**

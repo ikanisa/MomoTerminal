@@ -13,9 +13,10 @@ import com.momoterminal.core.database.entity.*
         TokenWalletEntity::class,
         TokenTransactionEntity::class,
         SmsTransactionEntity::class,
-        NfcTagEntity::class
+        NfcTagEntity::class,
+        TokenEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class MomoDatabase : RoomDatabase() {
@@ -25,4 +26,5 @@ abstract class MomoDatabase : RoomDatabase() {
     abstract fun walletDao(): WalletDao
     abstract fun smsTransactionDao(): SmsTransactionDao
     abstract fun nfcTagDao(): NfcTagDao
+    abstract fun tokenDao(): TokenDao
 }
