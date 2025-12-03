@@ -1,5 +1,7 @@
 package com.momoterminal.di
 
+import com.momoterminal.data.repository.CountryRepository
+import com.momoterminal.data.repository.CountryRepositoryImpl
 import com.momoterminal.data.repository.TransactionRepositoryImpl
 import com.momoterminal.domain.repository.TransactionRepository
 import dagger.Binds
@@ -23,4 +25,13 @@ abstract class RepositoryModule {
     abstract fun bindTransactionRepository(
         impl: TransactionRepositoryImpl
     ): TransactionRepository
+    
+    /**
+     * Binds CountryRepositoryImpl to CountryRepository interface.
+     */
+    @Binds
+    @Singleton
+    abstract fun bindCountryRepository(
+        impl: CountryRepositoryImpl
+    ): CountryRepository
 }

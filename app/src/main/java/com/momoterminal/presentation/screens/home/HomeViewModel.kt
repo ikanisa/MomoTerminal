@@ -3,6 +3,7 @@ package com.momoterminal.presentation.screens.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.momoterminal.config.AppConfig
+import com.momoterminal.config.SupportedCountries
 import com.momoterminal.data.local.MomoDatabase
 import com.momoterminal.nfc.NfcManager
 import com.momoterminal.nfc.NfcPaymentData
@@ -37,8 +38,12 @@ class HomeViewModel @Inject constructor(
         val amount: String = "",
         val currency: String = "RWF",
         val countryCode: String = "RW",
-        val selectedProvider: NfcPaymentData.Provider = NfcPaymentData.Provider.MTN,
-        val isPaymentActive: Boolean = false
+        val countryName: String = "Rwanda",
+        val providerName: String = "MTN",
+        val providerDisplayName: String = "MTN MoMo",
+        val isPaymentActive: Boolean = false,
+        // NFC Writer toggle
+        val isNfcWriterEnabled: Boolean = true
     )
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -58,12 +63,37 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun loadConfig() {
+        val countryCode = appConfig.getCountryCode()
+        val country = SupportedCountries.getByCode(countryCode)
+        val providerName = appConfig.getMomoProvider()
+        
         _uiState.value = _uiState.value.copy(
             isConfigured = appConfig.isConfigured(),
             merchantPhone = appConfig.getMerchantPhone(),
             currency = appConfig.getCurrency(),
-            countryCode = appConfig.getCountryCode()
+            countryCode = countryCode,
+            countryName = country?.name ?: "Rwanda",
+            providerName = providerName,
+            providerDisplayName = getProviderDisplayName(providerName),
+            isNfcWriterEnabled = appConfig.isNfcWriterEnabled()
         )
+    }
+    
+    private fun getProviderDisplayName(providerCode: String): String {
+        return when (providerCode.uppercase()) {
+            "MTN" -> "MTN MoMo"
+            "AIRTEL" -> "Airtel Money"
+            "VODACOM" -> "M-Pesa"
+            "VODAFONE" -> "Vodafone Cash"
+            "ORANGE" -> "Orange Money"
+            "TIGO" -> "Tigo Pesa"
+            "WAVE" -> "Wave"
+            "MOOV" -> "Moov Money"
+            "ECOCASH" -> "EcoCash"
+            "TMONEY" -> "T-Money"
+            "MVOLA" -> "MVola"
+            else -> providerCode
+        }
     }
 
     private fun observePendingCount() {
@@ -111,23 +141,28 @@ class HomeViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(amount = "")
     }
 
-    fun onProviderSelected(provider: NfcPaymentData.Provider) {
-        _uiState.value = _uiState.value.copy(selectedProvider = provider)
+    fun toggleNfcWriter(enabled: Boolean) {
+        appConfig.setNfcWriterEnabled(enabled)
+        _uiState.value = _uiState.value.copy(isNfcWriterEnabled = enabled)
     }
 
     fun activatePayment() {
         val state = _uiState.value
         if (state.amount.isEmpty() || state.merchantPhone.isEmpty()) return
+        if (!state.isNfcWriterEnabled) return
 
         val amountDouble = state.amount.toDoubleOrNull() ?: return
         val amountInMinorUnits = (amountDouble * 100).toLong()
+        
+        // Get provider from country configuration
+        val provider = NfcPaymentData.Provider.fromString(state.providerName)
 
         val paymentData = NfcPaymentData(
             merchantPhone = state.merchantPhone,
             amountInMinorUnits = amountInMinorUnits,
             currency = state.currency,
             countryCode = state.countryCode,
-            provider = state.selectedProvider
+            provider = provider
         )
 
         nfcManager.activatePayment(paymentData)
@@ -139,7 +174,7 @@ class HomeViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(isPaymentActive = false, amount = "")
     }
 
-    fun isNfcAvailable(): Boolean = nfcManager.isNfcAvailable()
+    fun isNfcAvailable(): Boolean = nfcManager.isNfcAvailable() && _uiState.value.isNfcWriterEnabled
 
     fun isAmountValid(): Boolean {
         val amount = _uiState.value.amount

@@ -3,26 +3,21 @@ package com.momoterminal.presentation.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.momoterminal.config.AppConfig
+import com.momoterminal.config.SupportedCountries
 import com.momoterminal.data.preferences.UserPreferences
 import com.momoterminal.security.BiometricHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONObject
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 /**
  * ViewModel for the Settings screen.
+ * Supports separate profile country (from WhatsApp registration) and 
+ * mobile money country (for transactions).
  */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -33,28 +28,25 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel() {
     
     /**
-     * Connection test result.
-     */
-    sealed class ConnectionTestResult {
-        data object Idle : ConnectionTestResult()
-        data object Testing : ConnectionTestResult()
-        data object Success : ConnectionTestResult()
-        data class Failed(val message: String) : ConnectionTestResult()
-    }
-    
-    /**
      * UI state for the Settings screen.
      */
     data class SettingsUiState(
-        val webhookUrl: String = "",
-        val apiSecret: String = "",
+        // Profile info (from WhatsApp registration - read only)
+        val authPhone: String = "",
+        val profileCountryCode: String = "RW",
+        val profileCountryName: String = "Rwanda",
+        // Mobile Money configuration (user can change country)
+        val momoCountryCode: String = "RW",
+        val momoCountryName: String = "Rwanda",
+        val momoCurrency: String = "RWF",
+        val momoProviderName: String = "MTN MoMo",
         val merchantPhone: String = "",
+        // Legacy compatibility
         val countryCode: String = "RW",
+        // Other settings
         val isConfigured: Boolean = false,
         val isBiometricEnabled: Boolean = false,
         val isBiometricAvailable: Boolean = false,
-        val smsAutoSyncEnabled: Boolean = true,
-        val connectionTestResult: ConnectionTestResult = ConnectionTestResult.Idle,
         val showSaveSuccess: Boolean = false,
         val showLogoutDialog: Boolean = false,
         val appVersion: String = ""
@@ -62,12 +54,6 @@ class SettingsViewModel @Inject constructor(
     
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
-    
-    private val httpClient = OkHttpClient.Builder()
-        .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(10, TimeUnit.SECONDS)
-        .writeTimeout(10, TimeUnit.SECONDS)
-        .build()
     
     init {
         loadSettings()
@@ -78,17 +64,45 @@ class SettingsViewModel @Inject constructor(
     private fun loadSettings() {
         viewModelScope.launch {
             val biometricEnabled = userPreferences.biometricEnabledFlow.first()
-            val smsAutoSync = userPreferences.smsAutoSyncEnabledFlow.first()
+            
+            val profileCountryCode = appConfig.getProfileCountryCode()
+            val profileCountry = SupportedCountries.getByCode(profileCountryCode)
+            
+            val momoCountryCode = appConfig.getMomoCountryCode().ifBlank { profileCountryCode }
+            val momoCountry = SupportedCountries.getByCode(momoCountryCode)
+            val providerName = appConfig.getMomoProvider()
+            
             _uiState.value = _uiState.value.copy(
-                webhookUrl = appConfig.getGatewayUrl(),
-                apiSecret = appConfig.getApiSecret(),
+                authPhone = appConfig.getAuthPhone(),
+                profileCountryCode = profileCountryCode,
+                profileCountryName = profileCountry?.name ?: "Rwanda",
+                momoCountryCode = momoCountryCode,
+                momoCountryName = momoCountry?.name ?: "Rwanda",
+                momoCurrency = momoCountry?.currency ?: "RWF",
+                momoProviderName = getProviderDisplayName(providerName),
                 merchantPhone = appConfig.getMerchantPhone(),
-                countryCode = appConfig.getCountryCode(),
+                countryCode = momoCountryCode,
                 isConfigured = appConfig.isConfigured(),
                 isBiometricAvailable = biometricHelper.isBiometricAvailable(),
-                isBiometricEnabled = biometricEnabled,
-                smsAutoSyncEnabled = smsAutoSync
+                isBiometricEnabled = biometricEnabled
             )
+        }
+    }
+    
+    private fun getProviderDisplayName(providerCode: String): String {
+        return when (providerCode.uppercase()) {
+            "MTN" -> "MTN MoMo"
+            "AIRTEL" -> "Airtel Money"
+            "VODACOM" -> "M-Pesa"
+            "VODAFONE" -> "Vodafone Cash"
+            "ORANGE" -> "Orange Money"
+            "TIGO" -> "Tigo Pesa"
+            "WAVE" -> "Wave"
+            "MOOV" -> "Moov Money"
+            "ECOCASH" -> "EcoCash"
+            "TMONEY" -> "T-Money"
+            "MVOLA" -> "MVola"
+            else -> providerCode
         }
     }
     
@@ -111,21 +125,27 @@ class SettingsViewModel @Inject constructor(
         }
     }
     
-    fun updateWebhookUrl(url: String) {
-        _uiState.value = _uiState.value.copy(webhookUrl = url)
-    }
-    
-    fun updateApiSecret(secret: String) {
-        _uiState.value = _uiState.value.copy(apiSecret = secret)
-    }
-    
     fun updateMerchantPhone(phone: String) {
         _uiState.value = _uiState.value.copy(merchantPhone = phone)
     }
 
+    fun updateMomoCountryCode(code: String) {
+        val country = SupportedCountries.getByCode(code)
+        val providerName = country?.providers?.firstOrNull() ?: "MTN"
+        
+        _uiState.value = _uiState.value.copy(
+            momoCountryCode = code,
+            momoCountryName = country?.name ?: "Rwanda",
+            momoCurrency = country?.currency ?: "RWF",
+            momoProviderName = getProviderDisplayName(providerName),
+            countryCode = code
+        )
+        appConfig.saveMomoCountryCode(code)
+    }
+    
+    // Legacy method for compatibility
     fun updateCountryCode(code: String) {
-        _uiState.value = _uiState.value.copy(countryCode = code)
-        appConfig.saveCountryCode(code)
+        updateMomoCountryCode(code)
     }
 
     fun toggleBiometric(enabled: Boolean) {
@@ -138,16 +158,14 @@ class SettingsViewModel @Inject constructor(
     fun saveSettings(): Boolean {
         val state = _uiState.value
         
-        // Validate
-        if (state.webhookUrl.isBlank()) return false
-        if (!state.webhookUrl.startsWith("http://") && !state.webhookUrl.startsWith("https://")) return false
+        // Validate phone
         if (state.merchantPhone.isBlank()) return false
         
-        // Save
-        appConfig.saveConfig(
-            url = state.webhookUrl,
-            secret = state.apiSecret,
-            phone = state.merchantPhone
+        // Save mobile money configuration
+        appConfig.saveMerchantConfig(
+            merchantCode = state.merchantPhone,
+            mobileMoneyNumber = state.merchantPhone,
+            momoCountryCode = state.momoCountryCode
         )
         
         _uiState.value = _uiState.value.copy(
@@ -164,75 +182,8 @@ class SettingsViewModel @Inject constructor(
         return true
     }
     
-    fun testConnection() {
-        val state = _uiState.value
-        
-        if (state.webhookUrl.isBlank()) {
-            _uiState.value = _uiState.value.copy(
-                connectionTestResult = ConnectionTestResult.Failed("URL is required")
-            )
-            return
-        }
-        
-        _uiState.value = _uiState.value.copy(
-            connectionTestResult = ConnectionTestResult.Testing
-        )
-        
-        viewModelScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                try {
-                    val json = JSONObject().apply {
-                        put("test", true)
-                        put("message", "MomoTerminal connection test")
-                        put("timestamp", System.currentTimeMillis())
-                    }
-                    
-                    val request = Request.Builder()
-                        .url(state.webhookUrl)
-                        .post(json.toString().toRequestBody("application/json".toMediaType()))
-                        .addHeader("X-Api-Key", state.apiSecret)
-                        .addHeader("Content-Type", "application/json")
-                        .build()
-                    
-                    val response = httpClient.newCall(request).execute()
-                    val success = response.isSuccessful
-                    response.close()
-                    
-                    if (success) {
-                        ConnectionTestResult.Success
-                    } else {
-                        ConnectionTestResult.Failed("Server returned error")
-                    }
-                } catch (e: Exception) {
-                    ConnectionTestResult.Failed(e.message ?: "Connection failed")
-                }
-            }
-            
-            _uiState.value = _uiState.value.copy(connectionTestResult = result)
-            
-            // Reset after delay
-            kotlinx.coroutines.delay(3000)
-            _uiState.value = _uiState.value.copy(
-                connectionTestResult = ConnectionTestResult.Idle
-            )
-        }
-    }
-    
-    fun isUrlValid(): Boolean {
-        val url = _uiState.value.webhookUrl
-        return url.isNotBlank() && 
-            (url.startsWith("http://") || url.startsWith("https://"))
-    }
-    
     fun isPhoneValid(): Boolean {
         return _uiState.value.merchantPhone.isNotBlank()
-    }
-    
-    fun toggleSmsAutoSync(enabled: Boolean) {
-        _uiState.value = _uiState.value.copy(smsAutoSyncEnabled = enabled)
-        viewModelScope.launch {
-            userPreferences.setSmsAutoSyncEnabled(enabled)
-        }
     }
     
     fun showLogoutDialog() {
@@ -248,6 +199,7 @@ class SettingsViewModel @Inject constructor(
             // Clear user preferences
             userPreferences.clearAll()
             // App config should also be cleared
+            appConfig.clearConfig()
             // Navigation will be handled by the screen
         }
     }

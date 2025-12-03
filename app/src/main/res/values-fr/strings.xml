@@ -14,6 +14,12 @@
     <string name="merchant_code_hint">Code Marchand</string>
     <string name="currency_symbol">RWF</string>
     
+    <!-- NFC Writer Toggle -->
+    <string name="nfc_writer">Émetteur NFC</string>
+    <string name="nfc_writer_on">Prêt à diffuser les paiements</string>
+    <string name="nfc_writer_off">Diffusion NFC désactivée</string>
+    <string name="tap_amount_to_start">Appuyez sur le champ montant pour entrer le montant du paiement</string>
+    
     <!-- SMS Relay -->
     <string name="sms_relay_status">Statut du Relais SMS</string>
     <string name="sms_relay_active">Relais SMS Actif</string>
@@ -131,23 +137,29 @@
     <string name="logout">Déconnexion</string>
     <string name="merchant_profile">Profil Marchand</string>
     <string name="merchant_phone_label">Numéro de Téléphone Marchand</string>
-    <string name="developer_options">Options Développeur</string>
-    <string name="app_capabilities_demo">Démo des Capacités</string>
-    <string name="capabilities_description">Tester Réseau, NFC, Biométrie et plus</string>
-    <string name="sms_synchronization">Synchronisation SMS</string>
-    <string name="auto_sync_sms">Sync Auto des SMS</string>
-    <string name="auto_sync_description">Enregistrer automatiquement les messages de confirmation MoMo</string>
-    <string name="sms_sync_warning">⚠️ Désactiver la sync SMS signifie que les transactions ne seront pas enregistrées automatiquement.</string>
     <string name="about">À Propos</string>
     <string name="app_version">Version de l\'App</string>
     <string name="privacy_policy">Politique de Confidentialité</string>
     <string name="terms_of_service">Conditions d\'Utilisation</string>
-    <string name="open_source_licenses">Licences Open Source</string>
     <string name="save_configuration">Enregistrer la Configuration</string>
     <string name="configuration_saved">Configuration enregistrée</string>
     <string name="settings_saved">Paramètres enregistrés avec succès</string>
     <string name="logout_confirm_title">Déconnexion</string>
     <string name="logout_confirm_message">Êtes-vous sûr de vouloir vous déconnecter? Vous devrez vous reconnecter pour accéder à l\'app.</string>
+    
+    <!-- User Profile Section -->
+    <string name="user_profile">Profil Utilisateur</string>
+    <string name="whatsapp_number">Numéro WhatsApp</string>
+    <string name="profile_country">Pays du Profil</string>
+    <string name="not_set">Non défini</string>
+    
+    <!-- Mobile Money Setup Section -->
+    <string name="mobile_money_setup">Configuration Mobile Money</string>
+    <string name="momo_country_info">Votre pays mobile money peut être différent de votre pays de profil. Sélectionnez le pays où votre compte mobile money est enregistré.</string>
+    <string name="mobile_money_number">Numéro Mobile Money</string>
+    <string name="mobile_money_number_placeholder">Entrez votre numéro mobile money</string>
+    <string name="select_momo_country">Sélectionner le Pays Mobile Money</string>
+    <string name="change_country">Changer de pays</string>
     
     <!-- Navigation -->
     <string name="nav_home">Accueil</string>
