@@ -210,10 +210,15 @@ android {
 }
 
 // Build-time validation: Fail release builds with placeholder certificate pins
-tasks.matching { it.name.contains("Release") && it.name.contains("assemble") }.configureEach {
-    doFirst {
-        val placeholderPatterns = listOf("AAAA", "BBBB", "CCCC", "YOUR_", "PLACEHOLDER")
-        val pins = listOf(certPinPrimary, certPinBackup, certPinRootCa)
+// Note: Validation happens at configuration time to be configuration cache compatible
+run {
+    val placeholderPatterns = listOf("AAAA", "BBBB", "CCCC", "YOUR_", "PLACEHOLDER")
+    val pins = listOf(certPinPrimary, certPinBackup, certPinRootCa)
+    val isReleaseBuild = gradle.startParameter.taskNames.any { 
+        it.contains("Release", ignoreCase = true) && it.contains("assemble", ignoreCase = true)
+    }
+    
+    if (isReleaseBuild) {
         pins.forEach { pin ->
             placeholderPatterns.forEach { pattern ->
                 if (pin.contains(pattern)) {

@@ -1,5 +1,7 @@
 package com.momoterminal.presentation.theme
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 // MoMo Brand Colors
@@ -29,13 +31,49 @@ val VodafoneRed = Color(0xFFE60000)
 val AirtelTigoRed = Color(0xFFED1C24)
 
 // Status Colors
-val SuccessGreen = Color(0xFF00C853) // More vibrant green
+val SuccessGreen = Color(0xFF00C853)
 val SuccessGreenLight = Color(0xFF69F0AE)
-val ErrorRed = Color(0xFFD50000) // More vibrant red
+val ErrorRed = Color(0xFFD50000)
 val ErrorRedLight = Color(0xFFFF5252)
-val WarningOrange = Color(0xFFFFAB00) // More vibrant orange
+val WarningOrange = Color(0xFFFFAB00)
 val WarningOrangeLight = Color(0xFFFFD740)
-val InfoBlue = Color(0xFF0091EA) // More vibrant blue
+val InfoBlue = Color(0xFF0091EA)
+
+// Gradient Definitions for Premium Cards
+object MomoGradients {
+    val primary = Brush.linearGradient(
+        colors = listOf(MomoYellow, MomoYellowLight, MomoYellowDark)
+    )
+    
+    val premiumCard = Brush.linearGradient(
+        colors = listOf(Color(0xFF1A1A2E), Color(0xFF16213E), Color(0xFF0F3460))
+    )
+    
+    val success = Brush.linearGradient(
+        colors = listOf(SuccessGreen, SuccessGreenLight)
+    )
+    
+    val goldCard = Brush.linearGradient(
+        colors = listOf(Color(0xFFFFD700), Color(0xFFFFA500), Color(0xFFFF8C00)),
+        start = Offset(0f, 0f),
+        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+    )
+}
+
+// Glassmorphism Colors
+object GlassColors {
+    val surfaceLight = Color.White.copy(alpha = 0.1f)
+    val surfaceMedium = Color.White.copy(alpha = 0.15f)
+    val border = Color.White.copy(alpha = 0.2f)
+    val borderLight = Color.White.copy(alpha = 0.1f)
+}
+
+// Colored Shadows
+object ColoredShadows {
+    val primary = MomoYellow.copy(alpha = 0.3f)
+    val success = SuccessGreen.copy(alpha = 0.3f)
+    val error = ErrorRed.copy(alpha = 0.3f)
+}
 
 // Light Theme Colors
 val LightBackground = Neutral50

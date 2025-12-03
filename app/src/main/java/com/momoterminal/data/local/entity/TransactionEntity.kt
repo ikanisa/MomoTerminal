@@ -2,16 +2,25 @@ package com.momoterminal.data.local.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
+import java.util.UUID
 import kotlin.math.roundToLong
 
 /**
  * Room Entity representing a transaction stored in the local database.
  */
-@Entity(tableName = "transactions")
+@Entity(
+    tableName = "transactions",
+    indices = [Index(value = ["client_transaction_id"], unique = true)]
+)
 data class TransactionEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    
+    /** Client-generated UUID for end-to-end tracing with EasyMO backend. */
+    @ColumnInfo(name = "client_transaction_id")
+    val clientTransactionId: String = UUID.randomUUID().toString(),
     
     /** SMS sender (e.g., "MTN MoMo"). */
     val sender: String,

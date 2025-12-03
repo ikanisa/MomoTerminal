@@ -28,6 +28,7 @@ class SupabasePaymentRepository @Inject constructor(
     ): Result<String> {
         return try {
             val insert = TransactionInsert(
+                client_transaction_id = transaction.clientTransactionId,
                 merchant_id = merchantId,
                 device_id = deviceId,
                 amount = transaction.amountInPesewas ?: 0,
@@ -118,6 +119,7 @@ class SupabasePaymentRepository @Inject constructor(
 
 @Serializable
 data class TransactionInsert(
+    val client_transaction_id: String,
     val merchant_id: String,
     val device_id: String? = null,
     val amount: Long,

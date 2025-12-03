@@ -42,7 +42,7 @@ class WebhookDispatcher @Inject constructor(
     
     companion object {
         private const val TAG = "WebhookDispatcher"
-        private const val PAYLOAD_VERSION = "1.0"
+        private const val PAYLOAD_VERSION = "2.0"
         private const val PAYLOAD_SOURCE = "momoterminal"
         private const val MAX_RESPONSE_BODY_LENGTH = 1000
         
@@ -209,12 +209,17 @@ class WebhookDispatcher @Inject constructor(
     
     /**
      * Create the JSON payload for the webhook request.
+     * Includes nonce for replay protection and client_transaction_id for tracing.
      */
     private fun createPayload(log: SmsDeliveryLogEntity, timestamp: Long): String {
+        val nonce = java.util.UUID.randomUUID().toString()
+        val clientTransactionId = java.util.UUID.randomUUID().toString()
         val json = JSONObject().apply {
             put("source", PAYLOAD_SOURCE)
             put("version", PAYLOAD_VERSION)
             put("timestamp", isoDateFormat.format(Date(timestamp)))
+            put("nonce", nonce)
+            put("client_transaction_id", clientTransactionId)
             put("phone_number", log.phoneNumber)
             put("sender", log.sender)
             put("message", log.message)
