@@ -177,14 +177,6 @@ fun SettingsScreen(
                 enabled = uiState.isBiometricAvailable
             )
             
-            SettingsToggle(
-                icon = Icons.AutoMirrored.Filled.Message,
-                title = "Auto-Sync SMS",
-                description = "Automatically sync MoMo messages",
-                checked = uiState.smsAutoSyncEnabled,
-                onCheckedChange = viewModel::toggleSmsAutoSync
-            )
-            
             Spacer(modifier = Modifier.height(24.dp))
             HorizontalDivider()
             Spacer(modifier = Modifier.height(24.dp))
@@ -251,30 +243,6 @@ fun SettingsScreen(
                             if (isSelected) Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.primary)
                         }
                     }
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // ==================== DEVELOPER OPTIONS ====================
-            SectionHeader(title = stringResource(R.string.developer_options), icon = Icons.Default.Build)
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Card(
-                onClick = onNavigateToCapabilitiesDemo,
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-            ) {
-                Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Build, null, tint = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(stringResource(R.string.app_capabilities_demo), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        Text(stringResource(R.string.capabilities_description), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, "Open", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             

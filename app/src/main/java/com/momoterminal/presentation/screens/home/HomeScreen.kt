@@ -12,8 +12,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,9 +42,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -175,8 +170,6 @@ private fun PaymentInputContent(
     onNavigateToSettings: () -> Unit,
     isValid: Boolean
 ) {
-    var showKeypad by remember { mutableStateOf(false) }
-    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -208,23 +201,13 @@ private fun PaymentInputContent(
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        Spacer(modifier = Modifier.weight(0.5f))
-
-        // Amount display - tap to show keypad
-        Box(
-            modifier = Modifier
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { showKeypad = true }
-        ) {
-            AmountDisplay(
-                amount = uiState.amount,
-                currency = uiState.currency,
-                label = stringResource(R.string.amount_to_receive),
-                isActive = showKeypad || uiState.amount.isNotEmpty()
-            )
-        }
+        // Amount display
+        AmountDisplay(
+            amount = uiState.amount,
+            currency = uiState.currency,
+            label = stringResource(R.string.amount_to_receive),
+            isActive = uiState.amount.isNotEmpty()
+        )
 
         // Provider info (from user's MoMo country)
         if (uiState.providerName.isNotEmpty()) {
@@ -238,30 +221,17 @@ private fun PaymentInputContent(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Dynamic Keypad - shows when amount is tapped
-        AnimatedVisibility(
-            visible = showKeypad,
-            enter = slideInVertically(
-                initialOffsetY = { it },
-                animationSpec = tween(MomoAnimation.DURATION_MEDIUM, easing = MomoAnimation.EaseOutExpo)
-            ) + fadeIn(),
-            exit = slideOutVertically(
-                targetOffsetY = { it },
-                animationSpec = tween(MomoAnimation.DURATION_FAST)
-            ) + fadeOut()
-        ) {
-            Column {
-                AmountKeypad(
-                    onDigitClick = onDigitClick,
-                    onBackspaceClick = onBackspaceClick,
-                    onClearClick = onClearClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-        }
+        // Keypad - always visible
+        AmountKeypad(
+            onDigitClick = onDigitClick,
+            onBackspaceClick = onBackspaceClick,
+            onClearClick = onClearClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Activate NFC button
         val buttonScale by animateFloatAsState(
@@ -272,10 +242,7 @@ private fun PaymentInputContent(
         
         MomoButton(
             text = stringResource(R.string.activate_nfc),
-            onClick = {
-                showKeypad = false
-                onActivate()
-            },
+            onClick = onActivate,
             enabled = isValid && uiState.isNfcEnabled,
             modifier = Modifier
                 .fillMaxWidth()
