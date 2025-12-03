@@ -47,6 +47,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -75,6 +76,7 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val uriHandler = LocalUriHandler.current
     
     // Show snackbar for save success
     LaunchedEffect(uiState.showSaveSuccess) {
@@ -340,7 +342,7 @@ fun SettingsScreen(
             
             // Privacy Policy Link
             TextButton(
-                onClick = { /* TODO: Open privacy policy URL */ },
+                onClick = { uriHandler.openUri("https://momoterminal.app/privacy") },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
@@ -356,7 +358,7 @@ fun SettingsScreen(
             
             // Terms of Service Link
             TextButton(
-                onClick = { /* TODO: Open terms URL */ },
+                onClick = { uriHandler.openUri("https://momoterminal.app/terms") },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
@@ -372,7 +374,7 @@ fun SettingsScreen(
             
             // Open Source Licenses
             TextButton(
-                onClick = { /* TODO: Show licenses dialog */ },
+                onClick = { uriHandler.openUri("https://momoterminal.app/licenses") },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
