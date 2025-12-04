@@ -44,9 +44,11 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
+    implementation(libs.compose.material.icons)
     implementation(libs.compose.runtime)
     
     implementation(project(":core:designsystem"))
+    implementation(project(":feature:payment")) // For PaymentState
     implementation(libs.coroutines.android)
     implementation(libs.gson)
 }

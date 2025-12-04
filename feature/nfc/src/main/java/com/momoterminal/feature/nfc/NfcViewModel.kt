@@ -20,11 +20,29 @@ class NfcViewModel @Inject constructor(
             initialValue = NfcState.Ready
         )
 
+    /**
+     * Activate NFC payment with the specified amount.
+     * This will enable NFC HCE and wait for payer to tap.
+     */
+    fun activateNfcPayment(amount: Long, currency: String = "RWF") {
+        val paymentData = NfcPaymentData(
+            merchantPhone = "", // Will be populated from AppConfig in NfcManager
+            amountInMinorUnits = amount * 100, // Convert to minor units (cents)
+            currency = currency,
+            reference = generateReference()
+        )
+        nfcManager.activatePayment(paymentData)
+    }
+
     fun onScanStarted() {
         // Logic to prepare for scanning if needed
     }
 
     fun onScanCancelled() {
         nfcManager.cancelPayment()
+    }
+    
+    private fun generateReference(): String {
+        return "REF-${System.currentTimeMillis()}"
     }
 }

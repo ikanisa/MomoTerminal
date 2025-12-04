@@ -100,6 +100,17 @@ class NfcManager @Inject constructor(
         
         Log.d(TAG, "Activating payment: $paymentData")
         
+        // Get merchant phone from AppConfig
+        val appConfig = AppConfig(context)
+        val merchantPhone = appConfig.getMerchantPhone()
+        
+        // Update PaymentState for HCE service
+        com.momoterminal.feature.payment.nfc.PaymentState.setPaymentData(
+            amount = paymentData.amountInMinorUnits / 100, // Convert back to whole units
+            merchantPhone = if (merchantPhone.isBlank()) paymentData.merchantPhone else merchantPhone,
+            currency = paymentData.currency
+        )
+        
         // Update state to activating
         _nfcState.value = NfcState.Activating
         _currentPaymentData.value = paymentData
@@ -121,6 +132,9 @@ class NfcManager @Inject constructor(
         cancelTimeout()
         _currentPaymentData.value = null
         _nfcState.value = NfcState.Ready
+        
+        // Clear PaymentState
+        com.momoterminal.feature.payment.nfc.PaymentState.reset()
     }
     
     /**
