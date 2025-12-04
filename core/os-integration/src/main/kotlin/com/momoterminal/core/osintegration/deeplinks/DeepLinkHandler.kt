@@ -76,21 +76,3 @@ class DeepLinkHandler @Inject constructor() {
     }
 }
 
-// Compose integration
-@Composable
-fun HandleDeepLinks(
-    navController: NavHostController,
-    deepLinkHandler: DeepLinkHandler = hiltViewModel()
-) {
-    val context = LocalContext.current
-    
-    LaunchedEffect(Unit) {
-        val intent = (context as? ComponentActivity)?.intent
-        intent?.data?.let { uri ->
-            deepLinkHandler.handleDeepLink(navController, uri)
-        }
-    }
-}
-
-// MainActivity integration example removed
-

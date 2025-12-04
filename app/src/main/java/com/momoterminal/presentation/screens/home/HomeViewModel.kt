@@ -3,7 +3,7 @@ package com.momoterminal.presentation.screens.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.momoterminal.core.database.dao.TransactionDao
-import com.momoterminal.data.preferences.UserPreferences
+import com.momoterminal.core.common.preferences.UserPreferences
 import com.momoterminal.data.repository.CountryRepository
 import com.momoterminal.data.repository.WalletRepository
 import com.momoterminal.nfc.NfcManager

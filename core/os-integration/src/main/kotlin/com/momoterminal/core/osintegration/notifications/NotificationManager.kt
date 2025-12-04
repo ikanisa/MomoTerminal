@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -13,7 +14,7 @@ import javax.inject.Singleton
 // Generic notification channels
 enum class NotificationChannelType(
     val id: String,
-    val name: String,
+    val channelName: String,
     val importance: Int
 ) {
     GENERAL("general", "General", NotificationManager.IMPORTANCE_DEFAULT),
@@ -51,13 +52,15 @@ class AppNotificationManager @Inject constructor(
     }
 
     private fun createNotificationChannels() {
-        NotificationChannelType.values().forEach { channelType ->
-            val channel = NotificationChannel(
-                channelType.id,
-                channelType.name,
-                channelType.importance
-            )
-            notificationManager.createNotificationChannel(channel)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannelType.values().forEach { channelType ->
+                val channel = NotificationChannel(
+                    channelType.id,
+                    channelType.channelName,
+                    channelType.importance
+                )
+                notificationManager.createNotificationChannel(channel)
+            }
         }
     }
 

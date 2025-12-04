@@ -6,7 +6,7 @@ import com.momoterminal.supabase.EdgeFunctionsApi
 import com.momoterminal.supabase.SupabaseAuthService
 import com.momoterminal.supabase.SupabaseClientConfig
 import com.momoterminal.supabase.SupabasePaymentRepository
-import com.momoterminal.util.PhoneNumberValidator
+import com.momoterminal.core.common.PhoneNumberValidator
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

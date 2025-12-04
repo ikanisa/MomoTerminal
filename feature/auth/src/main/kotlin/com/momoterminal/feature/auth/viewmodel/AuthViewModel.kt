@@ -1,9 +1,9 @@
 package com.momoterminal.feature.auth.viewmodel
 
 import androidx.lifecycle.viewModelScope
-import com.momoterminal.core.common.UiEffect
-import com.momoterminal.core.common.UiEvent
-import com.momoterminal.core.common.UiState
+import com.momoterminal.core.ui.UiEffect
+import com.momoterminal.core.ui.UiEvent
+import com.momoterminal.core.ui.UiState
 import com.momoterminal.core.domain.repository.AuthRepository
 import com.momoterminal.core.ui.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel

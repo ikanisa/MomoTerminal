@@ -2,8 +2,8 @@ package com.momoterminal.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.momoterminal.security.BiometricHelper
-import com.momoterminal.util.PhoneNumberValidator
+import com.momoterminal.core.security.BiometricHelper
+import com.momoterminal.core.common.PhoneNumberValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay

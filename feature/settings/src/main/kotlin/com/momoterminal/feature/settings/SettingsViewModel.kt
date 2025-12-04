@@ -11,7 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.momoterminal.core.domain.repository.AuthRepository
 import com.momoterminal.core.common.model.CountryConfig
-import com.momoterminal.data.preferences.UserPreferences
+import com.momoterminal.core.common.preferences.UserPreferences
 import com.momoterminal.core.data.repository.CountryRepository
 import com.momoterminal.security.BiometricHelper
 import com.momoterminal.core.common.LocaleManager

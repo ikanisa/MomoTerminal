@@ -1,4 +1,4 @@
-package com.momoterminal.util
+package com.momoterminal.core.common
 
 import android.content.Context
 import android.os.Build

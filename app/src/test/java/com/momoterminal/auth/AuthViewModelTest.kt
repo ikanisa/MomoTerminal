@@ -3,8 +3,8 @@ package com.momoterminal.auth
 import app.cash.turbine.test
 import com.momoterminal.api.AuthResponse
 import com.momoterminal.api.User
-import com.momoterminal.security.BiometricHelper
-import com.momoterminal.util.PhoneNumberValidator
+import com.momoterminal.core.security.BiometricHelper
+import com.momoterminal.core.common.PhoneNumberValidator
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk

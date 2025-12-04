@@ -3,13 +3,12 @@ package com.momoterminal.core.osintegration.capabilities
 import android.Manifest
 import android.content.Context
 import android.location.Location
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.compose.runtime.*
+
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.location.*
@@ -60,7 +59,7 @@ class LocationProvider @Inject constructor(
         ).build()
         
         val locationCallback = object : LocationCallback() {
-            override fun onLocationResult(result: LocationResult) {
+            override fun onLocationResult(result: com.google.android.gms.location.LocationResult) {
                 result.lastLocation?.let { location ->
                     callback(LocationResult.Success(location))
                 }
@@ -80,39 +79,7 @@ class LocationProvider @Inject constructor(
     }
 }
 
-// Compose integration for location
-@Composable
-fun rememberLocationProvider(): LocationProvider {
-    val context = LocalContext.current
-    return remember { LocationProvider(context) }
-}
 
-@Composable
-fun RequestLocationPermission(
-    onPermissionGranted: () -> Unit,
-    onPermissionDenied: () -> Unit
-) {
-    val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        when {
-            permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true -> {
-                onPermissionGranted()
-            }
-            else -> onPermissionDenied()
-        }
-    }
-    
-    LaunchedEffect(Unit) {
-        launcher.launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-        )
-    }
-}
 
 // 2. CAMERA PROVIDER (Generic, domain-agnostic)
 
@@ -167,22 +134,7 @@ class CameraProvider @Inject constructor(
     }
 }
 
-// Compose integration for camera
-@Composable
-fun RequestCameraPermission(
-    onPermissionGranted: () -> Unit,
-    onPermissionDenied: () -> Unit
-) {
-    val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) onPermissionGranted() else onPermissionDenied()
-    }
-    
-    LaunchedEffect(Unit) {
-        launcher.launch(Manifest.permission.CAMERA)
-    }
-}
+
 
 // 3. BIOMETRIC PROVIDER (Generic, domain-agnostic)
 
@@ -251,93 +203,4 @@ class BiometricProvider @Inject constructor(
     }
 }
 
-// Compose integration for biometric
-@Composable
-fun rememberBiometricProvider(): BiometricProvider {
-    val context = LocalContext.current
-    return remember { BiometricProvider(context) }
-}
 
-// Usage examples in feature modules
-
-// Example 1: Location-aware feature (domain-agnostic)
-@Composable
-fun LocationAwareFeature(
-    locationProvider: LocationProvider = rememberLocationProvider()
-) {
-    var location by remember { mutableStateOf<Location?>(null) }
-    var hasPermission by remember { mutableStateOf(false) }
-    
-    if (!hasPermission) {
-        RequestLocationPermission(
-            onPermissionGranted = { hasPermission = true },
-            onPermissionDenied = { /* Handle denial */ }
-        )
-    } else {
-        LaunchedEffect(Unit) {
-            when (val result = locationProvider.getCurrentLocation()) {
-                is LocationResult.Success -> location = result.location
-                is LocationResult.Error -> { /* Handle error */ }
-                is LocationResult.PermissionDenied -> { /* Handle denial */ }
-            }
-        }
-    }
-    
-    location?.let {
-        Text("Lat: ${it.latitude}, Lon: ${it.longitude}")
-        // Use location for any domain: nearby items, context-aware features, etc.
-    }
-}
-
-// Example 2: Camera capture (domain-agnostic)
-@Composable
-fun CameraCaptureFeature(
-    cameraProvider: CameraProvider = hiltViewModel()
-) {
-    var hasPermission by remember { mutableStateOf(false) }
-    val activity = LocalContext.current as FragmentActivity
-    
-    if (!hasPermission) {
-        RequestCameraPermission(
-            onPermissionGranted = { hasPermission = true },
-            onPermissionDenied = { /* Handle denial */ }
-        )
-    } else {
-        Button(onClick = {
-            lifecycleScope.launch {
-                when (val result = cameraProvider.captureImage(activity)) {
-                    is CameraResult.Success -> {
-                        // Use bitmap for any domain: scan, capture, upload, etc.
-                    }
-                    is CameraResult.Error -> { /* Handle error */ }
-                    else -> { /* Handle other cases */ }
-                }
-            }
-        }) {
-            Text("Capture")
-        }
-    }
-}
-
-// Example 3: Biometric authentication (domain-agnostic)
-@Composable
-fun SecureActionButton(
-    biometricProvider: BiometricProvider = rememberBiometricProvider(),
-    onAuthenticated: () -> Unit
-) {
-    val activity = LocalContext.current as FragmentActivity
-    val scope = rememberCoroutineScope()
-    
-    Button(onClick = {
-        scope.launch {
-            when (biometricProvider.authenticate(activity, "Secure Action", "Verify to continue")) {
-                is BiometricResult.Success -> onAuthenticated()
-                is BiometricResult.Error -> { /* Handle error */ }
-                is BiometricResult.Cancelled -> { /* Handle cancellation */ }
-                is BiometricResult.NotAvailable -> { /* Fallback to PIN/password */ }
-            }
-        }
-    }) {
-        Text("Perform Secure Action")
-    }
-}

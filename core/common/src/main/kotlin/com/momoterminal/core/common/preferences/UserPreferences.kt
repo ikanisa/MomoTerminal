@@ -1,4 +1,4 @@
-package com.momoterminal.data.preferences
+package com.momoterminal.core.common.preferences
 
 import android.content.Context
 import androidx.datastore.core.DataStore

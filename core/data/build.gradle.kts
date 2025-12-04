@@ -28,9 +28,16 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:database"))
     implementation(project(":core:network"))
+    implementation(project(":core:security"))
+    
+    // Supabase dependencies (needed for KSP to resolve types)
+    implementation(libs.supabase.postgrest)
+    implementation(libs.supabase.gotrue)
     
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     
     implementation(libs.coroutines.android)
+    implementation(libs.timber)
+    implementation(libs.paging.runtime)
 }

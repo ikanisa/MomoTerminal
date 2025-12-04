@@ -8,7 +8,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import com.momoterminal.data.preferences.UserPreferences
+import com.momoterminal.core.common.preferences.UserPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.Locale

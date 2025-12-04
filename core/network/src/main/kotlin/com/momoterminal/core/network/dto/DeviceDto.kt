@@ -1,4 +1,4 @@
-package com.momoterminal.data.remote.dto
+package com.momoterminal.core.network.dto
 
 import com.google.gson.annotations.SerializedName
 

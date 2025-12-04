@@ -47,4 +47,6 @@ dependencies {
     implementation(libs.compose.runtime)
     
     implementation(libs.coroutines.android)
+    implementation(libs.timber)
+    implementation(libs.retrofit)
 }

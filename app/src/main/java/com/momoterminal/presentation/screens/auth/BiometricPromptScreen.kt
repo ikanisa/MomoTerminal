@@ -10,7 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.fragment.app.FragmentActivity
-import com.momoterminal.security.BiometricHelper
+import com.momoterminal.core.security.BiometricHelper
 import kotlinx.coroutines.flow.collectLatest
 
 /**

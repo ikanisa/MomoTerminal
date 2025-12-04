@@ -2,7 +2,6 @@ package com.momoterminal.core.data.repository
 
 import com.momoterminal.core.common.config.SupportedCountries
 import com.momoterminal.core.common.model.CountryConfig
-import com.momoterminal.data.model.CountryListItem
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Order
@@ -83,9 +82,6 @@ class CountryRepositoryImpl @Inject constructor(
     fun getUssdSupportedCountries(): List<CountryConfig> =
         _countries.value.filter { it.hasUssdSupport }
 
-    fun getCountryListItems(): List<CountryListItem> = _countries.value.map {
-        CountryListItem(it.code, it.name, it.flagEmoji, it.providerName, it.currency, it.phonePrefix, it.hasUssdSupport)
-    }
 
     fun searchCountries(query: String): List<CountryConfig> {
         val q = query.lowercase()

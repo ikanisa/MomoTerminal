@@ -28,6 +28,8 @@ dependencies {
     
     implementation(libs.androidx.core.ktx)
     implementation(libs.coroutines.android)
+    implementation(libs.datastore.preferences)
+    implementation(libs.timber)
     
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

@@ -1,20 +1,13 @@
 package com.momoterminal.core.data.mapper
 
 import com.momoterminal.core.database.entity.TransactionEntity
-import com.momoterminal.data.remote.dto.SyncRequestDto
-import com.momoterminal.data.remote.dto.TransactionDto
-import com.momoterminal.core.domain.model.SyncStatus
 import com.momoterminal.core.domain.model.Transaction
-import android.os.Build
-import java.math.BigDecimal
-import java.math.RoundingMode
+import com.momoterminal.core.domain.model.TransactionStatus
+import com.momoterminal.core.domain.model.TransactionType
+import java.time.Instant
 
 /**
- * Mapper functions for converting between domain models, entities, and DTOs.
- * 
- * Note: All amount values in domain/DTO are in pesewas (smallest currency unit) to avoid
- * floating-point precision errors. 1 GHS = 100 pesewas.
- * Entity stores amount as Double for Room compatibility but uses precise conversion.
+ * Mapper functions for converting between domain models and entities.
  */
 object TransactionMapper {
     
@@ -23,71 +16,46 @@ object TransactionMapper {
      */
     fun entityToDomain(entity: TransactionEntity): Transaction {
         return Transaction(
-            id = entity.id,
-            sender = entity.sender,
-            body = entity.body,
-            amountInPesewas = entity.amountInPesewas,
-            currency = entity.currency ?: "GHS",
-            transactionId = entity.transactionId,
-            timestamp = entity.timestamp,
-            status = SyncStatus.fromValue(entity.status),
-            merchantCode = entity.merchantCode
+            id = entity.id.toString(),
+            amount = entity.amount ?: 0.0,
+            currency = entity.currency ?: "RWF",
+            status = mapStatus(entity.status),
+            type = TransactionType.PAYMENT, // Default type
+            reference = entity.transactionId ?: "",
+            description = entity.body,
+            createdAt = Instant.ofEpochMilli(entity.timestamp),
+            updatedAt = Instant.ofEpochMilli(entity.timestamp)
         )
     }
     
     /**
      * Convert domain Transaction to TransactionEntity.
-     * Uses BigDecimal for precise currency conversion from pesewas to main unit.
      */
     fun domainToEntity(transaction: Transaction): TransactionEntity {
         return TransactionEntity(
-            id = transaction.id,
-            sender = transaction.sender,
-            body = transaction.body,
-            amount = transaction.amountInPesewas?.let { pesewas ->
-                BigDecimal(pesewas).divide(BigDecimal(100), 2, RoundingMode.HALF_UP).toDouble()
-            },
+            id = transaction.id.toLongOrNull() ?: 0L,
+            sender = "", // Not in new domain model
+            body = transaction.description ?: "",
+            amount = transaction.amount,
             currency = transaction.currency,
-            transactionId = transaction.transactionId,
-            timestamp = transaction.timestamp,
+            transactionId = transaction.reference,
+            timestamp = transaction.createdAt.toEpochMilli(),
             status = transaction.status.name,
-            merchantCode = transaction.merchantCode
+            merchantCode = null
         )
     }
     
     /**
-     * Convert TransactionEntity to SyncRequestDto for API calls.
+     * Map status string to TransactionStatus enum.
      */
-    fun entityToSyncRequest(
-        entity: TransactionEntity,
-        merchantPhone: String
-    ): SyncRequestDto {
-        return SyncRequestDto(
-            sender = entity.sender,
-            text = entity.body,
-            timestamp = entity.timestamp,
-            device = Build.MODEL,
-            merchant = merchantPhone,
-            amountInPesewas = entity.amountInPesewas,
-            transactionId = entity.transactionId
-        )
-    }
-    
-    /**
-     * Convert TransactionDto to domain Transaction.
-     */
-    fun dtoToDomain(dto: TransactionDto): Transaction {
-        return Transaction(
-            id = dto.id?.toLongOrNull() ?: 0,
-            sender = dto.sender,
-            body = dto.body ?: "",
-            amountInPesewas = dto.amountInPesewas,
-            currency = dto.currency,
-            transactionId = dto.transactionId,
-            timestamp = dto.timestamp,
-            status = SyncStatus.fromValue(dto.status),
-            merchantCode = dto.merchantCode
-        )
+    private fun mapStatus(status: String): TransactionStatus {
+        return when (status.uppercase()) {
+            "PENDING" -> TransactionStatus.PENDING
+            "COMPLETED", "SUCCESS" -> TransactionStatus.COMPLETED
+            "FAILED" -> TransactionStatus.FAILED
+            "CANCELLED" -> TransactionStatus.CANCELLED
+            else -> TransactionStatus.PENDING
+        }
     }
     
     /**

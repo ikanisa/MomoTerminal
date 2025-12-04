@@ -3,6 +3,7 @@ package com.momoterminal.di
 import android.content.Context
 import android.content.SharedPreferences
 import com.momoterminal.core.common.config.AppConfig
+import com.momoterminal.core.common.di.ApplicationScope
 import com.momoterminal.sync.SyncManager
 import dagger.Module
 import dagger.Provides
@@ -15,13 +16,6 @@ import kotlinx.coroutines.SupervisorJob
 import javax.inject.Named
 import javax.inject.Qualifier
 import javax.inject.Singleton
-
-/**
- * Qualifier for application-scoped CoroutineScope.
- */
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class ApplicationScope
 
 /**
  * Hilt module providing application-level dependencies.

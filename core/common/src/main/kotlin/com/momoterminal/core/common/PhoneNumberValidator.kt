@@ -1,4 +1,4 @@
-package com.momoterminal.util
+package com.momoterminal.core.common
 
 /**
  * Utility object for validating and formatting phone numbers.

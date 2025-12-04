@@ -6,7 +6,7 @@ import com.momoterminal.auth.AuthRepository
 import com.momoterminal.auth.OtpResult
 import com.momoterminal.auth.WhatsAppOtpService
 import com.momoterminal.supabase.SessionData
-import com.momoterminal.util.PhoneNumberValidator
+import com.momoterminal.core.common.PhoneNumberValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

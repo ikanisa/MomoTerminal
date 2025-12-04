@@ -2,9 +2,9 @@ package com.momoterminal.feature.transactions.viewmodel
 
 import androidx.lifecycle.viewModelScope
 import com.momoterminal.core.common.Result
-import com.momoterminal.core.common.UiEffect
-import com.momoterminal.core.common.UiEvent
-import com.momoterminal.core.common.UiState
+import com.momoterminal.core.ui.UiEffect
+import com.momoterminal.core.ui.UiEvent
+import com.momoterminal.core.ui.UiState
 import com.momoterminal.core.domain.model.Transaction
 import com.momoterminal.core.domain.repository.TransactionRepository
 import com.momoterminal.core.ui.BaseViewModel

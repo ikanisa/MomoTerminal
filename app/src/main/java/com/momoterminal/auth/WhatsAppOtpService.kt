@@ -6,7 +6,7 @@ import com.momoterminal.api.VerifyOtpRequest
 import com.momoterminal.supabase.AuthResult
 import com.momoterminal.supabase.SessionData
 import com.momoterminal.supabase.SupabaseAuthService
-import com.momoterminal.util.PhoneNumberValidator
+import com.momoterminal.core.common.PhoneNumberValidator
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -6,7 +6,7 @@ import android.os.Build
 import android.os.LocaleList
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
-import com.momoterminal.data.preferences.UserPreferences
+import com.momoterminal.core.common.preferences.UserPreferences
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import java.util.Locale

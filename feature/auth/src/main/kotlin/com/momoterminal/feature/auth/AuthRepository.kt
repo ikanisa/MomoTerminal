@@ -49,8 +49,8 @@ class AuthRepository @Inject constructor(
             emit(
                 DomainUser(
                     id = userId,
-                    phoneNumber = phoneNumber,
-                    merchantName = "", // Will be fetched from profile
+                    phone = phoneNumber,
+                    name = "", // Will be fetched from profile
                     isVerified = true
                 )
             )
@@ -99,8 +99,8 @@ class AuthRepository @Inject constructor(
                     Result.Success(
                         DomainUser(
                             id = sessionData.user.id,
-                            phoneNumber = sessionData.user.phone ?: phone,
-                            merchantName = "",
+                            phone = sessionData.user.phone ?: phone,
+                            name = "",
                             isVerified = true
                         )
                     )

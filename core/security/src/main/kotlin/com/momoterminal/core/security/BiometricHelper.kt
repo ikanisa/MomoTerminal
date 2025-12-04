@@ -1,4 +1,4 @@
-package com.momoterminal.security
+package com.momoterminal.core.security
 
 import android.content.Context
 import android.os.Build

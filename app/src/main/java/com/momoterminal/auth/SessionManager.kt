@@ -1,7 +1,7 @@
 package com.momoterminal.auth
 
 import android.content.Context
-import com.momoterminal.di.ApplicationScope
+import com.momoterminal.core.common.di.ApplicationScope
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

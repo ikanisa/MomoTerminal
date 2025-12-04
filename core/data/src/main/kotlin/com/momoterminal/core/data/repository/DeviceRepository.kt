@@ -2,8 +2,8 @@ package com.momoterminal.core.data.repository
 
 // import com.google.firebase.messaging.FirebaseMessaging
 import com.momoterminal.core.network.api.MomoApiService
-import com.momoterminal.data.preferences.UserPreferences
-import com.momoterminal.data.remote.dto.RegisterDeviceRequest
+import com.momoterminal.core.common.preferences.UserPreferences
+import com.momoterminal.core.network.dto.RegisterDeviceRequest
 import com.momoterminal.core.common.DeviceInfoProvider
 // import kotlinx.coroutines.tasks.await
 import timber.log.Timber

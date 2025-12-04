@@ -11,9 +11,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.momoterminal.auth.AuthRepository
 import com.momoterminal.core.common.model.CountryConfig
-import com.momoterminal.data.preferences.UserPreferences
+import com.momoterminal.core.common.preferences.UserPreferences
 import com.momoterminal.data.repository.CountryRepository
-import com.momoterminal.security.BiometricHelper
+import com.momoterminal.core.security.BiometricHelper
 import com.momoterminal.util.LocaleManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext

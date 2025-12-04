@@ -26,7 +26,9 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.security.crypto)
+    implementation(libs.biometric)
     
     implementation(libs.hilt.android)
+    implementation(libs.coroutines.android)
     ksp(libs.hilt.compiler)
 }
