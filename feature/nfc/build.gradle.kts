@@ -46,6 +46,5 @@ dependencies {
     implementation(libs.compose.runtime)
     
     implementation(project(":core:designsystem"))
-    implementation(project(":core:designsystem"))
     implementation(libs.coroutines.android)
 }
