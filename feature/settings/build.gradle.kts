@@ -32,6 +32,10 @@ dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:domain"))
     implementation(project(":core:ui"))
+    implementation(project(":core:data"))
+    implementation(project(":core:security"))
+    // Note: feature:auth dependency would create circular dependency
+    // AuthRepository should be in core:domain instead
     
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
