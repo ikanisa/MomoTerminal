@@ -2,7 +2,7 @@ package com.momoterminal.domain.usecase
 
 import com.momoterminal.core.database.entity.SmsTransactionEntity
 import com.momoterminal.data.repository.SmsRepository
-import com.momoterminal.sms.SmsWalletIntegrationService
+// import com.momoterminal.sms.SmsWalletIntegrationService
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -16,6 +16,8 @@ class GetSmsTransactionsUseCase @Inject constructor(
     suspend fun getUnsynced(): List<SmsTransactionEntity> = smsRepository.getUnsynced()
 }
 
+/*
+// Temporarily disabled - requires SMS wallet integration service
 class ProcessIncomingSmsUseCase @Inject constructor(
     private val smsWalletService: SmsWalletIntegrationService
 ) {
@@ -35,6 +37,7 @@ class ProcessUncreditedSmsUseCase @Inject constructor(
         return smsWalletService.processUncreditedTransactions(userId)
     }
 }
+*/
 
 class MarkSmsSyncedUseCase @Inject constructor(
     private val smsRepository: SmsRepository

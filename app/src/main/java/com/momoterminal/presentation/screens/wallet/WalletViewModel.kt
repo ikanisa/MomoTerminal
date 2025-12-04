@@ -15,7 +15,6 @@ import com.momoterminal.offline.DataFreshness
 import com.momoterminal.offline.FreshnessStatus
 import com.momoterminal.offline.OfflineFirstManager
 import com.momoterminal.offline.SyncState
-import com.momoterminal.sms.SmsWalletIntegrationService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -26,7 +25,6 @@ class WalletViewModel @Inject constructor(
     private val getTokenBalanceUseCase: GetTokenBalanceUseCase,
     private val getTokenHistoryUseCase: GetTokenHistoryUseCase,
     private val applyTokenTransactionUseCase: ApplyTokenTransactionUseCase,
-    private val smsWalletIntegrationService: SmsWalletIntegrationService,
     private val smsRepository: SmsRepository,
     private val sessionManager: SessionManager,
     private val offlineFirstManager: OfflineFirstManager,
