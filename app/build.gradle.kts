@@ -483,6 +483,9 @@ dependencies {
     // Coil Image Loading
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
+    
+    // ZXing QR Code
+    implementation(libs.zxing.core)
 
     // Testing - Unit Tests
     testImplementation(libs.junit)

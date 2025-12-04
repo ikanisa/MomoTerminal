@@ -253,6 +253,75 @@ class SupabaseAuthService @Inject constructor(
             false
         }
     }
+    
+    /**
+     * Update user profile with MoMo configuration and settings.
+     *
+     * @param countryCode User's profile country code
+     * @param momoCountryCode Mobile Money country code
+     * @param momoPhone Mobile Money phone number or code
+     * @param useMomoCode Whether using MoMo code instead of phone
+     * @param merchantName Business/merchant name
+     * @param biometricEnabled Biometric authentication enabled
+     * @param nfcTerminalEnabled NFC terminal mode enabled
+     * @param language Preferred app language
+     * @return AuthResult indicating success or failure
+     */
+    suspend fun updateUserProfile(
+        countryCode: String? = null,
+        momoCountryCode: String? = null,
+        momoPhone: String? = null,
+        useMomoCode: Boolean? = null,
+        merchantName: String? = null,
+        biometricEnabled: Boolean? = null,
+        nfcTerminalEnabled: Boolean? = null,
+        language: String? = null
+    ): AuthResult<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUserOrNull()?.id
+            if (userId == null) {
+                Timber.e("No authenticated user found")
+                return@withContext AuthResult.Error(
+                    message = "Not authenticated",
+                    code = "NOT_AUTHENTICATED"
+                )
+            }
+            
+            Timber.d("Updating user profile for user: $userId")
+            
+            val response = edgeFunctionsApi.updateUserProfile(
+                UpdateProfileRequest(
+                    userId = userId,
+                    countryCode = countryCode,
+                    momoCountryCode = momoCountryCode,
+                    momoPhone = momoPhone,
+                    useMomoCode = useMomoCode,
+                    merchantName = merchantName,
+                    biometricEnabled = biometricEnabled,
+                    nfcTerminalEnabled = nfcTerminalEnabled,
+                    language = language
+                )
+            )
+            
+            if (response.isSuccessful && response.body()?.success == true) {
+                Timber.d("User profile updated successfully")
+                AuthResult.Success(Unit)
+            } else {
+                val errorMessage = response.body()?.error ?: "Failed to update profile"
+                Timber.e("Profile update failed: $errorMessage")
+                AuthResult.Error(
+                    message = errorMessage,
+                    code = response.body()?.code ?: "PROFILE_UPDATE_FAILED"
+                )
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to update user profile")
+            AuthResult.Error(
+                message = e.message ?: "Failed to update profile",
+                code = "PROFILE_UPDATE_FAILED"
+            )
+        }
+    }
 }
 
 /**

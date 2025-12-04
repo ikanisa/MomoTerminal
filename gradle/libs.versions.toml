@@ -108,6 +108,9 @@ play-services-ads-identifier = "18.1.0"
 # Coil Image Loading
 coil = "2.6.0"
 
+# ZXing QR Code
+zxing = "3.5.3"
+
 # Testing
 junit = "4.13.2"
 mockk = "1.13.13"
@@ -291,6 +294,9 @@ play-services-ads-identifier = { module = "com.google.android.gms:play-services-
 # Coil Image Loading
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coil" }
+
+# ZXing QR Code
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 
 # Testing - Unit
 junit = { module = "junit:junit", version.ref = "junit" }

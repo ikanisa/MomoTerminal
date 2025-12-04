@@ -62,6 +62,7 @@ import com.momoterminal.nfc.NfcState
 import com.momoterminal.presentation.components.MomoButton
 import com.momoterminal.presentation.components.ButtonType
 import com.momoterminal.presentation.components.OfflineBanner
+import com.momoterminal.presentation.components.QrCodeDisplay
 import com.momoterminal.presentation.components.SyncStatusIndicator
 import com.momoterminal.presentation.components.common.MomoTopAppBar
 import com.momoterminal.presentation.components.terminal.AmountDisplay
@@ -462,6 +463,12 @@ private fun NfcActiveContent(
 ) {
     val isSuccess = nfcState is NfcState.Success
     val message = nfcState.getDisplayMessage()
+    
+    // Generate USSD URI for QR code
+    val ussdUri = remember(amount) {
+        // For MTN Rwanda: *182*1*1*merchantPhone*amount#
+        "tel:*182*1*1*788767816*$amount#"
+    }
 
     Box(
         modifier = Modifier
@@ -493,12 +500,33 @@ private fun NfcActiveContent(
                 isActive = true
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // QR Code Display
+            if (!isSuccess && nfcState.isWorking()) {
+                QrCodeDisplay(
+                    data = ussdUri,
+                    size = 512,
+                    title = "Scan to Pay",
+                    subtitle = "Payer: Scan this QR code with your camera",
+                    modifier = Modifier.fillMaxWidth(0.7f)
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Text(
+                    text = "OR",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             NfcPulseAnimation(
                 isActive = nfcState.isWorking(),
                 isSuccess = isSuccess,
-                message = message
+                message = if (isSuccess) message else "Tap Android phone to NFC area"
             )
 
             Spacer(modifier = Modifier.weight(1f))

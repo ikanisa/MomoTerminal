@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,7 +34,8 @@ class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val biometricHelper: BiometricHelper,
     private val countryRepository: CountryRepository,
-    private val localeManager: LocaleManager
+    private val localeManager: LocaleManager,
+    private val supabaseAuthService: com.momoterminal.supabase.SupabaseAuthService
 ) : ViewModel() {
 
     data class PermissionState(
@@ -276,12 +278,31 @@ class SettingsViewModel @Inject constructor(
     fun saveSettings() {
         viewModelScope.launch {
             val state = _uiState.value
+            
+            // Save to local DataStore first
             userPreferences.updateMomoConfig(
                 momoCountryCode = state.momoCountryCode,
                 momoIdentifier = state.momoIdentifier,
                 useMomoCode = state.useMomoCode
             )
             userPreferences.updateBiometricEnabled(state.isBiometricEnabled)
+
+            // Sync to Supabase database
+            try {
+                supabaseAuthService.updateUserProfile(
+                    countryCode = state.profileCountryCode,
+                    momoCountryCode = state.momoCountryCode,
+                    momoPhone = state.momoIdentifier,
+                    useMomoCode = state.useMomoCode,
+                    merchantName = state.userName,
+                    biometricEnabled = state.isBiometricEnabled,
+                    nfcTerminalEnabled = state.isNfcTerminalEnabled,
+                    language = state.currentLanguage
+                )
+                Timber.d("Settings synced to Supabase successfully")
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to sync settings to Supabase")
+            }
 
             _uiState.update { it.copy(showSaveSuccess = true, isConfigured = state.momoIdentifier.isNotBlank()) }
             kotlinx.coroutines.delay(100)
