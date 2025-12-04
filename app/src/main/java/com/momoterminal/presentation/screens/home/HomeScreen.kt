@@ -169,7 +169,8 @@ fun HomeScreen(
                         onNavigateToSettings = onNavigateToSettings,
                         onAmountFocused = { isAmountFocused = it },
                         isAmountFocused = isAmountFocused,
-                        isValid = viewModel.isAmountValid() && viewModel.isNfcAvailable()
+                        isValid = viewModel.isAmountValid() && viewModel.isNfcAvailable(),
+                        isNfcActive = isNfcActive
                     )
                 }
             }
@@ -188,7 +189,8 @@ private fun PaymentInputContent(
     onNavigateToSettings: () -> Unit,
     onAmountFocused: (Boolean) -> Unit,
     isAmountFocused: Boolean,
-    isValid: Boolean
+    isValid: Boolean,
+    isNfcActive: Boolean
 ) {
     Column(
         modifier = Modifier
