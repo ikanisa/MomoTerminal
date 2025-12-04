@@ -4,45 +4,29 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
-import android.util.Log
-import com.momoterminal.core.common.auth.TokenManager
-import com.momoterminal.core.common.config.AppConfig
-import com.momoterminal.core.database.dao.TransactionDao
-import com.momoterminal.core.database.entity.TransactionEntity
-import com.momoterminal.feature.sms.SmsWalletIntegrationService
+import com.momoterminal.core.database.dao.SmsTransactionDao
+import com.momoterminal.core.database.entity.SmsTransactionEntity
+import com.momoterminal.core.database.entity.SmsTransactionType
+import com.momoterminal.sms.MomoSmsParser
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * BroadcastReceiver that listens for incoming SMS messages
- * and saves Mobile Money related messages to the local database.
- * Integrates with wallet system for automatic crediting.
+ * Simple SMS receiver for Mobile Money messages.
+ * 1. Catches incoming SMS
+ * 2. Parses MoMo transactions
+ * 3. Saves to local database
+ * 4. Syncs to Supabase (handled by background worker)
  */
 @AndroidEntryPoint
 class SmsReceiver : BroadcastReceiver() {
     
-    @Inject lateinit var transactionDao: TransactionDao
-    @Inject lateinit var smsWalletService: SmsWalletIntegrationService
-    @Inject lateinit var tokenManager: TokenManager
-    
-    companion object {
-        private const val TAG = "SmsReceiver"
-        
-        private val MOMO_KEYWORDS = listOf(
-            "MOMO", "MobileMoney", "Mobile Money", "MTN", "Airtel", "Tigo", "Vodacom", "Halotel", "Lumicash", "EcoCash",
-            "RWF", "CDF", "TZS", "BIF", "ZMW", "GHS", "USD",
-            "received", "sent", "payment", "confirmed", "transferred"
-        )
-        
-        const val BROADCAST_PAYMENT_RECEIVED = "com.momoterminal.action.PAYMENT_RECEIVED"
-        const val EXTRA_AMOUNT = "extra_amount"
-        const val EXTRA_SENDER = "extra_sender"
-        const val EXTRA_TRANSACTION_ID = "extra_transaction_id"
-        const val EXTRA_TIMESTAMP = "extra_timestamp"
-    }
+    @Inject lateinit var smsParser: MomoSmsParser
+    @Inject lateinit var smsDao: SmsTransactionDao
     
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
@@ -51,33 +35,57 @@ class SmsReceiver : BroadcastReceiver() {
             val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
             
             for (smsMessage in messages) {
-                val sender = smsMessage.displayOriginatingAddress ?: "Unknown"
-                val body = smsMessage.messageBody ?: ""
+                val sender = smsMessage.displayOriginatingAddress ?: continue
+                val body = smsMessage.messageBody ?: continue
                 val timestamp = smsMessage.timestampMillis
                 
-                Log.d(TAG, "SMS received from: $sender")
+                Timber.d("SMS received from: $sender")
                 
-                val isMomoMessage = MOMO_KEYWORDS.any { keyword ->
-                    sender.contains(keyword, ignoreCase = true) || body.contains(keyword, ignoreCase = true)
-                }
-                
-                if (isMomoMessage) {
-                    processAndSave(context, sender, body, timestamp)
+                // Check if it's a MoMo transaction
+                if (smsParser.isMomoMessage(sender, body)) {
+                    processMomoSms(sender, body, timestamp)
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error processing SMS", e)
+            Timber.e(e, "Error processing SMS")
         }
     }
     
-    private fun processAndSave(context: Context, sender: String, body: String, timestamp: Long) {
+    private fun processMomoSms(sender: String, body: String, timestamp: Long) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val userId = tokenManager.getUserId()
+                // Parse the SMS
+                val transaction = smsParser.parse(sender, body) ?: run {
+                    Timber.w("Could not parse MoMo SMS from $sender")
+                    return@launch
+                }
                 
-                // Process through wallet integration (parses + credits wallet)
-                if (userId != null) {
-                    val result = smsWalletService.processIncomingSms(userId, sender, body)
+                // Save to local database
+                val entity = SmsTransactionEntity(
+                    id = transaction?.transactionId ?: "",
+                    sender = sender,
+                    body = body,
+                    amount = transaction?.amount?.toString() ?: "0",
+                    currency = transaction?.currency ?: "",
+                    transactionId = transaction?.transactionId ?: "",
+                    type = SmsTransactionType.RECEIVED,
+                    receivedAt = timestamp,
+                    isSynced = false,
+                    syncedAt = null,
+                    createdAt = System.currentTimeMillis()
+                )
+                
+                smsDao.insert(entity)
+                Timber.i("Saved MoMo transaction: ${entity.transactionId} - ${entity.amount} ${entity.currency}")
+                
+                // Note: Background worker will sync to Supabase
+                
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to save MoMo SMS")
+            }
+        }
+    }
+}
                     Log.d(TAG, "SMS wallet processing result: $result")
                     
                     when (result) {
