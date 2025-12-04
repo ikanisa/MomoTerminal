@@ -323,6 +323,7 @@ dependencies {
     implementation(project(":core:performance"))
     implementation(project(":core:i18n"))
     implementation(project(":core:security"))
+    implementation(project(":feature:payment")) // For PaymentState in NfcHceService
     
     // Core Android
     implementation(libs.androidx.core.ktx)

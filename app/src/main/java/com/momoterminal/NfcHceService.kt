@@ -4,6 +4,7 @@ import android.nfc.cardemulation.HostApduService
 import android.os.Bundle
 import android.util.Log
 import com.momoterminal.core.common.config.AppConfig
+import com.momoterminal.feature.payment.nfc.PaymentState
 
 /**
  * NFC Host Card Emulation (HCE) Service that emulates an NFC Type 4 Tag.
