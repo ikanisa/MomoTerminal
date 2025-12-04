@@ -178,7 +178,7 @@ private val sampleTransactions = listOf(
 @androidx.compose.ui.tooling.preview.Preview(showBackground = true)
 @Composable
 private fun WalletScreenLightPreview() {
-    com.momoterminal.designsystem.theme.MomoTerminalTheme(darkTheme = false) {
+    MomoTheme(darkTheme = false) {
         WalletScreen()
     }
 }
@@ -186,7 +186,7 @@ private fun WalletScreenLightPreview() {
 @androidx.compose.ui.tooling.preview.Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun WalletScreenDarkPreview() {
-    com.momoterminal.designsystem.theme.MomoTerminalTheme(darkTheme = true) {
+    MomoTheme(darkTheme = true) {
         WalletScreen()
     }
 }
