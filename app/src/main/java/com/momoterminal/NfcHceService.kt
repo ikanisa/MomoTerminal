@@ -170,8 +170,14 @@ class NfcHceService : HostApduService() {
                     countryCode = countryCode,
                     phone = merchantPhone,
                     amount = amount
-                ) ?: "*182*1*1*${merchantPhone}*${amount}#"
-                "tel:${android.net.Uri.encode(ussdCode)}"
+                )
+                if (ussdCode != null) {
+                    "tel:${android.net.Uri.encode(ussdCode)}"
+                } else {
+                    // Fallback to Rwanda MTN USSD if country not configured
+                    Log.w(TAG, "No USSD config for country $countryCode, using default")
+                    "tel:${android.net.Uri.encode("*182*1*1*${merchantPhone}*${amount}#")}"
+                }
             } else {
                 Log.w(TAG, "No payment amount available")
                 null

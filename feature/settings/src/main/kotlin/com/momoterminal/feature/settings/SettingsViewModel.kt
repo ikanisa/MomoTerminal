@@ -186,14 +186,19 @@ class SettingsViewModel @Inject constructor(
     
     /**
      * Extract local phone number by removing country prefix.
+     * Returns empty string if the number format doesn't match expected prefix.
      */
     private fun extractLocalNumber(fullPhone: String, prefix: String): String {
         val cleanedPhone = fullPhone.replace(Regex("[^0-9]"), "")
         val cleanedPrefix = prefix.replace("+", "")
-        return if (cleanedPhone.startsWith(cleanedPrefix)) {
-            cleanedPhone.substring(cleanedPrefix.length)
-        } else {
-            cleanedPhone
+        
+        return when {
+            cleanedPhone.startsWith(cleanedPrefix) -> {
+                cleanedPhone.substring(cleanedPrefix.length)
+            }
+            // If no prefix match, but number is reasonable length (7-12 digits), assume it's already local
+            cleanedPhone.length in 7..12 -> cleanedPhone
+            else -> ""
         }
     }
 
@@ -312,19 +317,14 @@ class SettingsViewModel @Inject constructor(
             
             // Sync to Supabase if phone number is valid
             if (state.momoIdentifier.isNotBlank()) {
-                try {
-                    val result = supabasePaymentRepository.getOrCreateMerchant(
-                        phone = state.momoIdentifier,
-                        countryCode = state.momoCountryCode,
-                        currency = state.momoCurrency
-                    )
-                    result.onSuccess { merchantId ->
-                        Timber.d("Merchant profile saved to Supabase: $merchantId")
-                    }.onFailure { error ->
-                        Timber.e(error, "Failed to save merchant profile to Supabase")
-                    }
-                } catch (e: Exception) {
-                    Timber.e(e, "Error saving to Supabase")
+                supabasePaymentRepository.getOrCreateMerchant(
+                    phone = state.momoIdentifier,
+                    countryCode = state.momoCountryCode,
+                    currency = state.momoCurrency
+                ).onSuccess { merchantId ->
+                    Timber.d("Merchant profile saved to Supabase: $merchantId")
+                }.onFailure { error ->
+                    Timber.e(error, "Failed to save merchant profile to Supabase")
                 }
             }
 
