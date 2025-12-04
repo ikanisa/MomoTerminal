@@ -4,6 +4,7 @@ import android.nfc.cardemulation.HostApduService
 import android.os.Bundle
 import android.util.Log
 import com.momoterminal.core.common.config.AppConfig
+import com.momoterminal.core.common.config.UssdConfig
 
 /**
  * NFC Host Card Emulation (HCE) Service that emulates an NFC Type 4 Tag.
@@ -149,6 +150,7 @@ class NfcHceService : HostApduService() {
         // Get merchant phone from AppConfig
         val appConfig = AppConfig(applicationContext)
         val merchantPhone = appConfig.getMerchantPhone()
+        val countryCode = appConfig.getMomoCountryCode().ifBlank { appConfig.getProfileCountryCode() }
         
         // Get amount from PaymentState singleton
         val amount = PaymentState.currentAmount
@@ -160,10 +162,16 @@ class NfcHceService : HostApduService() {
             return
         }
         
-        // Use the current payment URI if available, otherwise construct USSD URI
+        // Use the current payment URI if available, otherwise construct country-specific USSD URI
         val uri = PaymentState.currentPaymentUri ?: run {
             if (amount != null && amount.isNotEmpty()) {
-                "tel:*182*1*1*${merchantPhone}*${amount}#"
+                // Use country-specific USSD code
+                val ussdCode = UssdConfig.generateSendMoneyUssd(
+                    countryCode = countryCode,
+                    phone = merchantPhone,
+                    amount = amount
+                ) ?: "*182*1*1*${merchantPhone}*${amount}#"
+                "tel:${android.net.Uri.encode(ussdCode)}"
             } else {
                 Log.w(TAG, "No payment amount available")
                 null

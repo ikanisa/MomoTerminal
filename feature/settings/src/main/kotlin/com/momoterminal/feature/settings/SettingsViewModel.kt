@@ -13,8 +13,10 @@ import com.momoterminal.core.domain.repository.AuthRepository
 import com.momoterminal.core.common.model.CountryConfig
 import com.momoterminal.core.common.preferences.UserPreferences
 import com.momoterminal.core.data.repository.CountryRepository
+import com.momoterminal.core.network.supabase.SupabasePaymentRepository
 import com.momoterminal.security.BiometricHelper
 import com.momoterminal.core.common.LocaleManager
+import com.momoterminal.core.common.config.AppConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +26,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,8 +36,11 @@ class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val biometricHelper: BiometricHelper,
     private val countryRepository: CountryRepository,
-    private val localeManager: LocaleManager
+    private val localeManager: LocaleManager,
+    private val supabasePaymentRepository: SupabasePaymentRepository
 ) : ViewModel() {
+    
+    private val appConfig = AppConfig(context)
 
     data class PermissionState(
         val smsGranted: Boolean = false,
@@ -138,6 +144,14 @@ class SettingsViewModel @Inject constructor(
             userPreferences.userPreferencesFlow.collect { prefs ->
                 val profileCountry = countryRepository.getByCode(prefs.countryCode) ?: CountryConfig.DEFAULT
                 val momoCountry = countryRepository.getByCode(prefs.momoCountryCode.ifEmpty { prefs.countryCode }) ?: profileCountry
+                
+                // Default MOMO number from WhatsApp number if not set
+                val effectiveMomoNumber = if (prefs.merchantPhone.isBlank() && prefs.phoneNumber.isNotBlank()) {
+                    // Extract just the local number from WhatsApp number (remove country prefix)
+                    extractLocalNumber(prefs.phoneNumber, profileCountry.phonePrefix)
+                } else {
+                    prefs.merchantPhone
+                }
 
                 _uiState.update {
                     it.copy(
@@ -149,15 +163,15 @@ class SettingsViewModel @Inject constructor(
                         momoCountryCode = prefs.momoCountryCode.ifEmpty { prefs.countryCode },
                         momoCountryName = momoCountry.name,
                         momoCurrency = momoCountry.currency,
-                        momoIdentifier = prefs.merchantPhone,
-                        merchantPhone = prefs.merchantPhone,
+                        momoIdentifier = effectiveMomoNumber,
+                        merchantPhone = effectiveMomoNumber,
                         useMomoCode = prefs.useMomoCode,
                         momoPhonePlaceholder = "X".repeat(momoCountry.phoneLength),
                         momoProviderName = momoCountry.providerName,
                         isBiometricEnabled = prefs.biometricEnabled,
-                        isConfigured = prefs.merchantPhone.isNotBlank(),
-                        isMomoIdentifierValid = prefs.merchantPhone.isBlank() || validateMomoIdentifier(prefs.merchantPhone, prefs.useMomoCode, momoCountry),
-                        isMomoPhoneValid = prefs.merchantPhone.isBlank() || validateMomoIdentifier(prefs.merchantPhone, prefs.useMomoCode, momoCountry)
+                        isConfigured = effectiveMomoNumber.isNotBlank(),
+                        isMomoIdentifierValid = effectiveMomoNumber.isBlank() || validateMomoIdentifier(effectiveMomoNumber, prefs.useMomoCode, momoCountry),
+                        isMomoPhoneValid = effectiveMomoNumber.isBlank() || validateMomoIdentifier(effectiveMomoNumber, prefs.useMomoCode, momoCountry)
                     )
                 }
             }
@@ -167,6 +181,19 @@ class SettingsViewModel @Inject constructor(
             userPreferences.smsAutoSyncEnabledFlow.collect { enabled ->
                 _uiState.update { it.copy(smsAutoSyncEnabled = enabled) }
             }
+        }
+    }
+    
+    /**
+     * Extract local phone number by removing country prefix.
+     */
+    private fun extractLocalNumber(fullPhone: String, prefix: String): String {
+        val cleanedPhone = fullPhone.replace(Regex("[^0-9]"), "")
+        val cleanedPrefix = prefix.replace("+", "")
+        return if (cleanedPhone.startsWith(cleanedPrefix)) {
+            cleanedPhone.substring(cleanedPrefix.length)
+        } else {
+            cleanedPhone
         }
     }
 
@@ -267,12 +294,39 @@ class SettingsViewModel @Inject constructor(
     fun saveSettings() {
         viewModelScope.launch {
             val state = _uiState.value
+            
+            // Save to local preferences
             userPreferences.updateMomoConfig(
                 momoCountryCode = state.momoCountryCode,
                 momoIdentifier = state.momoIdentifier,
                 useMomoCode = state.useMomoCode
             )
             userPreferences.updateBiometricEnabled(state.isBiometricEnabled)
+            
+            // Save to AppConfig for NFC service
+            appConfig.saveMerchantConfig(
+                merchantCode = state.momoIdentifier,
+                mobileMoneyNumber = state.momoIdentifier,
+                momoCountryCode = state.momoCountryCode
+            )
+            
+            // Sync to Supabase if phone number is valid
+            if (state.momoIdentifier.isNotBlank()) {
+                try {
+                    val result = supabasePaymentRepository.getOrCreateMerchant(
+                        phone = state.momoIdentifier,
+                        countryCode = state.momoCountryCode,
+                        currency = state.momoCurrency
+                    )
+                    result.onSuccess { merchantId ->
+                        Timber.d("Merchant profile saved to Supabase: $merchantId")
+                    }.onFailure { error ->
+                        Timber.e(error, "Failed to save merchant profile to Supabase")
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Error saving to Supabase")
+                }
+            }
 
             _uiState.update { it.copy(showSaveSuccess = true, isConfigured = state.momoIdentifier.isNotBlank()) }
             kotlinx.coroutines.delay(100)

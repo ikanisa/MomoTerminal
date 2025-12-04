@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -146,13 +147,23 @@ fun SettingsScreen(
                 placeholder = stringResource(R.string.mobile_money_number_placeholder),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Phone,
+                    imeAction = ImeAction.Done
+                ),
                 leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
                 isError = uiState.merchantPhone.isNotBlank() && !viewModel.isPhoneValid()
             )
             // ==================== PERMISSIONS SECTION ====================
             SectionHeader(title = "Permissions & Controls", icon = Icons.Default.Security)
             Spacer(modifier = Modifier.height(16.dp))
+            
+            // Helper to open app settings
+            val openAppSettings = {
+                context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.parse("package:${context.packageName}")
+                })
+            }
             
             // SMS Permission
             PermissionItem(
@@ -162,7 +173,8 @@ fun SettingsScreen(
                 isGranted = uiState.permissions.smsGranted,
                 onRequestPermission = {
                     smsPermissionLauncher.launch(arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_SMS))
-                }
+                },
+                onManagePermission = openAppSettings
             )
             
             // NFC Control
@@ -176,7 +188,8 @@ fun SettingsScreen(
                 },
                 isGranted = uiState.permissions.nfcEnabled,
                 isAvailable = uiState.permissions.nfcAvailable,
-                onRequestPermission = { context.startActivity(Intent(Settings.ACTION_NFC_SETTINGS)) }
+                onRequestPermission = { context.startActivity(Intent(Settings.ACTION_NFC_SETTINGS)) },
+                onManagePermission = { context.startActivity(Intent(Settings.ACTION_NFC_SETTINGS)) }
             )
             
             // Camera Permission
@@ -185,7 +198,8 @@ fun SettingsScreen(
                 title = "Camera Access",
                 description = if (uiState.permissions.cameraGranted) "Granted - Can scan QR codes" else "Required for QR scanning",
                 isGranted = uiState.permissions.cameraGranted,
-                onRequestPermission = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
+                onRequestPermission = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) },
+                onManagePermission = openAppSettings
             )
             
             // Notifications (Android 13+)
@@ -195,7 +209,8 @@ fun SettingsScreen(
                     title = "Notifications",
                     description = if (uiState.permissions.notificationsGranted) "Granted - Will receive alerts" else "Required for payment alerts",
                     isGranted = uiState.permissions.notificationsGranted,
-                    onRequestPermission = { notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
+                    onRequestPermission = { notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) },
+                    onManagePermission = openAppSettings
                 )
             }
             
@@ -209,6 +224,9 @@ fun SettingsScreen(
                     context.startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
                         data = Uri.parse("package:${context.packageName}")
                     })
+                },
+                onManagePermission = {
+                    context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
                 }
             )
             
@@ -315,7 +333,10 @@ fun SettingsScreen(
                 placeholder = if (uiState.useMomoCode) "123456" else uiState.momoPhonePlaceholder,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = if (uiState.useMomoCode) KeyboardType.Number else KeyboardType.Phone),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = if (uiState.useMomoCode) KeyboardType.Number else KeyboardType.Phone,
+                    imeAction = ImeAction.Done
+                ),
                 isError = uiState.momoIdentifier.isNotBlank() && !uiState.isMomoIdentifierValid
             )
             
@@ -326,36 +347,6 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(start = 16.dp, top = 4.dp)
                 )
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Country Selector
-            if (uiState.availableCountries.isNotEmpty()) {
-                Text(stringResource(R.string.momo_country), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(modifier = Modifier.height(8.dp))
-                uiState.availableCountries.forEach { country ->
-                    val isSelected = country.code == uiState.momoCountryCode
-                    Card(
-                        onClick = { viewModel.updateMomoCountry(country.code) },
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(country.name, style = MaterialTheme.typography.bodyLarge, fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal)
-                                Text("${country.currency} • ${country.providerName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                            if (isSelected) Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.primary)
-                        }
-                    }
-                }
             }
             
             Spacer(modifier = Modifier.height(24.dp))
@@ -682,7 +673,8 @@ private fun PermissionItem(
     description: String,
     isGranted: Boolean,
     isAvailable: Boolean = true,
-    onRequestPermission: () -> Unit
+    onRequestPermission: () -> Unit,
+    onManagePermission: (() -> Unit)? = null
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -707,6 +699,8 @@ private fun PermissionItem(
             }
             if (isAvailable && !isGranted) {
                 TextButton(onClick = onRequestPermission) { Text("Grant") }
+            } else if (isGranted && onManagePermission != null) {
+                TextButton(onClick = onManagePermission) { Text("Manage") }
             } else if (isGranted) {
                 Icon(Icons.Default.CheckCircle, "Granted", tint = SuccessGreen)
             }
