@@ -172,7 +172,8 @@ fun HomeScreen(
                         onNavigateToSettings = onNavigateToSettings,
                         onAmountFocused = { isAmountFocused = it },
                         isAmountFocused = isAmountFocused,
-                        isValid = viewModel.isAmountValid() && viewModel.isNfcAvailable(),
+                        isAmountValid = viewModel.isAmountValid(),
+                        isNfcAvailable = viewModel.isNfcAvailable(),
                         isNfcActive = isNfcActive
                     )
                 }
@@ -193,7 +194,8 @@ private fun PaymentInputContent(
     onNavigateToSettings: () -> Unit,
     onAmountFocused: (Boolean) -> Unit,
     isAmountFocused: Boolean,
-    isValid: Boolean,
+    isAmountValid: Boolean,
+    isNfcAvailable: Boolean,
     isNfcActive: Boolean
 ) {
     Column(
@@ -272,7 +274,7 @@ private fun PaymentInputContent(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 val buttonScale by animateFloatAsState(
-                    targetValue = if (isValid) 1f else 0.98f,
+                    targetValue = if (isAmountValid) 1f else 0.98f,
                     animationSpec = tween(MomoAnimation.DURATION_MEDIUM),
                     label = "buttonScale"
                 )
@@ -284,22 +286,22 @@ private fun PaymentInputContent(
                         .padding(horizontal = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // NFC Button
+                    // NFC Button - requires NFC to be available
                     MomoButton(
                         text = if (isNfcActive) "NFC ACTIVE" else "NFC",
                         onClick = { viewModel.activatePaymentWithMethod(HomeViewModel.PaymentMethod.NFC) },
-                        enabled = isValid && !isNfcActive,
+                        enabled = isAmountValid && isNfcAvailable && !isNfcActive,
                         modifier = Modifier
                             .weight(1f)
                             .scale(buttonScale),
                         type = if (isNfcActive) ButtonType.SECONDARY else ButtonType.PRIMARY
                     )
                     
-                    // QR Code Button
+                    // QR Code Button - always available if amount is valid
                     MomoButton(
                         text = "QR CODE",
                         onClick = { viewModel.activatePaymentWithMethod(HomeViewModel.PaymentMethod.QR_CODE) },
-                        enabled = isValid && !isNfcActive,
+                        enabled = isAmountValid && !isNfcActive,
                         modifier = Modifier
                             .weight(1f)
                             .scale(buttonScale),

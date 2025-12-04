@@ -4,10 +4,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
-import com.momoterminal.core.database.dao.SmsTransactionDao
-import com.momoterminal.core.database.entity.SmsTransactionEntity
-import com.momoterminal.core.database.entity.SmsTransactionType
 import com.momoterminal.sms.MomoSmsParser
+import com.momoterminal.sms.VendorSmsProcessor
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,17 +14,21 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * Simple SMS receiver for Mobile Money messages.
+ * SMS receiver for Mobile Money messages.
  * 1. Catches incoming SMS
- * 2. Parses MoMo transactions
- * 3. Saves to local database
- * 4. Syncs to Supabase (handled by background worker)
+ * 2. Uses AI (OpenAI/Gemini) to parse transaction data
+ * 3. Matches to registered vendor by MOMO number
+ * 4. Saves to Supabase vendor_sms_transactions table
  */
 @AndroidEntryPoint
 class SmsReceiver : BroadcastReceiver() {
     
     @Inject lateinit var smsParser: MomoSmsParser
-    @Inject lateinit var smsDao: SmsTransactionDao
+    @Inject lateinit var vendorProcessor: VendorSmsProcessor
+    
+    // TODO: Get from secure config/environment variables
+    private val AI_API_KEY = System.getenv("OPENAI_API_KEY") ?: ""
+    private val USE_OPENAI = true // Set to false to use Gemini
     
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
@@ -54,34 +56,25 @@ class SmsReceiver : BroadcastReceiver() {
     private fun processMomoSms(sender: String, body: String, timestamp: Long) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Parse the SMS
-                val transaction = smsParser.parse(sender, body) ?: run {
-                    Timber.w("Could not parse MoMo SMS from $sender")
-                    return@launch
-                }
+                Timber.i("Processing MoMo SMS from $sender")
                 
-                // Save to local database
-                val entity = SmsTransactionEntity(
-                    id = transaction?.transactionId ?: "",
-                    sender = sender,
-                    body = body,
-                    amount = transaction?.amount?.toString() ?: "0",
-                    currency = transaction?.currency ?: "",
-                    transactionId = transaction?.transactionId ?: "",
-                    type = SmsTransactionType.RECEIVED,
+                // Process with AI and save to Supabase
+                val result = vendorProcessor.processSms(
+                    rawSms = body,
+                    senderAddress = sender,
                     receivedAt = timestamp,
-                    isSynced = false,
-                    syncedAt = null,
-                    createdAt = System.currentTimeMillis()
+                    useOpenAI = USE_OPENAI,
+                    apiKey = AI_API_KEY
                 )
                 
-                smsDao.insert(entity)
-                Timber.i("Saved MoMo transaction: ${entity.transactionId} - ${entity.amount} ${entity.currency}")
-                
-                // Note: Background worker will sync to Supabase
+                result.onSuccess { transactionId ->
+                    Timber.i("✅ SMS processed successfully: $transactionId")
+                }.onFailure { error ->
+                    Timber.e(error, "❌ Failed to process SMS")
+                }
                 
             } catch (e: Exception) {
-                Timber.e(e, "Failed to save MoMo SMS")
+                Timber.e(e, "Failed to process MoMo SMS")
             }
         }
     }
