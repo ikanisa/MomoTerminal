@@ -1,5 +1,6 @@
 package com.momoterminal
 
+import android.content.Intent
 import android.nfc.cardemulation.HostApduService
 import android.os.Bundle
 import android.util.Log
@@ -9,12 +10,26 @@ import com.momoterminal.feature.payment.nfc.PaymentState
 /**
  * NFC Host Card Emulation (HCE) Service that emulates an NFC Type 4 Tag.
  * Broadcasts payment URIs via NDEF to NFC readers.
- * Reads merchant phone from AppConfig for dynamic configuration.
+ * 
+ * Payment data is received via Intent from NfcManager when activatePayment() is called.
+ * This design avoids the race condition that occurs with static singleton state.
  */
 class NfcHceService : HostApduService() {
     
     companion object {
         private const val TAG = "NfcHceService"
+        
+        // Intent actions for communication with NfcManager
+        const val ACTION_SET_PAYMENT_DATA = "com.momoterminal.action.SET_PAYMENT_DATA"
+        const val ACTION_CLEAR_PAYMENT_DATA = "com.momoterminal.action.CLEAR_PAYMENT_DATA"
+        
+        // Intent extras
+        const val EXTRA_AMOUNT = "extra_amount"
+        const val EXTRA_MERCHANT_CODE = "extra_merchant_code"
+        const val EXTRA_PROVIDER = "extra_provider"
+        const val EXTRA_CURRENCY = "extra_currency"
+        const val EXTRA_COUNTRY_CODE = "extra_country_code"
+        const val EXTRA_USSD_STRING = "extra_ussd_string"
         
         // Status words
         private val SW_OK = byteArrayOf(0x90.toByte(), 0x00.toByte())
@@ -51,8 +66,46 @@ class NfcHceService : HostApduService() {
         private const val INS_READ_BINARY = 0xB0.toByte()
     }
     
+    // Current payment data received via Intent
+    private var currentUssdString: String? = null
+    private var currentMerchantCode: String? = null
+    private var currentAmount: Double = 0.0
+    
     private var currentFile: Short = 0
     private var ndefMessage: ByteArray? = null
+    
+    /**
+     * Handle incoming Intents from NfcManager to set/clear payment data.
+     */
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        intent?.let { handleIntent(it) }
+        return START_STICKY
+    }
+    
+    private fun handleIntent(intent: Intent) {
+        when (intent.action) {
+            ACTION_SET_PAYMENT_DATA -> {
+                currentAmount = intent.getDoubleExtra(EXTRA_AMOUNT, 0.0)
+                currentMerchantCode = intent.getStringExtra(EXTRA_MERCHANT_CODE)
+                currentUssdString = intent.getStringExtra(EXTRA_USSD_STRING)
+                
+                Log.d(TAG, "Payment data set: merchant=$currentMerchantCode, amount=$currentAmount, ussd=$currentUssdString")
+                PaymentState.appendLog("NFC: Payment data configured")
+                
+                // Pre-generate NDEF message for faster response
+                prepareNdefMessage()
+            }
+            ACTION_CLEAR_PAYMENT_DATA -> {
+                currentUssdString = null
+                currentMerchantCode = null
+                currentAmount = 0.0
+                ndefMessage = null
+                
+                Log.d(TAG, "Payment data cleared")
+                PaymentState.appendLog("NFC: Payment data cleared")
+            }
+        }
+    }
     
     override fun processCommandApdu(commandApdu: ByteArray, extras: Bundle?): ByteArray {
         if (commandApdu.isEmpty()) {
@@ -147,49 +200,40 @@ class NfcHceService : HostApduService() {
     }
     
     private fun prepareNdefMessage() {
-        // Get merchant phone from AppConfig
-        val appConfig = AppConfig(applicationContext)
-        val merchantPhone = appConfig.getMerchantPhone()
+        // Use the USSD string received via Intent
+        val ussdString = currentUssdString
         
-        // Get amount from PaymentState singleton
-        val amount = PaymentState.currentAmount
-        
-        // If config is missing, return error
-        if (merchantPhone.isBlank()) {
-            Log.w(TAG, "Merchant phone not configured")
+        if (ussdString.isNullOrBlank()) {
+            Log.w(TAG, "No USSD string available - payment not configured")
             ndefMessage = null
             return
         }
         
-        // Use the current payment URI if available, otherwise construct USSD URI
-        val uri = PaymentState.currentPaymentUri ?: run {
-            if (amount != null && amount.isNotEmpty()) {
-                "tel:*182*1*1*${merchantPhone}*${amount}#"
-            } else {
-                Log.w(TAG, "No payment amount available")
-                null
-            }
-        }
-        
-        if (uri == null) {
-            ndefMessage = null
-            return
-        }
-        
-        ndefMessage = createNdefMessage(uri)
-        Log.d(TAG, "NDEF message prepared for URI: $uri")
-        PaymentState.appendLog("NFC: Broadcasting URI")
+        ndefMessage = createNdefMessage(ussdString)
+        Log.d(TAG, "NDEF message prepared for USSD: $ussdString")
+        PaymentState.appendLog("NFC: Ready to broadcast")
     }
     
     /**
-     * Creates an NDEF message with a URI record.
+     * Creates an NDEF message with a URI record for tel: scheme.
+     * Uses URI identifier code 0x05 (tel: scheme) for proper phone dialer integration.
+     * 
      * Format: [NLEN (2 bytes)][NDEF Record]
-     * NDEF Record: [Header][Type Length][Payload Length][Type][Payload]
+     * NDEF Record: [Header][Type Length][Payload Length][Type][URI Identifier][Payload]
      */
-    private fun createNdefMessage(uri: String): ByteArray {
-        // For custom URI schemes, use identifier code 0x00 (no abbreviation)
-        val uriBytes = uri.toByteArray(Charsets.UTF_8)
-        val identifierCode: Byte = 0x00
+    private fun createNdefMessage(ussdUri: String): ByteArray {
+        // Extract the USSD code part (strip tel: prefix if present)
+        val uriPayload = if (ussdUri.startsWith("tel:")) {
+            ussdUri.substringAfter("tel:")
+        } else {
+            ussdUri
+        }
+        
+        val uriBytes = uriPayload.toByteArray(Charsets.UTF_8)
+        
+        // Use URI identifier code 0x05 for tel: scheme (standard NDEF URI prefix)
+        // This allows the receiving phone to automatically open the dialer
+        val uriIdentifier: Byte = 0x05
         
         // NDEF Record header for URI:
         // TNF = 0x01 (Well Known), SR=1 (short record), ME=1, MB=1
@@ -199,7 +243,7 @@ class NfcHceService : HostApduService() {
         val type: Byte = 0x55 // 'U' for URI
         
         // Build NDEF record
-        val ndefRecord = byteArrayOf(header, typeLength, payloadLength, type, identifierCode) + uriBytes
+        val ndefRecord = byteArrayOf(header, typeLength, payloadLength, type, uriIdentifier) + uriBytes
         
         // NLEN (2 bytes big-endian) + NDEF record
         val nlen = ndefRecord.size

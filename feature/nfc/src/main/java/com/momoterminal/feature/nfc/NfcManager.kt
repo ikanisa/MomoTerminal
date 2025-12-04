@@ -1,11 +1,11 @@
 package com.momoterminal.feature.nfc
 
 import android.content.Context
+import android.content.Intent
 import android.nfc.NfcAdapter
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.momoterminal.core.common.config.AppConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +17,8 @@ import javax.inject.Singleton
 /**
  * Singleton manager for NFC state and operations.
  * Provides centralized NFC state management and event handling.
+ * 
+ * Communicates with NfcHceService via Intent to send/clear payment data.
  */
 @Singleton
 class NfcManager @Inject constructor(
@@ -25,6 +27,22 @@ class NfcManager @Inject constructor(
     companion object {
         private const val TAG = "NfcManager"
         private const val DEFAULT_TIMEOUT_MS = 60_000L // 60 seconds
+        
+        // Intent actions for HCE service communication
+        // These must match the constants in NfcHceService
+        private const val ACTION_SET_PAYMENT_DATA = "com.momoterminal.action.SET_PAYMENT_DATA"
+        private const val ACTION_CLEAR_PAYMENT_DATA = "com.momoterminal.action.CLEAR_PAYMENT_DATA"
+        
+        // Intent extras
+        private const val EXTRA_AMOUNT = "extra_amount"
+        private const val EXTRA_MERCHANT_CODE = "extra_merchant_code"
+        private const val EXTRA_PROVIDER = "extra_provider"
+        private const val EXTRA_CURRENCY = "extra_currency"
+        private const val EXTRA_COUNTRY_CODE = "extra_country_code"
+        private const val EXTRA_USSD_STRING = "extra_ussd_string"
+        
+        // HCE service class name (in app module)
+        private const val HCE_SERVICE_CLASS = "com.momoterminal.NfcHceService"
     }
     
     private val _nfcState = MutableStateFlow<NfcState>(NfcState.Ready)
@@ -81,6 +99,7 @@ class NfcManager @Inject constructor(
     
     /**
      * Activate NFC payment broadcasting.
+     * Sends payment data to HCE service via Intent.
      * @param paymentData The payment data to broadcast
      * @param timeoutMs Timeout in milliseconds (default 60 seconds)
      */
@@ -100,6 +119,8 @@ class NfcManager @Inject constructor(
         
         Log.d(TAG, "Activating payment: $paymentData")
         
+        // Send payment data to HCE Service via Intent
+        sendPaymentDataToHceService(paymentData)
         // Get merchant phone from AppConfig
         val appConfig = AppConfig(context)
         val merchantPhone = appConfig.getMerchantPhone()
@@ -126,10 +147,15 @@ class NfcManager @Inject constructor(
     
     /**
      * Cancel the current NFC payment.
+     * Clears payment data in HCE service via Intent.
      */
     fun cancelPayment() {
         Log.d(TAG, "Cancelling payment")
         cancelTimeout()
+        
+        // Clear payment data in HCE Service
+        clearPaymentDataInHceService()
+        
         _currentPaymentData.value = null
         _nfcState.value = NfcState.Ready
         
@@ -138,11 +164,53 @@ class NfcManager @Inject constructor(
     }
     
     /**
+     * Send payment data to HCE service via explicit Intent.
+     */
+    private fun sendPaymentDataToHceService(paymentData: NfcPaymentData) {
+        try {
+            val intent = Intent().apply {
+                setClassName(context.packageName, HCE_SERVICE_CLASS)
+                action = ACTION_SET_PAYMENT_DATA
+                putExtra(EXTRA_AMOUNT, paymentData.getDisplayAmount())
+                putExtra(EXTRA_MERCHANT_CODE, paymentData.merchantPhone)
+                putExtra(EXTRA_PROVIDER, paymentData.provider.name)
+                putExtra(EXTRA_CURRENCY, paymentData.currency)
+                putExtra(EXTRA_COUNTRY_CODE, paymentData.countryCode)
+                putExtra(EXTRA_USSD_STRING, paymentData.toUssdString())
+            }
+            context.startService(intent)
+            Log.d(TAG, "Payment data sent to HCE service: ${paymentData.toUssdString()}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send payment data to HCE service", e)
+        }
+    }
+    
+    /**
+     * Clear payment data in HCE service via explicit Intent.
+     */
+    private fun clearPaymentDataInHceService() {
+        try {
+            val intent = Intent().apply {
+                setClassName(context.packageName, HCE_SERVICE_CLASS)
+                action = ACTION_CLEAR_PAYMENT_DATA
+            }
+            context.startService(intent)
+            Log.d(TAG, "Payment data cleared in HCE service")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to clear payment data in HCE service", e)
+        }
+    }
+    
+    /**
      * Called when NFC transaction is successful.
      * @param transactionId The transaction identifier
      */
     fun onTransactionSuccess(transactionId: String? = null) {
         cancelTimeout()
+        
+        // Clear payment data in HCE service
+        clearPaymentDataInHceService()
+        
         val txId = transactionId ?: generateTransactionId()
         Log.d(TAG, "Transaction successful: $txId")
         _nfcState.value = NfcState.Success(txId)
@@ -161,6 +229,10 @@ class NfcManager @Inject constructor(
      */
     fun onTransactionError(errorCode: NfcErrorCode, message: String? = null) {
         cancelTimeout()
+        
+        // Clear payment data in HCE service
+        clearPaymentDataInHceService()
+        
         val errorMessage = message ?: errorCode.description
         Log.e(TAG, "Transaction error: $errorCode - $errorMessage")
         _nfcState.value = NfcState.Error(errorMessage, errorCode)
@@ -187,6 +259,10 @@ class NfcManager @Inject constructor(
         cancelTimeout()
         timeoutRunnable = Runnable {
             Log.w(TAG, "NFC transaction timed out")
+            
+            // Clear payment data in HCE service on timeout
+            clearPaymentDataInHceService()
+            
             _nfcState.value = NfcState.Timeout
             _currentPaymentData.value = null
             

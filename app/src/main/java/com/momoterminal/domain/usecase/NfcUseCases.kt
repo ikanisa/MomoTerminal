@@ -2,7 +2,7 @@ package com.momoterminal.domain.usecase
 
 import com.momoterminal.data.local.entity.NfcTagEntity
 import com.momoterminal.data.repository.NfcRepository
-import com.momoterminal.nfc.NfcWalletIntegrationService
+import com.momoterminal.feature.payment.nfc.NfcWalletIntegrationService
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

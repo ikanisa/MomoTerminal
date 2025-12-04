@@ -14,6 +14,10 @@ import org.junit.Before
 import org.junit.Test
 import android.content.Context
 import io.mockk.every
+import com.momoterminal.feature.nfc.NfcPaymentData
+import com.momoterminal.feature.nfc.NfcState
+import com.momoterminal.feature.nfc.NfcErrorCode
+import com.momoterminal.feature.nfc.NfcManager
 
 /**
  * Unit tests for NfcManager.

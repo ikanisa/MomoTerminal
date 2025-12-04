@@ -23,7 +23,7 @@ import com.momoterminal.designsystem.component.PressableCard
 import com.momoterminal.designsystem.motion.MomoHaptic
 import com.momoterminal.designsystem.motion.MotionTokens
 import com.momoterminal.designsystem.motion.performMomoHaptic
-import com.momoterminal.nfc.NfcState
+import com.momoterminal.feature.nfc.NfcState
 import kotlinx.coroutines.delay
 
 /**
