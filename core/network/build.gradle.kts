@@ -26,6 +26,7 @@ android {
 dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:domain"))
+    implementation(project(":core:database"))
     
     implementation(libs.androidx.core.ktx)
     implementation(libs.coroutines.android)
@@ -39,4 +40,13 @@ dependencies {
     implementation(libs.okhttp.logging)
     
     implementation(libs.gson)
+    
+    // Supabase
+    implementation(libs.supabase.postgrest)
+    implementation(libs.supabase.gotrue)
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.core)
+    
+    // Logging
+    implementation(libs.timber)
 }

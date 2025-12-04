@@ -40,6 +40,7 @@ import com.momoterminal.core.designsystem.component.TransactionRow
 import com.momoterminal.core.designsystem.component.TransactionSource
 import com.momoterminal.core.designsystem.theme.MomoTheme
 
+
 data class TokenBalance(val type: TokenType, val label: String, val value: String)
 
 data class Transaction(

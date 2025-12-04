@@ -32,6 +32,8 @@ dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:domain"))
     implementation(project(":core:ui"))
+    implementation(project(":core:network"))
+    implementation(project(":core:security"))
     
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
