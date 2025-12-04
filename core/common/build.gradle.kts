@@ -27,6 +27,7 @@ dependencies {
     implementation(project(":core:security"))
     
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.coroutines.android)
     implementation(libs.datastore.preferences)
     implementation(libs.timber)

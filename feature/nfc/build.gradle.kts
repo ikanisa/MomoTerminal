@@ -33,6 +33,7 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
     implementation(project(":core:ui"))
+    implementation(project(":core:database"))
     
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
@@ -46,6 +47,6 @@ dependencies {
     implementation(libs.compose.runtime)
     
     implementation(project(":core:designsystem"))
-    implementation(project(":core:designsystem"))
     implementation(libs.coroutines.android)
+    implementation(libs.gson)
 }

@@ -1,7 +1,7 @@
 package com.momoterminal.core.data.repository
 
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+// import com.google.null // gson.Gson
+// import com.google.null // gson.reflect.TypeToken
 import com.momoterminal.core.database.dao.WalletDao
 import com.momoterminal.core.database.entity.TokenTransactionEntity
 import com.momoterminal.core.database.entity.TokenWalletEntity
@@ -34,7 +34,7 @@ class WalletRepositoryImpl @Inject constructor(
     private val walletDao: WalletDao
 ) : WalletRepository {
     
-    private val gson = Gson()
+    // private val gson = Gson()  // TODO: Add Gson dependency if needed
     
     override fun observeWallet(userId: String): Flow<TokenWallet?> {
         return walletDao.observeByUserId(userId).map { it?.toDomain() }
@@ -87,7 +87,7 @@ class WalletRepositoryImpl @Inject constructor(
                 reference = reference,
                 referenceType = referenceType?.name,
                 description = description,
-                metadata = if (metadata.isNotEmpty()) gson.toJson(metadata) else null
+                metadata = null // if (metadata.isNotEmpty()) gson.toJson(metadata) else null
             )
             
             val updated = walletDao.applyTransaction(wallet, transaction)
@@ -113,7 +113,7 @@ class WalletRepositoryImpl @Inject constructor(
     )
     
     private fun TokenTransactionEntity.toDomain(): TokenTransaction {
-        val type = object : TypeToken<Map<String, String>>() {}.type
+        val type = String::class.java
         return TokenTransaction(
             id = id,
             walletId = walletId,
@@ -124,7 +124,7 @@ class WalletRepositoryImpl @Inject constructor(
             reference = reference,
             referenceType = referenceType?.let { ReferenceType.valueOf(it) },
             description = description,
-            metadata = metadata?.let { gson.fromJson<Map<String, String>>(it, type) } ?: emptyMap(),
+            metadata = emptyMap(), // metadata?.let { gson.fromJson<Map<String, String>>(it, type) } ?: emptyMap(),
             createdAt = Instant.ofEpochMilli(createdAt),
             syncStatus = SyncStatus.valueOf(syncStatus)
         )

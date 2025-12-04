@@ -14,7 +14,7 @@ import com.momoterminal.core.common.model.CountryConfig
 import com.momoterminal.core.common.preferences.UserPreferences
 import com.momoterminal.data.repository.CountryRepository
 import com.momoterminal.core.security.BiometricHelper
-import com.momoterminal.util.LocaleManager
+import com.momoterminal.core.common.LocaleManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow

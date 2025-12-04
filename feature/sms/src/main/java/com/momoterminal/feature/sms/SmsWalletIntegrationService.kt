@@ -3,10 +3,10 @@ package com.momoterminal.feature.sms
 import android.util.Log
 import com.momoterminal.core.database.entity.SmsTransactionEntity
 import com.momoterminal.core.database.entity.SmsTransactionType
-import com.momoterminal.data.repository.SmsRepository
-import com.momoterminal.data.repository.WalletRepository
-import com.momoterminal.domain.model.ReferenceType
-import com.momoterminal.domain.model.TokenTransactionType
+import com.momoterminal.core.data.repository.SmsRepository
+import com.momoterminal.core.data.repository.WalletRepository
+import com.momoterminal.core.domain.model.ReferenceType
+import com.momoterminal.core.domain.model.TokenTransactionType
 import javax.inject.Inject
 import javax.inject.Singleton
 
