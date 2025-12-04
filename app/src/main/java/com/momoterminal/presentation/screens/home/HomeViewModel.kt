@@ -26,6 +26,10 @@ class HomeViewModel @Inject constructor(
     private val walletRepository: WalletRepository
 ) : ViewModel() {
 
+    enum class PaymentMethod {
+        NFC, QR_CODE
+    }
+
     data class HomeUiState(
         val amount: String = "",
         val currency: String = "RWF",
@@ -38,7 +42,8 @@ class HomeViewModel @Inject constructor(
         val isNfcEnabled: Boolean = true,
         val isNfcAvailable: Boolean = false,
         val walletBalance: Long = 0,
-        val recentTransactionCount: Int = 0
+        val recentTransactionCount: Int = 0,
+        val selectedPaymentMethod: PaymentMethod? = null
     )
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -124,11 +129,14 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(isNfcEnabled = enabled) }
     }
 
-    fun activatePayment() {
+    fun activatePaymentWithMethod(method: PaymentMethod) {
         val state = _uiState.value
         if (!isAmountValid() || !state.isNfcEnabled) return
 
         val amountValue = state.amount.toDoubleOrNull() ?: return
+        
+        // Store selected payment method
+        _uiState.update { it.copy(selectedPaymentMethod = method) }
 
         val paymentData = NfcPaymentData.fromAmount(
             merchantPhone = state.merchantPhone,
@@ -141,9 +149,14 @@ class HomeViewModel @Inject constructor(
         nfcManager.activatePayment(paymentData)
     }
 
+    fun activatePayment() {
+        // Default to NFC for backward compatibility
+        activatePaymentWithMethod(PaymentMethod.NFC)
+    }
+
     fun cancelPayment() {
         nfcManager.cancelPayment()
-        _uiState.update { it.copy(amount = "") }
+        _uiState.update { it.copy(amount = "", selectedPaymentMethod = null) }
     }
 
     fun triggerSync() {

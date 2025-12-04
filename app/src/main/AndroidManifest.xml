@@ -197,7 +197,7 @@
 
         <!-- SMS Receiver -->
         <receiver
-            android:name=".SmsReceiver"
+            android:name="com.momoterminal.feature.sms.receiver.SmsReceiver"
             android:exported="true"
             android:permission="android.permission.BROADCAST_SMS">
             <intent-filter android:priority="999">

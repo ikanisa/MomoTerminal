@@ -142,6 +142,9 @@ class SettingsViewModel @Inject constructor(
                 val profileCountry = countryRepository.getByCode(prefs.countryCode) ?: CountryConfig.DEFAULT
                 val momoCountry = countryRepository.getByCode(prefs.momoCountryCode.ifEmpty { prefs.countryCode }) ?: profileCountry
 
+                // Smart default: use WhatsApp number as MoMo number if not set
+                val defaultMomoPhone = if (prefs.merchantPhone.isBlank()) prefs.phoneNumber else prefs.merchantPhone
+
                 _uiState.update {
                     it.copy(
                         userName = prefs.merchantName,
@@ -152,8 +155,8 @@ class SettingsViewModel @Inject constructor(
                         momoCountryCode = prefs.momoCountryCode.ifEmpty { prefs.countryCode },
                         momoCountryName = momoCountry.name,
                         momoCurrency = momoCountry.currency,
-                        momoIdentifier = prefs.merchantPhone,
-                        merchantPhone = prefs.merchantPhone,
+                        momoIdentifier = defaultMomoPhone,
+                        merchantPhone = defaultMomoPhone,
                         useMomoCode = prefs.useMomoCode,
                         momoPhonePlaceholder = "X".repeat(momoCountry.phoneLength),
                         momoProviderName = momoCountry.providerName,
@@ -169,6 +172,12 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             userPreferences.smsAutoSyncEnabledFlow.collect { enabled ->
                 _uiState.update { it.copy(smsAutoSyncEnabled = enabled) }
+            }
+        }
+        
+        viewModelScope.launch {
+            userPreferences.nfcTerminalEnabledFlow.collect { enabled ->
+                _uiState.update { it.copy(isNfcTerminalEnabled = enabled) }
             }
         }
     }

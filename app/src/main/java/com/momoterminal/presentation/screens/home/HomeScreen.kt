@@ -274,21 +274,40 @@ private fun PaymentInputContent(
                     label = "buttonScale"
                 )
                 
-                // NFC Emit Button - Tap for each transaction
-                MomoButton(
-                    text = if (isNfcActive) "NFC ACTIVE - WAITING..." else "TAP TO EMIT NFC",
-                    onClick = onActivate,
-                    enabled = isValid && !isNfcActive,
+                // Two payment method buttons
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .scale(buttonScale),
-                    type = if (isNfcActive) ButtonType.SECONDARY else ButtonType.PRIMARY
-                )
+                        .padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // NFC Button
+                    MomoButton(
+                        text = if (isNfcActive) "NFC ACTIVE" else "NFC",
+                        onClick = onActivate,
+                        enabled = isValid && !isNfcActive,
+                        modifier = Modifier
+                            .weight(1f)
+                            .scale(buttonScale),
+                        type = if (isNfcActive) ButtonType.SECONDARY else ButtonType.PRIMARY
+                    )
+                    
+                    // QR Code Button
+                    MomoButton(
+                        text = "QR CODE",
+                        onClick = onActivate,
+                        enabled = isValid && !isNfcActive,
+                        modifier = Modifier
+                            .weight(1f)
+                            .scale(buttonScale),
+                        type = ButtonType.OUTLINE
+                    )
+                }
                 
                 // Instruction text
                 if (!isNfcActive) {
                     Text(
-                        text = "Payer will tap their phone to complete payment",
+                        text = "Choose payment method: NFC (Android) or QR Code (iPhone/All)",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         textAlign = TextAlign.Center,

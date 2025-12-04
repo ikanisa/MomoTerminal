@@ -10,13 +10,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -92,43 +95,34 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            // User Profile Section
+            // User Profile Section (Read-only info from WhatsApp)
             SectionHeader(
                 title = stringResource(R.string.user_profile),
                 icon = Icons.Default.Person
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             
-            // Profile Info Card (read-only, from WhatsApp registration)
             ProfileInfoCard(
                 phoneNumber = uiState.authPhone,
                 profileCountry = uiState.profileCountryName
             )
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Mobile Money Setup Section
+            // Mobile Money Configuration
             SectionHeader(
                 title = stringResource(R.string.mobile_money_setup),
                 icon = Icons.Default.AccountBalance
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             
-            // Info text about separate country
-            Text(
-                text = stringResource(R.string.momo_country_info),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            
-            // Mobile Money Country Selector
+            // Country Selector
             MomoCountryCard(
                 countryName = uiState.momoCountryName,
                 currency = uiState.momoCurrency,
@@ -136,20 +130,7 @@ fun SettingsScreen(
                 onClick = { showMomoCountryPicker = true }
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Mobile Money Phone Number
-            MomoTextField(
-                value = uiState.merchantPhone,
-                onValueChange = viewModel::updateMerchantPhone,
-                label = stringResource(R.string.mobile_money_number),
-                placeholder = stringResource(R.string.mobile_money_number_placeholder),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
-                isError = uiState.merchantPhone.isNotBlank() && !viewModel.isPhoneValid()
-            )
+            Spacer(modifier = Modifier.height(12.dp))
             // ==================== PERMISSIONS SECTION ====================
             SectionHeader(title = "Permissions & Controls", icon = Icons.Default.Security)
             Spacer(modifier = Modifier.height(16.dp))
@@ -381,7 +362,17 @@ fun SettingsScreen(
                 placeholder = if (uiState.useMomoCode) "123456" else uiState.momoPhonePlaceholder,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = if (uiState.useMomoCode) KeyboardType.Number else KeyboardType.Phone),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = if (uiState.useMomoCode) KeyboardType.Number else KeyboardType.Phone,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        if (uiState.isMomoIdentifierValid && uiState.momoIdentifier.isNotBlank()) {
+                            viewModel.saveSettings()
+                        }
+                    }
+                ),
                 isError = uiState.momoIdentifier.isNotBlank() && !uiState.isMomoIdentifierValid
             )
             
@@ -669,12 +660,28 @@ private fun MomoCountryPickerDialog(
     onCountrySelected: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val countries = SupportedCountries.getAllCountries()
+    val allCountries = SupportedCountries.getAllCountries()
+    
+    // Show only primary markets by default, with option to see all
+    val primaryCountries = allCountries.filter { it.isPrimaryMarket }
+    var showAllCountries by remember { mutableStateOf(false) }
+    
+    val countries = if (showAllCountries) allCountries else primaryCountries
     
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(stringResource(R.string.select_momo_country))
+            Column {
+                Text(stringResource(R.string.select_momo_country))
+                if (!showAllCountries && primaryCountries.size < allCountries.size) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.showing_primary_markets),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         },
         text = {
             Column(
@@ -701,11 +708,26 @@ private fun MomoCountryPickerDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = country.name,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = country.name,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                                    )
+                                    if (country.isPrimaryMarket) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                        ) {
+                                            Text(
+                                                text = "⭐",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                }
                                 Text(
                                     text = "${country.providerName} • ${country.currency}",
                                     style = MaterialTheme.typography.bodySmall,
@@ -720,6 +742,18 @@ private fun MomoCountryPickerDialog(
                                 )
                             }
                         }
+                    }
+                }
+                
+                if (!showAllCountries && primaryCountries.size < allCountries.size) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TextButton(
+                        onClick = { showAllCountries = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.show_all_countries))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(Icons.Default.ExpandMore, null)
                     }
                 }
             }
@@ -771,10 +805,21 @@ private fun PermissionItem(
                 Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
                 Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (isAvailable && !isGranted) {
-                TextButton(onClick = onRequestPermission) { Text("Grant") }
-            } else if (isGranted) {
-                Icon(Icons.Default.CheckCircle, "Granted", tint = SuccessGreen)
+            if (isAvailable) {
+                if (!isGranted) {
+                    TextButton(onClick = onRequestPermission) { Text("Enable") }
+                } else {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(Icons.Default.CheckCircle, "Granted", tint = SuccessGreen)
+                        // Allow revoking by opening settings
+                        IconButton(onClick = onRequestPermission) {
+                            Icon(Icons.Default.Settings, "Manage", 
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
     }
