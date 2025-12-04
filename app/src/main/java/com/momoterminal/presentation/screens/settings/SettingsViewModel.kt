@@ -67,6 +67,7 @@ class SettingsViewModel @Inject constructor(
         val isBiometricEnabled: Boolean = false,
         val isBiometricAvailable: Boolean = false,
         val smsAutoSyncEnabled: Boolean = true,
+        val isNfcTerminalEnabled: Boolean = false,
         val appVersion: String = "1.0.0",
         val isConfigured: Boolean = false,
         val showSaveSuccess: Boolean = false,
@@ -261,6 +262,14 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             userPreferences.setSmsAutoSyncEnabled(enabled)
             _uiState.update { it.copy(smsAutoSyncEnabled = enabled) }
+        }
+    }
+    
+    fun toggleNfcTerminal() {
+        viewModelScope.launch {
+            val newValue = !_uiState.value.isNfcTerminalEnabled
+            userPreferences.setNfcTerminalEnabled(newValue)
+            _uiState.update { it.copy(isNfcTerminalEnabled = newValue) }
         }
     }
 

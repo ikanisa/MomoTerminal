@@ -179,6 +179,72 @@ fun SettingsScreen(
                 onRequestPermission = { context.startActivity(Intent(Settings.ACTION_NFC_SETTINGS)) }
             )
             
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // NFC Terminal Mode Toggle
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Nfc,
+                                contentDescription = null,
+                                tint = MomoYellow,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "NFC Terminal Mode",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = if (uiState.isNfcTerminalEnabled) 
+                                        "Active - Can emit NFC for payments" 
+                                    else 
+                                        "Inactive - NFC terminal disabled",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = uiState.isNfcTerminalEnabled,
+                            onCheckedChange = { viewModel.toggleNfcTerminal() },
+                            enabled = uiState.permissions.nfcEnabled,
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = SuccessGreen,
+                                checkedTrackColor = SuccessGreen.copy(alpha = 0.5f)
+                            )
+                        )
+                    }
+                    
+                    if (!uiState.permissions.nfcEnabled) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "⚠️ Enable NFC in device settings first",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
             // Camera Permission
             PermissionItem(
                 icon = Icons.Default.CameraAlt,

@@ -214,13 +214,6 @@ private fun PaymentInputContent(
             )
         }
 
-        // NFC Toggle
-        NfcToggleCard(
-            isEnabled = uiState.isNfcEnabled,
-            onToggle = onToggleNfc,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
         // Amount display - clickable to show keypad
         Box(
             modifier = Modifier
@@ -278,14 +271,27 @@ private fun PaymentInputContent(
                     label = "buttonScale"
                 )
                 
+                // NFC Emit Button - Tap for each transaction
                 MomoButton(
-                    text = stringResource(R.string.activate_nfc),
+                    text = if (isNfcActive) "NFC ACTIVE - WAITING..." else "TAP TO EMIT NFC",
                     onClick = onActivate,
-                    enabled = isValid,
+                    enabled = isValid && !isNfcActive,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .scale(buttonScale)
+                        .scale(buttonScale),
+                    type = if (isNfcActive) ButtonType.SECONDARY else ButtonType.PRIMARY
                 )
+                
+                // Instruction text
+                if (!isNfcActive) {
+                    Text(
+                        text = "Payer will tap their phone to complete payment",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
             }
         }
         
