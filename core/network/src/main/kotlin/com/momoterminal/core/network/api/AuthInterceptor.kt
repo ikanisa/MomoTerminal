@@ -1,6 +1,6 @@
 package com.momoterminal.core.network.api
 
-import com.momoterminal.auth.AuthRepository
+import com.momoterminal.core.domain.repository.AuthRepository
 import com.momoterminal.core.common.auth.TokenManager
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
