@@ -5,15 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
-import com.momoterminal.ai.AiSmsParserService
 import com.momoterminal.core.common.auth.TokenManager
 import com.momoterminal.core.common.config.AppConfig
 import com.momoterminal.core.database.dao.TransactionDao
 import com.momoterminal.core.database.entity.TransactionEntity
 import com.momoterminal.feature.sms.SmsWalletIntegrationService
-import com.momoterminal.sync.SyncManager
-import com.momoterminal.webhook.WebhookDispatcher
-import com.momoterminal.webhook.WebhookWorker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,10 +24,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class SmsReceiver : BroadcastReceiver() {
     
-    @Inject lateinit var webhookDispatcher: WebhookDispatcher
     @Inject lateinit var transactionDao: TransactionDao
-    @Inject lateinit var syncManager: SyncManager
-    @Inject lateinit var aiSmsParserService: AiSmsParserService
     @Inject lateinit var smsWalletService: SmsWalletIntegrationService
     @Inject lateinit var tokenManager: TokenManager
     
@@ -63,7 +56,6 @@ class SmsReceiver : BroadcastReceiver() {
                 val timestamp = smsMessage.timestampMillis
                 
                 Log.d(TAG, "SMS received from: $sender")
-                PaymentState.appendLog("SMS from $sender: ${body.take(50)}...")
                 
                 val isMomoMessage = MOMO_KEYWORDS.any { keyword ->
                     sender.contains(keyword, ignoreCase = true) || body.contains(keyword, ignoreCase = true)
@@ -71,33 +63,16 @@ class SmsReceiver : BroadcastReceiver() {
                 
                 if (isMomoMessage) {
                     processAndSave(context, sender, body, timestamp)
-                    syncManager.enqueueSyncNow()
-                    dispatchToWebhooks(context, sender, body)
-                    PaymentState.appendLog("SMS saved and sync triggered")
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error processing SMS", e)
-            PaymentState.appendLog("SMS Error: ${e.message}")
-        }
-    }
-    
-    private fun dispatchToWebhooks(context: Context, sender: String, body: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val phoneNumber = AppConfig(context).getMerchantPhone().takeIf { it.isNotBlank() } ?: ""
-                webhookDispatcher.dispatchSms(phoneNumber, sender, body)
-                WebhookWorker.enqueueNow(context)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error dispatching to webhooks", e)
-            }
         }
     }
     
     private fun processAndSave(context: Context, sender: String, body: String, timestamp: Long) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val appConfig = AppConfig(context)
                 val userId = tokenManager.getUserId()
                 
                 // Process through wallet integration (parses + credits wallet)
@@ -113,23 +88,16 @@ class SmsReceiver : BroadcastReceiver() {
                     }
                 }
                 
-                // Also save to legacy transactions table for backward compatibility
-                val parsedData = try {
-                    aiSmsParserService.parseSmartly(sender, body)
-                } catch (e: Exception) {
-                    Log.w(TAG, "AI parsing failed", e)
-                    null
-                }
-                
+                // Save to transactions table
                 val transaction = TransactionEntity(
                     sender = sender,
                     body = body,
                     timestamp = timestamp,
                     status = "PENDING",
-                    amount = parsedData?.getDisplayAmount(),
-                    currency = parsedData?.currency ?: "RWF",
-                    transactionId = parsedData?.transactionId,
-                    merchantCode = appConfig.getMerchantPhone()
+                    amount = null, // TODO: Parse from SMS
+                    currency = "RWF",
+                    transactionId = null,
+                    merchantCode = ""
                 )
                 transactionDao.insert(transaction)
                 

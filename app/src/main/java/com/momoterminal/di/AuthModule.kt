@@ -5,6 +5,7 @@ import com.momoterminal.api.AuthInterceptor
 import com.momoterminal.auth.AuthRepository
 import com.momoterminal.auth.SessionManager
 import com.momoterminal.core.common.auth.TokenManager
+import com.momoterminal.core.common.di.ApplicationScope
 import com.momoterminal.core.security.BiometricHelper
 import com.momoterminal.core.security.SecureStorage
 import dagger.Module

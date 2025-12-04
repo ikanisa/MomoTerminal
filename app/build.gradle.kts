@@ -322,6 +322,7 @@ dependencies {
     implementation(project(":core:os-integration"))
     implementation(project(":core:performance"))
     implementation(project(":core:i18n"))
+    implementation(project(":core:security"))
     
     // Core Android
     implementation(libs.androidx.core.ktx)

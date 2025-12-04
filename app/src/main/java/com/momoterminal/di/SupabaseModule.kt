@@ -16,29 +16,12 @@ import io.github.jan.supabase.postgrest.Postgrest
 import javax.inject.Singleton
 
 /**
- * Hilt module providing Supabase-related dependencies.
+ * Hilt module providing app-specific Supabase services.
+ * Note: SupabaseClient, Auth, and Postgrest are provided by core:network module
  */
 @Module
 @InstallIn(SingletonComponent::class)
 object SupabaseModule {
-    
-    @Provides
-    @Singleton
-    fun provideSupabaseClient(): SupabaseClient {
-        return SupabaseClientConfig.client
-    }
-    
-    @Provides
-    @Singleton
-    fun provideSupabaseAuth(): io.github.jan.supabase.gotrue.Auth {
-        return SupabaseClientConfig.auth
-    }
-
-    @Provides
-    @Singleton
-    fun provideSupabasePostgrest(): io.github.jan.supabase.postgrest.Postgrest {
-        return SupabaseClientConfig.postgrest
-    }
     
     @Provides
     @Singleton

@@ -3,7 +3,8 @@ package com.momoterminal.ai
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import com.google.ai.client.generativeai.type.generationConfig
-import com.momoterminal.sms.SmsParser
+import com.momoterminal.core.database.entity.SmsTransactionType
+import com.momoterminal.sms.MomoSmsParser
 import org.json.JSONObject
 import timber.log.Timber
 import javax.inject.Inject
@@ -14,7 +15,9 @@ import javax.inject.Singleton
  * Provides intelligent parsing of Mobile Money SMS messages with fallback to regex-based parsing.
  */
 @Singleton
-class AiSmsParserService @Inject constructor() {
+class AiSmsParserService @Inject constructor(
+    private val smsParser: MomoSmsParser
+) {
     
     companion object {
         private const val TAG = "AiSmsParserService"
@@ -149,21 +152,21 @@ SMS Body: $body
      * Fallback to regex-based parsing.
      */
     private fun parseWithRegex(sender: String, body: String): AiParsedTransaction? {
-        val result = SmsParser.parseSms(sender, body) ?: return null
+        val result = smsParser.parse(sender, body) ?: return null
         
         return AiParsedTransaction(
-            amountInPesewas = result.amountInPesewas,
+            amountInPesewas = (result.amount * 100).toLong(),
             currency = result.currency,
-            senderPhone = if (result.transactionType == SmsParser.TransactionType.RECEIVED) {
-                result.senderOrRecipient
+            senderPhone = if (result.type == SmsTransactionType.RECEIVED) {
+                result.sender
             } else null,
-            recipientPhone = if (result.transactionType != SmsParser.TransactionType.RECEIVED) {
-                result.senderOrRecipient
+            recipientPhone = if (result.type != SmsTransactionType.RECEIVED) {
+                result.sender
             } else null,
-            transactionId = result.transactionId,
-            transactionType = result.transactionType.name,
-            provider = result.provider,
-            balanceInPesewas = result.balanceInPesewas,
+            transactionId = result.reference,
+            transactionType = result.type.name,
+            provider = "REGEX",
+            balanceInPesewas = result.balance?.let { (it * 100).toLong() },
             rawMessage = result.rawMessage,
             parsedBy = "regex"
         )

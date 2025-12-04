@@ -167,7 +167,8 @@ object DatabaseModule {
     @Singleton
     fun provideSmsTransactionDao(database: MomoDatabase): SmsTransactionDao = database.smsTransactionDao()
 
-    @Provides
-    @Singleton
-    fun provideNfcTagDao(database: MomoDatabase): NfcTagDao = database.nfcTagDao()
+    // Note: NfcTagDao is now provided by core:database module
+    // @Provides
+    // @Singleton
+    // fun provideNfcTagDao(database: MomoDatabase): NfcTagDao = database.nfcTagDao()
 }

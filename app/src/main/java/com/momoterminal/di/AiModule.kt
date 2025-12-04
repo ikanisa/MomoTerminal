@@ -1,6 +1,7 @@
 package com.momoterminal.di
 
 import com.momoterminal.ai.AiSmsParserService
+import com.momoterminal.sms.MomoSmsParser
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,7 +20,9 @@ object AiModule {
      */
     @Provides
     @Singleton
-    fun provideAiSmsParserService(): AiSmsParserService {
-        return AiSmsParserService()
+    fun provideAiSmsParserService(
+        smsParser: MomoSmsParser
+    ): AiSmsParserService {
+        return AiSmsParserService(smsParser)
     }
 }
