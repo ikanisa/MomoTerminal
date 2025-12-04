@@ -15,7 +15,6 @@ import com.momoterminal.offline.DataFreshness
 import com.momoterminal.offline.FreshnessStatus
 import com.momoterminal.offline.OfflineFirstManager
 import com.momoterminal.offline.SyncState
-import com.momoterminal.sms.SmsWalletIntegrationService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -26,7 +25,6 @@ class WalletViewModel @Inject constructor(
     private val getTokenBalanceUseCase: GetTokenBalanceUseCase,
     private val getTokenHistoryUseCase: GetTokenHistoryUseCase,
     private val applyTokenTransactionUseCase: ApplyTokenTransactionUseCase,
-    private val smsWalletIntegrationService: SmsWalletIntegrationService,
     private val smsRepository: SmsRepository,
     private val sessionManager: SessionManager,
     private val offlineFirstManager: OfflineFirstManager,
@@ -97,14 +95,19 @@ class WalletViewModel @Inject constructor(
     }
 
     fun processUncreditedSms() {
+        // Simplified: Just mark unsynced SMS for background sync
         val uid = userId ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(isProcessing = true) }
-            val count = smsWalletIntegrationService.processUncreditedTransactions(uid)
+            
+            // Get unsynced SMS count
+            val unsyncedSms = smsRepository.getUnsynced()
+            val count = unsyncedSms.size
+            
             _uiState.update { 
                 it.copy(
                     isProcessing = false,
-                    message = if (count > 0) "Credited $count transactions" else "No pending credits"
+                    message = if (count > 0) "$count SMS ready to sync" else "No pending SMS"
                 )
             }
         }

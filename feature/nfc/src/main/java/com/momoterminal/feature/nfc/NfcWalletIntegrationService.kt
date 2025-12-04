@@ -3,12 +3,12 @@ package com.momoterminal.feature.nfc
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.momoterminal.data.local.entity.NfcTagEntity
-import com.momoterminal.data.repository.NfcRepository
-import com.momoterminal.data.repository.WalletRepository
-import com.momoterminal.domain.model.ReferenceType
-import com.momoterminal.domain.model.TokenTransactionType
-import com.momoterminal.domain.model.TokenWallet
+import com.momoterminal.core.data.repository.NfcRepository
+import com.momoterminal.core.data.repository.WalletRepository
+import com.momoterminal.core.database.entity.NfcTagEntity
+import com.momoterminal.core.domain.model.ReferenceType
+import com.momoterminal.core.domain.model.TokenTransactionType
+import com.momoterminal.core.domain.model.TokenWallet
 import javax.inject.Inject
 import javax.inject.Singleton
 

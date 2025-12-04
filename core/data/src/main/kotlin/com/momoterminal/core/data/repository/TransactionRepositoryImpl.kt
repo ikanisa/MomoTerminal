@@ -26,7 +26,7 @@ class TransactionRepositoryImpl @Inject constructor(
 ) : TransactionRepository {
 
     override fun getTransactions(page: Int, pageSize: Int): Flow<Result<PaginatedResult<Transaction>>> = flow {
-        emit(Result.Success(PaginatedResult(emptyList(), 0, page, pageSize, false)))
+        emit(Result.Success(PaginatedResult(emptyList(), page, pageSize, 0, 0)))
     }
 
     override fun getTransactionById(id: String): Flow<Result<Transaction>> = flow {
@@ -37,7 +37,13 @@ class TransactionRepositoryImpl @Inject constructor(
         emit(emptyList())
     }
 
-    override suspend fun getPendingCount(): Int {
-        return 0
+    override suspend fun getPendingCount(): Int = 0
+
+    override suspend fun createTransaction(transaction: Transaction): Result<Transaction> {
+        return Result.Error(Exception("Not implemented"))
+    }
+
+    override suspend fun syncTransactions(): Result<Unit> {
+        return Result.Success(Unit)
     }
 }

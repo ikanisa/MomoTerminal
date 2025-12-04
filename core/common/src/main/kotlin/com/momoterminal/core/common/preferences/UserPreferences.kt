@@ -33,6 +33,7 @@ data class UserPreferencesData(
     // Settings
     val biometricEnabled: Boolean = false,
     val smsAutoSyncEnabled: Boolean = true,
+    val nfcTerminalEnabled: Boolean = false,
     val keepScreenOn: Boolean = false,
     val vibrationEnabled: Boolean = true,
     val autoLockTimeout: Int = 5
@@ -59,6 +60,7 @@ class UserPreferences @Inject constructor(
             useMomoCode = prefs[KEY_USE_MOMO_CODE] ?: false,
             biometricEnabled = prefs[KEY_BIOMETRIC_ENABLED] ?: false,
             smsAutoSyncEnabled = prefs[KEY_SMS_AUTO_SYNC_ENABLED] ?: true,
+            nfcTerminalEnabled = prefs[KEY_NFC_TERMINAL_ENABLED] ?: false,
             keepScreenOn = prefs[KEY_KEEP_SCREEN_ON] ?: false,
             vibrationEnabled = prefs[KEY_VIBRATION_ENABLED] ?: true,
             autoLockTimeout = prefs[KEY_AUTO_LOCK_TIMEOUT] ?: DEFAULT_AUTO_LOCK_TIMEOUT
@@ -136,6 +138,15 @@ class UserPreferences @Inject constructor(
         context.dataStore.edit { it[KEY_AUTO_LOCK_TIMEOUT] = timeoutMinutes }
     }
     
+    // NFC Terminal
+    val nfcTerminalEnabledFlow: Flow<Boolean> = context.dataStore.data.map { it[KEY_NFC_TERMINAL_ENABLED] ?: false }
+    
+    suspend fun setNfcTerminalEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[KEY_NFC_TERMINAL_ENABLED] = enabled }
+    }
+    
+    suspend fun getNfcTerminalEnabled() = nfcTerminalEnabledFlow.first()
+    
     // Device UUID
     suspend fun saveDeviceUuid(uuid: String) {
         context.dataStore.edit { it[KEY_DEVICE_UUID] = uuid }
@@ -167,6 +178,7 @@ class UserPreferences @Inject constructor(
         private val KEY_KEEP_SCREEN_ON = booleanPreferencesKey("keep_screen_on")
         private val KEY_VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
         private val KEY_AUTO_LOCK_TIMEOUT = intPreferencesKey("auto_lock_timeout_minutes")
+        private val KEY_NFC_TERMINAL_ENABLED = booleanPreferencesKey("nfc_terminal_enabled")
         private val KEY_DEVICE_UUID = stringPreferencesKey("device_uuid")
         private val KEY_LANGUAGE = stringPreferencesKey("app_language")
         

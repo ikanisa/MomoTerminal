@@ -4,52 +4,31 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
-import android.util.Log
-import com.momoterminal.ai.AiSmsParserService
-import com.momoterminal.core.common.auth.TokenManager
-import com.momoterminal.core.common.config.AppConfig
-import com.momoterminal.core.database.dao.TransactionDao
-import com.momoterminal.core.database.entity.TransactionEntity
-import com.momoterminal.feature.sms.SmsWalletIntegrationService
-import com.momoterminal.sync.SyncManager
-import com.momoterminal.webhook.WebhookDispatcher
-import com.momoterminal.webhook.WebhookWorker
+import com.momoterminal.sms.MomoSmsParser
+import com.momoterminal.sms.VendorSmsProcessor
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * BroadcastReceiver that listens for incoming SMS messages
- * and saves Mobile Money related messages to the local database.
- * Integrates with wallet system for automatic crediting.
+ * SMS receiver for Mobile Money messages.
+ * 1. Catches incoming SMS
+ * 2. Uses AI (OpenAI/Gemini) to parse transaction data
+ * 3. Matches to registered vendor by MOMO number
+ * 4. Saves to Supabase vendor_sms_transactions table
  */
 @AndroidEntryPoint
 class SmsReceiver : BroadcastReceiver() {
     
-    @Inject lateinit var webhookDispatcher: WebhookDispatcher
-    @Inject lateinit var transactionDao: TransactionDao
-    @Inject lateinit var syncManager: SyncManager
-    @Inject lateinit var aiSmsParserService: AiSmsParserService
-    @Inject lateinit var smsWalletService: SmsWalletIntegrationService
-    @Inject lateinit var tokenManager: TokenManager
+    @Inject lateinit var smsParser: MomoSmsParser
+    @Inject lateinit var vendorProcessor: VendorSmsProcessor
     
-    companion object {
-        private const val TAG = "SmsReceiver"
-        
-        private val MOMO_KEYWORDS = listOf(
-            "MOMO", "MobileMoney", "Mobile Money", "MTN", "Airtel", "Tigo", "Vodacom", "Halotel", "Lumicash", "EcoCash",
-            "RWF", "CDF", "TZS", "BIF", "ZMW", "GHS", "USD",
-            "received", "sent", "payment", "confirmed", "transferred"
-        )
-        
-        const val BROADCAST_PAYMENT_RECEIVED = "com.momoterminal.action.PAYMENT_RECEIVED"
-        const val EXTRA_AMOUNT = "extra_amount"
-        const val EXTRA_SENDER = "extra_sender"
-        const val EXTRA_TRANSACTION_ID = "extra_transaction_id"
-        const val EXTRA_TIMESTAMP = "extra_timestamp"
-    }
+    // TODO: Get from secure config/environment variables
+    private val AI_API_KEY = System.getenv("OPENAI_API_KEY") ?: ""
+    private val USE_OPENAI = true // Set to false to use Gemini
     
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
@@ -58,51 +37,48 @@ class SmsReceiver : BroadcastReceiver() {
             val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
             
             for (smsMessage in messages) {
-                val sender = smsMessage.displayOriginatingAddress ?: "Unknown"
-                val body = smsMessage.messageBody ?: ""
+                val sender = smsMessage.displayOriginatingAddress ?: continue
+                val body = smsMessage.messageBody ?: continue
                 val timestamp = smsMessage.timestampMillis
                 
-                Log.d(TAG, "SMS received from: $sender")
-                PaymentState.appendLog("SMS from $sender: ${body.take(50)}...")
+                Timber.d("SMS received from: $sender")
                 
-                val isMomoMessage = MOMO_KEYWORDS.any { keyword ->
-                    sender.contains(keyword, ignoreCase = true) || body.contains(keyword, ignoreCase = true)
-                }
-                
-                if (isMomoMessage) {
-                    processAndSave(context, sender, body, timestamp)
-                    syncManager.enqueueSyncNow()
-                    dispatchToWebhooks(context, sender, body)
-                    PaymentState.appendLog("SMS saved and sync triggered")
+                // Check if it's a MoMo transaction
+                if (smsParser.isMomoMessage(sender, body)) {
+                    processMomoSms(sender, body, timestamp)
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error processing SMS", e)
-            PaymentState.appendLog("SMS Error: ${e.message}")
+            Timber.e(e, "Error processing SMS")
         }
     }
     
-    private fun dispatchToWebhooks(context: Context, sender: String, body: String) {
+    private fun processMomoSms(sender: String, body: String, timestamp: Long) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val phoneNumber = AppConfig(context).getMerchantPhone().takeIf { it.isNotBlank() } ?: ""
-                webhookDispatcher.dispatchSms(phoneNumber, sender, body)
-                WebhookWorker.enqueueNow(context)
+                Timber.i("Processing MoMo SMS from $sender")
+                
+                // Process with AI and save to Supabase
+                val result = vendorProcessor.processSms(
+                    rawSms = body,
+                    senderAddress = sender,
+                    receivedAt = timestamp,
+                    useOpenAI = USE_OPENAI,
+                    apiKey = AI_API_KEY
+                )
+                
+                result.onSuccess { transactionId ->
+                    Timber.i("✅ SMS processed successfully: $transactionId")
+                }.onFailure { error ->
+                    Timber.e(error, "❌ Failed to process SMS")
+                }
+                
             } catch (e: Exception) {
-                Log.e(TAG, "Error dispatching to webhooks", e)
+                Timber.e(e, "Failed to process MoMo SMS")
             }
         }
     }
-    
-    private fun processAndSave(context: Context, sender: String, body: String, timestamp: Long) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val appConfig = AppConfig(context)
-                val userId = tokenManager.getUserId()
-                
-                // Process through wallet integration (parses + credits wallet)
-                if (userId != null) {
-                    val result = smsWalletService.processIncomingSms(userId, sender, body)
+}
                     Log.d(TAG, "SMS wallet processing result: $result")
                     
                     when (result) {
@@ -113,23 +89,16 @@ class SmsReceiver : BroadcastReceiver() {
                     }
                 }
                 
-                // Also save to legacy transactions table for backward compatibility
-                val parsedData = try {
-                    aiSmsParserService.parseSmartly(sender, body)
-                } catch (e: Exception) {
-                    Log.w(TAG, "AI parsing failed", e)
-                    null
-                }
-                
+                // Save to transactions table
                 val transaction = TransactionEntity(
                     sender = sender,
                     body = body,
                     timestamp = timestamp,
                     status = "PENDING",
-                    amount = parsedData?.getDisplayAmount(),
-                    currency = parsedData?.currency ?: "RWF",
-                    transactionId = parsedData?.transactionId,
-                    merchantCode = appConfig.getMerchantPhone()
+                    amount = null, // TODO: Parse from SMS
+                    currency = "RWF",
+                    transactionId = null,
+                    merchantCode = ""
                 )
                 transactionDao.insert(transaction)
                 

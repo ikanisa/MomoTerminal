@@ -14,7 +14,7 @@ import com.momoterminal.core.common.model.CountryConfig
 import com.momoterminal.core.common.preferences.UserPreferences
 import com.momoterminal.data.repository.CountryRepository
 import com.momoterminal.core.security.BiometricHelper
-import com.momoterminal.util.LocaleManager
+import com.momoterminal.core.common.LocaleManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,7 +34,8 @@ class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val biometricHelper: BiometricHelper,
     private val countryRepository: CountryRepository,
-    private val localeManager: LocaleManager
+    private val localeManager: LocaleManager,
+    private val supabaseAuthService: com.momoterminal.supabase.SupabaseAuthService
 ) : ViewModel() {
 
     data class PermissionState(
@@ -55,6 +57,7 @@ class SettingsViewModel @Inject constructor(
         val profileCountryName: String = "Rwanda",
         val momoCountryCode: String = "RW",
         val momoCountryName: String = "Rwanda",
+        val momoCountryFlag: String = "🇷🇼",
         val momoCurrency: String = "RWF",
         val momoPhonePlaceholder: String = "78XXXXXXX",
         val momoProviderName: String = "MTN MoMo",
@@ -67,6 +70,7 @@ class SettingsViewModel @Inject constructor(
         val isBiometricEnabled: Boolean = false,
         val isBiometricAvailable: Boolean = false,
         val smsAutoSyncEnabled: Boolean = true,
+        val isNfcTerminalEnabled: Boolean = false,
         val appVersion: String = "1.0.0",
         val isConfigured: Boolean = false,
         val showSaveSuccess: Boolean = false,
@@ -139,6 +143,9 @@ class SettingsViewModel @Inject constructor(
                 val profileCountry = countryRepository.getByCode(prefs.countryCode) ?: CountryConfig.DEFAULT
                 val momoCountry = countryRepository.getByCode(prefs.momoCountryCode.ifEmpty { prefs.countryCode }) ?: profileCountry
 
+                // Smart default: use WhatsApp number as MoMo number if not set
+                val defaultMomoPhone = if (prefs.merchantPhone.isBlank()) prefs.phoneNumber else prefs.merchantPhone
+
                 _uiState.update {
                     it.copy(
                         userName = prefs.merchantName,
@@ -148,9 +155,10 @@ class SettingsViewModel @Inject constructor(
                         profileCountryName = profileCountry.name,
                         momoCountryCode = prefs.momoCountryCode.ifEmpty { prefs.countryCode },
                         momoCountryName = momoCountry.name,
+                        momoCountryFlag = momoCountry.flagEmoji,
                         momoCurrency = momoCountry.currency,
-                        momoIdentifier = prefs.merchantPhone,
-                        merchantPhone = prefs.merchantPhone,
+                        momoIdentifier = defaultMomoPhone,
+                        merchantPhone = defaultMomoPhone,
                         useMomoCode = prefs.useMomoCode,
                         momoPhonePlaceholder = "X".repeat(momoCountry.phoneLength),
                         momoProviderName = momoCountry.providerName,
@@ -166,6 +174,12 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             userPreferences.smsAutoSyncEnabledFlow.collect { enabled ->
                 _uiState.update { it.copy(smsAutoSyncEnabled = enabled) }
+            }
+        }
+        
+        viewModelScope.launch {
+            userPreferences.nfcTerminalEnabledFlow.collect { enabled ->
+                _uiState.update { it.copy(isNfcTerminalEnabled = enabled) }
             }
         }
     }
@@ -208,6 +222,7 @@ class SettingsViewModel @Inject constructor(
             it.copy(
                 momoCountryCode = countryCode,
                 momoCountryName = country.name,
+                momoCountryFlag = country.flagEmoji,
                 momoCurrency = country.currency,
                 momoPhonePlaceholder = "X".repeat(country.phoneLength),
                 momoProviderName = country.providerName,
@@ -263,16 +278,43 @@ class SettingsViewModel @Inject constructor(
             _uiState.update { it.copy(smsAutoSyncEnabled = enabled) }
         }
     }
+    
+    fun toggleNfcTerminal() {
+        viewModelScope.launch {
+            val newValue = !_uiState.value.isNfcTerminalEnabled
+            userPreferences.setNfcTerminalEnabled(newValue)
+            _uiState.update { it.copy(isNfcTerminalEnabled = newValue) }
+        }
+    }
 
     fun saveSettings() {
         viewModelScope.launch {
             val state = _uiState.value
+            
+            // Save to local DataStore first
             userPreferences.updateMomoConfig(
                 momoCountryCode = state.momoCountryCode,
                 momoIdentifier = state.momoIdentifier,
                 useMomoCode = state.useMomoCode
             )
             userPreferences.updateBiometricEnabled(state.isBiometricEnabled)
+
+            // Sync to Supabase database
+            try {
+                supabaseAuthService.updateUserProfile(
+                    countryCode = state.profileCountryCode,
+                    momoCountryCode = state.momoCountryCode,
+                    momoPhone = state.momoIdentifier,
+                    useMomoCode = state.useMomoCode,
+                    merchantName = state.userName,
+                    biometricEnabled = state.isBiometricEnabled,
+                    nfcTerminalEnabled = state.isNfcTerminalEnabled,
+                    language = state.currentLanguage
+                )
+                Timber.d("Settings synced to Supabase successfully")
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to sync settings to Supabase")
+            }
 
             _uiState.update { it.copy(showSaveSuccess = true, isConfigured = state.momoIdentifier.isNotBlank()) }
             kotlinx.coroutines.delay(100)

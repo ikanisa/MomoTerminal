@@ -37,6 +37,9 @@ dependencies {
     // Note: feature:auth dependency would create circular dependency
     // AuthRepository should be in core:domain instead
     
+    // Needed for KSP to resolve BiometricHelper
+    implementation(libs.biometric)
+    
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     

@@ -1,10 +1,10 @@
 package com.momoterminal.feature.payment.viewmodel
 
 import androidx.lifecycle.viewModelScope
-import com.momoterminal.core.common.UiEffect
-import com.momoterminal.core.common.UiEvent
-import com.momoterminal.core.common.UiState
 import com.momoterminal.core.ui.BaseViewModel
+import com.momoterminal.core.ui.UiEffect
+import com.momoterminal.core.ui.UiEvent
+import com.momoterminal.core.ui.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject

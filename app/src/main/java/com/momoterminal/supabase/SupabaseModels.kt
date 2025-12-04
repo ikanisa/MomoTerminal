@@ -73,3 +73,28 @@ data class CompleteProfileResponse(
     val error: String? = null,
     val code: String? = null
 )
+
+/**
+ * Update user profile request.
+ */
+data class UpdateProfileRequest(
+    val userId: String,
+    val countryCode: String? = null,
+    val momoCountryCode: String? = null,
+    val momoPhone: String? = null,
+    val useMomoCode: Boolean? = null,
+    val merchantName: String? = null,
+    val biometricEnabled: Boolean? = null,
+    val nfcTerminalEnabled: Boolean? = null,
+    val language: String? = null
+)
+
+/**
+ * Update user profile response.
+ */
+data class UpdateProfileResponse(
+    val success: Boolean,
+    val message: String? = null,
+    val error: String? = null,
+    val code: String? = null
+)

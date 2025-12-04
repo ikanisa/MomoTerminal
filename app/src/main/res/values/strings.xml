@@ -68,6 +68,8 @@
     <!-- Country Selection -->
     <string name="select_country">Select Country</string>
     <string name="select_momo_country">Select Mobile Money Country</string>
+    <string name="showing_primary_markets">Showing primary markets</string>
+    <string name="show_all_countries">Show All Countries</string>
     
     <!-- Webhook Management -->
     <string name="webhooks_title">Webhooks</string>

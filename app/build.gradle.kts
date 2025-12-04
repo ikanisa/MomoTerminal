@@ -322,15 +322,8 @@ dependencies {
     implementation(project(":core:os-integration"))
     implementation(project(":core:performance"))
     implementation(project(":core:i18n"))
-    
-    // Feature modules
-    implementation(project(":feature:payment"))
-    implementation(project(":feature:transactions"))
-    implementation(project(":feature:auth"))
-    implementation(project(":feature:settings"))
-    implementation(project(":feature:nfc"))
-    implementation(project(":feature:sms"))
-    implementation(project(":feature:wallet"))
+    implementation(project(":core:security"))
+    implementation(project(":feature:payment")) // For PaymentState in NfcHceService
     
     // Core Android
     implementation(libs.androidx.core.ktx)
@@ -490,6 +483,9 @@ dependencies {
     // Coil Image Loading
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
+    
+    // ZXing QR Code
+    implementation(libs.zxing.core)
 
     // Testing - Unit Tests
     testImplementation(libs.junit)

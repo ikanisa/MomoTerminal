@@ -13,7 +13,7 @@ import com.momoterminal.core.domain.repository.AuthRepository
 import com.momoterminal.core.common.model.CountryConfig
 import com.momoterminal.core.common.preferences.UserPreferences
 import com.momoterminal.core.data.repository.CountryRepository
-import com.momoterminal.security.BiometricHelper
+import com.momoterminal.core.security.BiometricHelper
 import com.momoterminal.core.common.LocaleManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext

@@ -34,6 +34,7 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:data"))
     implementation(project(":feature:nfc"))
+    implementation(project(":core:database"))
     
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
@@ -47,4 +48,5 @@ dependencies {
     implementation(libs.compose.runtime)
     
     implementation(libs.coroutines.android)
+    implementation(libs.gson)
 }
