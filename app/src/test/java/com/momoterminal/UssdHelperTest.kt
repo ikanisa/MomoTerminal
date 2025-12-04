@@ -1,6 +1,6 @@
 package com.momoterminal
 
-import com.momoterminal.nfc.NfcPaymentData
+import com.momoterminal.feature.nfc.NfcPaymentData
 import com.momoterminal.ussd.UssdHelper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

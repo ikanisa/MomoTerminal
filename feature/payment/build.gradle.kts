@@ -33,6 +33,7 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:ui"))
     implementation(project(":core:data"))
+    implementation(project(":feature:nfc"))
     
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

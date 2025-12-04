@@ -3,7 +3,7 @@ package com.momoterminal.feature.payment.ussd
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import com.momoterminal.feature.payment.nfc.NfcPaymentData
+import com.momoterminal.feature.nfc.NfcPaymentData
 
 /**
  * Helper class for generating and launching USSD codes.

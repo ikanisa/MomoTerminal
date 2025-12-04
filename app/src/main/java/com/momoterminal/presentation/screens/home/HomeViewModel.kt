@@ -6,9 +6,9 @@ import com.momoterminal.core.database.dao.TransactionDao
 import com.momoterminal.core.common.preferences.UserPreferences
 import com.momoterminal.data.repository.CountryRepository
 import com.momoterminal.data.repository.WalletRepository
-import com.momoterminal.nfc.NfcManager
-import com.momoterminal.nfc.NfcPaymentData
-import com.momoterminal.nfc.NfcState
+import com.momoterminal.feature.nfc.NfcManager
+import com.momoterminal.feature.nfc.NfcPaymentData
+import com.momoterminal.feature.nfc.NfcState
 import com.momoterminal.offline.OfflineFirstManager
 import com.momoterminal.offline.SyncState
 import dagger.hilt.android.lifecycle.HiltViewModel

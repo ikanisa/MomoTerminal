@@ -3,10 +3,10 @@ package com.momoterminal.presentation.screens.nfc
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.momoterminal.auth.SessionManager
-import com.momoterminal.nfc.NfcManager
-import com.momoterminal.nfc.NfcPaymentData
-import com.momoterminal.nfc.NfcState
-import com.momoterminal.nfc.NfcWalletIntegrationService
+import com.momoterminal.feature.nfc.NfcManager
+import com.momoterminal.feature.nfc.NfcPaymentData
+import com.momoterminal.feature.nfc.NfcState
+import com.momoterminal.feature.payment.nfc.NfcWalletIntegrationService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
