@@ -125,6 +125,7 @@ fun SettingsScreen(
             // Country Selector
             MomoCountryCard(
                 countryName = uiState.momoCountryName,
+                countryFlag = uiState.momoCountryFlag,
                 currency = uiState.momoCurrency,
                 providerName = uiState.momoProviderName,
                 onClick = { showMomoCountryPicker = true }
@@ -572,6 +573,7 @@ private fun ProfileInfoCard(
 @Composable
 private fun MomoCountryCard(
     countryName: String,
+    countryFlag: String,
     currency: String,
     providerName: String,
     onClick: () -> Unit
@@ -590,14 +592,21 @@ private fun MomoCountryCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.AccountBalance,
-                contentDescription = null,
-                tint = MomoYellow,
-                modifier = Modifier.size(32.dp)
-            )
-            
-            Spacer(modifier = Modifier.width(16.dp))
+            // Flag emoji
+            if (countryFlag.isNotBlank()) {
+                Text(
+                    text = countryFlag,
+                    style = MaterialTheme.typography.displaySmall,
+                    modifier = Modifier.padding(end = 12.dp)
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.AccountBalance,
+                    contentDescription = null,
+                    tint = MomoYellow,
+                    modifier = Modifier.size(32.dp).padding(end = 12.dp)
+                )
+            }
             
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -679,6 +688,14 @@ private fun MomoCountryPickerDialog(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
+                                    // Flag emoji
+                                    if (country.flagEmoji.isNotBlank()) {
+                                        Text(
+                                            text = country.flagEmoji,
+                                            style = MaterialTheme.typography.titleLarge,
+                                            modifier = Modifier.padding(end = 8.dp)
+                                        )
+                                    }
                                     Text(
                                         text = country.name,
                                         style = MaterialTheme.typography.bodyLarge,

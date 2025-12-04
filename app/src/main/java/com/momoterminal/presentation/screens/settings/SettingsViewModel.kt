@@ -57,6 +57,7 @@ class SettingsViewModel @Inject constructor(
         val profileCountryName: String = "Rwanda",
         val momoCountryCode: String = "RW",
         val momoCountryName: String = "Rwanda",
+        val momoCountryFlag: String = "🇷🇼",
         val momoCurrency: String = "RWF",
         val momoPhonePlaceholder: String = "78XXXXXXX",
         val momoProviderName: String = "MTN MoMo",
@@ -154,6 +155,7 @@ class SettingsViewModel @Inject constructor(
                         profileCountryName = profileCountry.name,
                         momoCountryCode = prefs.momoCountryCode.ifEmpty { prefs.countryCode },
                         momoCountryName = momoCountry.name,
+                        momoCountryFlag = momoCountry.flagEmoji,
                         momoCurrency = momoCountry.currency,
                         momoIdentifier = defaultMomoPhone,
                         merchantPhone = defaultMomoPhone,
@@ -220,6 +222,7 @@ class SettingsViewModel @Inject constructor(
             it.copy(
                 momoCountryCode = countryCode,
                 momoCountryName = country.name,
+                momoCountryFlag = country.flagEmoji,
                 momoCurrency = country.currency,
                 momoPhonePlaceholder = "X".repeat(country.phoneLength),
                 momoProviderName = country.providerName,

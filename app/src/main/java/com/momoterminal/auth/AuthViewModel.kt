@@ -23,7 +23,8 @@ class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val biometricHelper: BiometricHelper,
     private val sessionManager: SessionManager,
-    private val phoneNumberValidator: PhoneNumberValidator
+    private val phoneNumberValidator: PhoneNumberValidator,
+    private val userPreferences: com.momoterminal.core.common.preferences.UserPreferences
 ) : ViewModel() {
 
     /**
@@ -238,6 +239,16 @@ class AuthViewModel @Inject constructor(
                         is AuthRepository.AuthResult.Success -> {
                             resendCountdownJob?.cancel()
                             stopCountdownTimers()
+                            
+                            // Save phone number and country to UserPreferences
+                            viewModelScope.launch {
+                                userPreferences.updateProfile(
+                                    phoneNumber = phoneToUse,
+                                    countryCode = state.countryCode.removePrefix("+"),
+                                    merchantName = result.data.user.merchantName ?: ""
+                                )
+                            }
+                            
                             _uiState.value = _uiState.value.copy(
                                 isLoading = false,
                                 isAuthenticated = true,
