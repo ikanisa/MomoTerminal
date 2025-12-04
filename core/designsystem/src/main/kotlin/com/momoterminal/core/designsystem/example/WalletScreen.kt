@@ -38,7 +38,9 @@ import com.momoterminal.core.designsystem.component.TokenType
 import com.momoterminal.core.designsystem.component.TransactionDirection
 import com.momoterminal.core.designsystem.component.TransactionRow
 import com.momoterminal.core.designsystem.component.TransactionSource
+import com.momoterminal.core.designsystem.theme.MomoTerminalTheme
 import com.momoterminal.core.designsystem.theme.MomoTheme
+
 
 
 data class TokenBalance(val type: TokenType, val label: String, val value: String)
@@ -179,7 +181,7 @@ private val sampleTransactions = listOf(
 @androidx.compose.ui.tooling.preview.Preview(showBackground = true)
 @Composable
 private fun WalletScreenLightPreview() {
-    MomoTheme(darkTheme = false) {
+    MomoTerminalTheme(darkTheme = false) {
         WalletScreen()
     }
 }
@@ -187,7 +189,7 @@ private fun WalletScreenLightPreview() {
 @androidx.compose.ui.tooling.preview.Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun WalletScreenDarkPreview() {
-    MomoTheme(darkTheme = true) {
+    MomoTerminalTheme(darkTheme = true) {
         WalletScreen()
     }
 }
