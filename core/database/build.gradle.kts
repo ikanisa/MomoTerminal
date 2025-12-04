@@ -38,4 +38,7 @@ dependencies {
     
     implementation(libs.datastore.preferences)
     implementation(libs.coroutines.android)
+    implementation(libs.timber)
+    implementation(libs.security.crypto)
+    implementation("net.zetetic:android-database-sqlcipher:4.5.4")
 }

@@ -9,7 +9,7 @@ import android.os.PowerManager
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.momoterminal.feature.auth.AuthRepository
+import com.momoterminal.core.domain.repository.AuthRepository
 import com.momoterminal.core.common.model.CountryConfig
 import com.momoterminal.data.preferences.UserPreferences
 import com.momoterminal.core.data.repository.CountryRepository

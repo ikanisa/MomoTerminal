@@ -1,6 +1,6 @@
 package com.momoterminal.core.network.supabase
 
-import com.momoterminal.BuildConfig
+import com.momoterminal.core.network.BuildConfig
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.gotrue.Auth

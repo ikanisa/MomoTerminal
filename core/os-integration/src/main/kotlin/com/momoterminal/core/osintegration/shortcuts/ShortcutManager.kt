@@ -73,24 +73,7 @@ interface ShortcutProvider {
     suspend fun getShortcuts(): List<AppShortcut>
 }
 
-// Example: Recent items shortcut provider
-class RecentItemsShortcutProvider @Inject constructor(
-    private val repository: RecentItemsRepository
-) : ShortcutProvider {
-    
-    override suspend fun getShortcuts(): List<AppShortcut> {
-        return repository.getRecentItems(limit = 3).mapIndexed { index, item ->
-            AppShortcut(
-                id = "recent_${item.id}",
-                shortLabel = item.title,
-                longLabel = "Open ${item.title}",
-                iconResId = android.R.drawable.ic_menu_recent_history,
-                deepLink = "app://feature/item/${item.id}",
-                rank = index
-            )
-        }
-    }
-}
+// Example: Recent items shortcut provider removed
 
 // Shortcut update worker
 class ShortcutUpdateWorker @Inject constructor(

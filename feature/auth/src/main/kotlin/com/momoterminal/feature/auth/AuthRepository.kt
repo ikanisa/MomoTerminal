@@ -14,6 +14,10 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import com.momoterminal.core.domain.repository.AuthRepository as AuthRepositoryInterface
+import com.momoterminal.core.domain.model.User as DomainUser
+import com.momoterminal.core.common.Result
+
 /**
  * Repository handling all authentication-related operations.
  * Now uses Supabase for WhatsApp OTP authentication.
@@ -24,7 +28,7 @@ class AuthRepository @Inject constructor(
     private val supabaseAuthService: SupabaseAuthService,
     private val tokenManager: TokenManager,
     private val sessionManager: SessionManager
-) {
+) : AuthRepositoryInterface {
     /**
      * Result wrapper for authentication operations.
      */
@@ -35,10 +39,107 @@ class AuthRepository @Inject constructor(
     }
 
     /**
+     * Get current user as a Flow.
+     */
+    override fun getCurrentUser(): Flow<DomainUser?> = flow {
+        val userId = tokenManager.getUserId()
+        val phoneNumber = tokenManager.getPhoneNumber()
+        
+        if (userId != null && phoneNumber != null) {
+            emit(
+                DomainUser(
+                    id = userId,
+                    phoneNumber = phoneNumber,
+                    merchantName = "", // Will be fetched from profile
+                    isVerified = true
+                )
+            )
+        } else {
+            emit(null)
+        }
+    }
+
+    /**
+     * Send OTP to phone number.
+     */
+    override suspend fun sendOtp(phone: String): Result<Unit> {
+        return try {
+            when (val result = supabaseAuthService.sendWhatsAppOtp(phone)) {
+                is SupabaseAuthResult.Success -> Result.Success(Unit)
+                is SupabaseAuthResult.Error -> Result.Error(Exception(result.message))
+                else -> Result.Error(Exception("Unexpected error sending OTP"))
+            }
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    /**
+     * Verify OTP code.
+     */
+    override suspend fun verifyOtp(phone: String, code: String): Result<DomainUser> {
+        return try {
+            when (val result = supabaseAuthService.verifyOtp(phone, code)) {
+                is SupabaseAuthResult.Success -> {
+                    val sessionData = result.data
+                    
+                    tokenManager.saveTokens(
+                        accessToken = sessionData.accessToken,
+                        refreshToken = sessionData.refreshToken,
+                        expiresInSeconds = sessionData.expiresIn
+                    )
+                    
+                    tokenManager.saveUserInfo(
+                        userId = sessionData.user.id,
+                        phoneNumber = sessionData.user.phone ?: phone
+                    )
+                    
+                    sessionManager.startSession()
+                    
+                    Result.Success(
+                        DomainUser(
+                            id = sessionData.user.id,
+                            phoneNumber = sessionData.user.phone ?: phone,
+                            merchantName = "",
+                            isVerified = true
+                        )
+                    )
+                }
+                is SupabaseAuthResult.Error -> Result.Error(Exception(result.message))
+                else -> Result.Error(Exception("Unexpected error verifying OTP"))
+            }
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    /**
+     * Sign out.
+     */
+    override suspend fun signOut(): Result<Unit> {
+        return try {
+            logout()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
+    /**
+     * Check if authenticated.
+     */
+    override fun isAuthenticated(): Flow<Boolean> = flow {
+        emit(tokenManager.hasValidToken())
+    }
+
+    // ... existing methods ...
+
+    /**
      * Login with phone number using WhatsApp OTP.
      * For new flow: First call requestOtp(), then call this with the OTP code.
      */
     fun login(phoneNumber: String, otpCode: String): Flow<AuthResult<AuthResponse>> = flow {
+        // ... implementation ...
         emit(AuthResult.Loading)
         
         try {
@@ -182,7 +283,7 @@ class AuthRepository @Inject constructor(
      * Verify OTP code using Supabase Edge Functions.
      * Verify OTP code using Supabase.
      */
-    fun verifyOtp(phoneNumber: String, otpCode: String): Flow<AuthResult<OtpResponse>> = flow {
+    fun verifyOtpLegacy(phoneNumber: String, otpCode: String): Flow<AuthResult<OtpResponse>> = flow {
         emit(AuthResult.Loading)
         
         try {
@@ -267,7 +368,7 @@ class AuthRepository @Inject constructor(
     /**
      * Refresh the access token using refresh token.
      */
-    suspend fun refreshToken(): Boolean {
+    override suspend fun refreshToken(): Boolean {
         val refreshToken = tokenManager.getRefreshToken() ?: return false
         
         return try {
@@ -297,7 +398,7 @@ class AuthRepository @Inject constructor(
     /**
      * Logout the user and clear all tokens.
      */
-    fun logout() {
+    override fun logout() {
         tokenManager.clearTokens()
         sessionManager.endSession()
         Timber.d("User logged out")
@@ -306,7 +407,7 @@ class AuthRepository @Inject constructor(
     /**
      * Check if user is currently authenticated.
      */
-    fun isAuthenticated(): Boolean {
+    fun isAuthenticatedLegacy(): Boolean {
         return tokenManager.hasValidToken()
     }
 

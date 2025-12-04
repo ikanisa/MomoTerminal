@@ -21,6 +21,15 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    
+    buildFeatures {
+        buildConfig = true
+    }
+    
+    defaultConfig {
+        buildConfigField("String", "SUPABASE_URL", "\"https://your-project.supabase.co\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"your-anon-key\"")
+    }
 }
 
 dependencies {

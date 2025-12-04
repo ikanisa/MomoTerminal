@@ -10,4 +10,6 @@ interface AuthRepository {
     suspend fun verifyOtp(phone: String, code: String): Result<User>
     suspend fun signOut(): Result<Unit>
     fun isAuthenticated(): Flow<Boolean>
+    suspend fun refreshToken(): Boolean
+    fun logout()
 }
