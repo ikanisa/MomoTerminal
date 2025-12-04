@@ -157,11 +157,13 @@ fun HomeScreen(
                         nfcState = nfcState,
                         amount = uiState.amount,
                         currency = uiState.currency,
+                        paymentMethod = uiState.selectedPaymentMethod ?: HomeViewModel.PaymentMethod.NFC,
                         onCancel = { viewModel.cancelPayment() }
                     )
                 } else {
                     PaymentInputContent(
                         uiState = uiState,
+                        viewModel = viewModel,
                         onDigitClick = viewModel::onDigitClick,
                         onBackspaceClick = viewModel::onBackspaceClick,
                         onClearClick = viewModel::onClearClick,
@@ -182,6 +184,7 @@ fun HomeScreen(
 @Composable
 private fun PaymentInputContent(
     uiState: HomeViewModel.HomeUiState,
+    viewModel: HomeViewModel,
     onDigitClick: (String) -> Unit,
     onBackspaceClick: () -> Unit,
     onClearClick: () -> Unit,
@@ -284,7 +287,7 @@ private fun PaymentInputContent(
                     // NFC Button
                     MomoButton(
                         text = if (isNfcActive) "NFC ACTIVE" else "NFC",
-                        onClick = onActivate,
+                        onClick = { viewModel.activatePaymentWithMethod(HomeViewModel.PaymentMethod.NFC) },
                         enabled = isValid && !isNfcActive,
                         modifier = Modifier
                             .weight(1f)
@@ -295,7 +298,7 @@ private fun PaymentInputContent(
                     // QR Code Button
                     MomoButton(
                         text = "QR CODE",
-                        onClick = onActivate,
+                        onClick = { viewModel.activatePaymentWithMethod(HomeViewModel.PaymentMethod.QR_CODE) },
                         enabled = isValid && !isNfcActive,
                         modifier = Modifier
                             .weight(1f)
@@ -478,6 +481,7 @@ private fun NfcActiveContent(
     nfcState: NfcState,
     amount: String,
     currency: String,
+    paymentMethod: HomeViewModel.PaymentMethod,
     onCancel: () -> Unit
 ) {
     val isSuccess = nfcState is NfcState.Success
@@ -521,32 +525,53 @@ private fun NfcActiveContent(
 
             Spacer(modifier = Modifier.height(32.dp))
             
-            // QR Code Display
+            // Show only selected payment method
             if (!isSuccess && nfcState.isWorking()) {
-                QrCodeDisplay(
-                    data = ussdUri,
-                    size = 512,
-                    title = "Scan to Pay",
-                    subtitle = "Payer: Scan this QR code with your camera",
-                    modifier = Modifier.fillMaxWidth(0.7f)
+                when (paymentMethod) {
+                    HomeViewModel.PaymentMethod.QR_CODE -> {
+                        // QR Code Only
+                        QrCodeDisplay(
+                            data = ussdUri,
+                            size = 512,
+                            title = "Scan to Pay",
+                            subtitle = "Payer: Scan this QR code with your camera",
+                            modifier = Modifier.fillMaxWidth(0.8f)
+                        )
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        Text(
+                            text = "📱 Point camera at QR code",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    HomeViewModel.PaymentMethod.NFC -> {
+                        // NFC Only
+                        NfcPulseAnimation(
+                            isActive = true,
+                            isSuccess = false,
+                            message = "Tap Android phone to NFC area"
+                        )
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        Text(
+                            text = "📡 Hold phone near device",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            } else if (isSuccess) {
+                NfcPulseAnimation(
+                    isActive = false,
+                    isSuccess = true,
+                    message = message
                 )
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                Text(
-                    text = "OR",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
             }
-
-            NfcPulseAnimation(
-                isActive = nfcState.isWorking(),
-                isSuccess = isSuccess,
-                message = if (isSuccess) message else "Tap Android phone to NFC area"
-            )
 
             Spacer(modifier = Modifier.weight(1f))
 
