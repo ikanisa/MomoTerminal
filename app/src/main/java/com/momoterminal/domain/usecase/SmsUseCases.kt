@@ -1,6 +1,6 @@
 package com.momoterminal.domain.usecase
 
-import com.momoterminal.data.local.entity.SmsTransactionEntity
+import com.momoterminal.core.database.entity.SmsTransactionEntity
 import com.momoterminal.data.repository.SmsRepository
 import com.momoterminal.sms.SmsWalletIntegrationService
 import kotlinx.coroutines.flow.Flow

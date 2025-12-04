@@ -1,6 +1,6 @@
 package com.momoterminal.feature.auth
 
-import com.momoterminal.security.SecureStorage
+import com.momoterminal.core.security.SecureStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -1,6 +1,6 @@
 package com.momoterminal.core.data.repository
 
-import com.momoterminal.data.model.CountryConfig
+import com.momoterminal.core.common.model.CountryConfig
 import kotlinx.coroutines.flow.Flow
 
 /**

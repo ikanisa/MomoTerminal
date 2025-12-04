@@ -1,13 +1,13 @@
 package com.momoterminal.data.repository
 
 import com.google.common.truth.Truth.assertThat
-import com.momoterminal.data.local.dao.TransactionDao
-import com.momoterminal.data.local.entity.TransactionEntity
+import com.momoterminal.core.database.dao.TransactionDao
+import com.momoterminal.core.database.entity.TransactionEntity
 import com.momoterminal.data.remote.api.MomoApiService
 import com.momoterminal.data.remote.dto.SyncResponseDto
 import com.momoterminal.domain.model.SyncStatus
 import com.momoterminal.domain.model.Transaction
-import com.momoterminal.security.SecureStorage
+import com.momoterminal.core.security.SecureStorage
 import com.momoterminal.util.Result
 import io.mockk.coEvery
 import io.mockk.coVerify

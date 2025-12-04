@@ -1,6 +1,6 @@
 package com.momoterminal.auth
 
-import com.momoterminal.security.SecureStorage
+import com.momoterminal.core.security.SecureStorage
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

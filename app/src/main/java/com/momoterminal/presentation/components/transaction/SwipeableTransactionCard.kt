@@ -20,7 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.momoterminal.data.local.entity.TransactionEntity
+import com.momoterminal.core.database.entity.TransactionEntity
 import com.momoterminal.presentation.theme.ErrorRed
 import com.momoterminal.presentation.theme.InfoBlue
 import com.momoterminal.presentation.theme.MomoAnimation

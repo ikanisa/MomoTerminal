@@ -1,6 +1,6 @@
 package com.momoterminal.sync
 
-import com.momoterminal.data.local.entity.TransactionEntity
+import com.momoterminal.core.database.entity.TransactionEntity
 import javax.inject.Inject
 import javax.inject.Singleton
 

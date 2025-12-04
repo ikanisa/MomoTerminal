@@ -5,7 +5,7 @@ import android.nfc.NfcAdapter
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.momoterminal.config.AppConfig
+import com.momoterminal.core.common.config.AppConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

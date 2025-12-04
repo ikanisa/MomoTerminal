@@ -19,7 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.momoterminal.R
-import com.momoterminal.data.model.CountryConfig
+import com.momoterminal.core.common.model.CountryConfig
 
 /**
  * Country selector with search and provider display.

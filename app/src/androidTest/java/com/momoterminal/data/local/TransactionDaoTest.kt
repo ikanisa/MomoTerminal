@@ -5,8 +5,8 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
-import com.momoterminal.data.local.dao.TransactionDao
-import com.momoterminal.data.local.entity.TransactionEntity
+import com.momoterminal.core.database.dao.TransactionDao
+import com.momoterminal.core.database.entity.TransactionEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After

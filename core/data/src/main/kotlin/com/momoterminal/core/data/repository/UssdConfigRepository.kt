@@ -1,6 +1,6 @@
 package com.momoterminal.core.data.repository
 
-import com.momoterminal.config.UssdConfig
+import com.momoterminal.core.common.config.UssdConfig
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.Serializable

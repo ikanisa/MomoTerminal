@@ -1,6 +1,6 @@
 package com.momoterminal.ussd
 
-import com.momoterminal.data.model.CountryConfig
+import com.momoterminal.core.common.model.CountryConfig
 import org.junit.Assert.*
 import org.junit.Test
 

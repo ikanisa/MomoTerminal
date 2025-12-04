@@ -1,6 +1,6 @@
 package com.momoterminal.feature.charts
 
-import com.momoterminal.data.local.dao.TransactionDao
+import com.momoterminal.core.database.dao.TransactionDao
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries

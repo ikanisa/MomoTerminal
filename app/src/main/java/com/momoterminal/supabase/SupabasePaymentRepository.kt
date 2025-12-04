@@ -1,6 +1,6 @@
 package com.momoterminal.supabase
 
-import com.momoterminal.data.local.entity.TransactionEntity
+import com.momoterminal.core.database.entity.TransactionEntity
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order

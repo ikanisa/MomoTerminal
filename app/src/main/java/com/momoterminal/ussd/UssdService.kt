@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import com.momoterminal.data.model.CountryConfig
+import com.momoterminal.core.common.model.CountryConfig
 import com.momoterminal.data.repository.CountryRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject

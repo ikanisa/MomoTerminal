@@ -1,8 +1,8 @@
 package com.momoterminal.data.repository
 
 import androidx.paging.*
-import com.momoterminal.data.local.dao.TransactionDao
-import com.momoterminal.data.local.entity.TransactionEntity
+import com.momoterminal.core.database.dao.TransactionDao
+import com.momoterminal.core.database.entity.TransactionEntity
 import com.momoterminal.domain.model.TransactionFilter
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject

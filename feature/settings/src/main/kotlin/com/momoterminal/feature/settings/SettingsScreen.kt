@@ -30,7 +30,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.momoterminal.R
-import com.momoterminal.config.SupportedCountries
+import com.momoterminal.core.common.config.SupportedCountries
 import com.momoterminal.i18n.LanguageSettingsRow
 import com.momoterminal.presentation.components.MomoButton
 import com.momoterminal.presentation.components.MomoTextField

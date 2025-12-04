@@ -1,7 +1,7 @@
 package com.momoterminal.di
 
 import android.content.Context
-import com.momoterminal.data.local.dao.TransactionDao
+import com.momoterminal.core.database.dao.TransactionDao
 import com.momoterminal.data.local.dao.WalletDao
 import com.momoterminal.offline.OfflineFirstManager
 import com.momoterminal.util.NetworkMonitor

@@ -1,6 +1,6 @@
 package com.momoterminal.data.mapper
 
-import com.momoterminal.data.local.entity.TransactionEntity
+import com.momoterminal.core.database.entity.TransactionEntity
 import com.momoterminal.data.remote.dto.SyncRequestDto
 import com.momoterminal.data.remote.dto.TransactionDto
 import com.momoterminal.domain.model.SyncStatus

@@ -2,7 +2,7 @@ package com.momoterminal.di
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.momoterminal.config.AppConfig
+import com.momoterminal.core.common.config.AppConfig
 import com.momoterminal.sync.SyncManager
 import dagger.Module
 import dagger.Provides

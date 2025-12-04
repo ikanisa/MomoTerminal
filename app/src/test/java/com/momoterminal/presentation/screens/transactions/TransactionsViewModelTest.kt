@@ -2,10 +2,10 @@ package com.momoterminal.presentation.screens.transactions
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
-import com.momoterminal.config.AppConfig
+import com.momoterminal.core.common.config.AppConfig
 import com.momoterminal.data.local.MomoDatabase
-import com.momoterminal.data.local.dao.TransactionDao
-import com.momoterminal.data.local.entity.TransactionEntity
+import com.momoterminal.core.database.dao.TransactionDao
+import com.momoterminal.core.database.entity.TransactionEntity
 import com.momoterminal.sync.SyncManager
 import io.mockk.every
 import io.mockk.mockk

@@ -28,7 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.momoterminal.R
-import com.momoterminal.data.local.entity.TransactionEntity
+import com.momoterminal.core.database.entity.TransactionEntity
 import com.momoterminal.presentation.theme.MomoTerminalTheme
 
 /**

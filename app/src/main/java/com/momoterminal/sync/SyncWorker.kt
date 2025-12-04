@@ -7,8 +7,8 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.momoterminal.ai.AiSmsParserService
-import com.momoterminal.config.AppConfig
-import com.momoterminal.data.local.dao.TransactionDao
+import com.momoterminal.core.common.config.AppConfig
+import com.momoterminal.core.database.dao.TransactionDao
 import com.momoterminal.supabase.PaymentResult
 import com.momoterminal.supabase.SupabasePaymentRepository
 import dagger.assisted.Assisted

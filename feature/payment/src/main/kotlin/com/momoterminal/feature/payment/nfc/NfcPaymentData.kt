@@ -1,6 +1,6 @@
 package com.momoterminal.feature.payment.nfc
 
-import com.momoterminal.config.UssdConfig
+import com.momoterminal.core.common.config.UssdConfig
 
 /**
  * Data class representing payment data for NFC transactions.

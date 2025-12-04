@@ -10,7 +10,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.momoterminal.auth.AuthRepository
-import com.momoterminal.data.model.CountryConfig
+import com.momoterminal.core.common.model.CountryConfig
 import com.momoterminal.data.preferences.UserPreferences
 import com.momoterminal.data.repository.CountryRepository
 import com.momoterminal.security.BiometricHelper

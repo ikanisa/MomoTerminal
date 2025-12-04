@@ -9,7 +9,7 @@ import com.momoterminal.security.EncryptionManager
 import com.momoterminal.security.KeystoreHelper
 import com.momoterminal.security.PlayIntegrityManager
 import com.momoterminal.security.ScreenSecurityManager
-import com.momoterminal.security.SecureStorage
+import com.momoterminal.core.security.SecureStorage
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

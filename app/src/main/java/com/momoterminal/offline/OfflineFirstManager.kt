@@ -3,7 +3,7 @@ package com.momoterminal.offline
 import android.content.Context
 import androidx.work.*
 import com.momoterminal.core.logging.MomoLogger
-import com.momoterminal.data.local.dao.TransactionDao
+import com.momoterminal.core.database.dao.TransactionDao
 import com.momoterminal.data.local.dao.WalletDao
 import com.momoterminal.sync.SyncWorker
 import com.momoterminal.sync.WalletSyncWorker

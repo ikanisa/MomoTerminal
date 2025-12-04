@@ -1,7 +1,7 @@
 package com.momoterminal.data.local.dao
 
 import androidx.room.*
-import com.momoterminal.data.local.entity.SmsTransactionEntity
+import com.momoterminal.core.database.entity.SmsTransactionEntity
 import com.momoterminal.data.local.entity.SmsTransactionType
 import kotlinx.coroutines.flow.Flow
 

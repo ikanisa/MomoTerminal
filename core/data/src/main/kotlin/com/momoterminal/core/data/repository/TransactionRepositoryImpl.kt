@@ -11,7 +11,7 @@ import com.momoterminal.core.domain.model.SyncStatus
 import com.momoterminal.core.domain.model.Transaction
 import com.momoterminal.core.domain.model.TransactionFilter
 import com.momoterminal.core.domain.repository.TransactionRepository
-import com.momoterminal.security.SecureStorage
+import com.momoterminal.core.security.SecureStorage
 import com.momoterminal.core.common.Result
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

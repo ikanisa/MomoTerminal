@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.momoterminal.config.AppConfig
+import com.momoterminal.core.common.config.AppConfig
 import com.momoterminal.data.local.MomoDatabase
-import com.momoterminal.data.local.entity.TransactionEntity
+import com.momoterminal.core.database.entity.TransactionEntity
 import com.momoterminal.data.repository.TransactionPagingRepository
 import com.momoterminal.domain.model.TransactionFilter
 import com.momoterminal.domain.model.SyncStatus

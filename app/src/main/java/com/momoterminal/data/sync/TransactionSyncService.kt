@@ -1,6 +1,6 @@
 package com.momoterminal.data.sync
 
-import com.momoterminal.config.AppConfig
+import com.momoterminal.core.common.config.AppConfig
 import com.momoterminal.data.local.MomoDatabase
 import com.momoterminal.data.preferences.UserPreferences
 import com.momoterminal.supabase.SupabasePaymentRepository

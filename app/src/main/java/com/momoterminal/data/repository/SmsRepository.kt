@@ -1,7 +1,7 @@
 package com.momoterminal.data.repository
 
 import com.momoterminal.data.local.dao.SmsTransactionDao
-import com.momoterminal.data.local.entity.SmsTransactionEntity
+import com.momoterminal.core.database.entity.SmsTransactionEntity
 import com.momoterminal.data.local.entity.SmsTransactionType
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject

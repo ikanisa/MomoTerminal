@@ -3,8 +3,8 @@ package com.momoterminal.presentation.screens.transaction
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.momoterminal.data.local.dao.TransactionDao
-import com.momoterminal.data.local.entity.TransactionEntity
+import com.momoterminal.core.database.dao.TransactionDao
+import com.momoterminal.core.database.entity.TransactionEntity
 import com.momoterminal.domain.model.Provider
 import com.momoterminal.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
