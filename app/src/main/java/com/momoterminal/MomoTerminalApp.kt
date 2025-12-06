@@ -3,6 +3,7 @@ package com.momoterminal
 import android.app.Application
 import android.content.SharedPreferences
 import androidx.hilt.work.HiltWorkerFactory
+import androidx.multidex.MultiDexApplication
 import androidx.work.Configuration
 import com.google.firebase.FirebaseApp
 import com.google.firebase.crashlytics.FirebaseCrashlytics
@@ -20,7 +21,7 @@ import javax.inject.Inject
  * Annotated with @HiltAndroidApp to enable Hilt dependency injection.
  */
 @HiltAndroidApp
-class MomoTerminalApp : Application(), Configuration.Provider {
+class MomoTerminalApp : MultiDexApplication(), Configuration.Provider {
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory

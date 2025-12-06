@@ -73,6 +73,8 @@ android {
         targetSdk = 35
         versionCode = calculatedVersionCode
         versionName = calculatedVersionName
+        
+        multiDexEnabled = true
 
         testInstrumentationRunner = "com.momoterminal.HiltTestRunner"
 
@@ -334,6 +336,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation("androidx.multidex:multidex:2.0.1")
 
     // Material Design
     implementation(libs.material)
