@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.momoterminal.auth.SessionManager
 import com.momoterminal.feature.nfc.NfcManager
-import com.momoterminal.feature.nfc.NfcPaymentData
+import com.momoterminal.core.domain.model.NfcPaymentData
 import com.momoterminal.feature.nfc.NfcState
 import com.momoterminal.feature.payment.nfc.NfcWalletIntegrationService
 import dagger.hilt.android.lifecycle.HiltViewModel

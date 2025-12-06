@@ -38,7 +38,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.momoterminal.feature.nfc.NfcPaymentData
+import com.momoterminal.core.domain.model.NfcPaymentData
 import com.momoterminal.presentation.theme.MomoAnimation
 import com.momoterminal.presentation.theme.MomoTerminalTheme
 import com.momoterminal.presentation.theme.MtnYellow

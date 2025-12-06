@@ -6,7 +6,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.momoterminal.feature.nfc.NfcPaymentData
+import com.momoterminal.core.domain.model.NfcPaymentData
 import com.momoterminal.feature.nfc.NfcState
 import com.momoterminal.presentation.screens.terminal.TerminalScreen
 import com.momoterminal.presentation.screens.terminal.TerminalViewModel
