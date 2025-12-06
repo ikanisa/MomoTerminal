@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.momoterminal.feature.nfc"
+    namespace = "com.momoterminal.feature.payment"
     compileSdk = 35
 
     defaultConfig {
@@ -31,8 +31,9 @@ android {
 dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:domain"))
-    implementation(project(":core:data"))
     implementation(project(":core:ui"))
+    implementation(project(":core:data"))
+    implementation(project(":feature:nfc"))
     implementation(project(":core:database"))
     
     implementation(libs.hilt.android)
@@ -44,10 +45,8 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
-    implementation(libs.compose.material.icons)
     implementation(libs.compose.runtime)
     
-    implementation(project(":core:designsystem"))
     implementation(libs.coroutines.android)
     implementation(libs.gson)
 }

@@ -6,6 +6,7 @@ import android.nfc.NfcAdapter
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import com.momoterminal.core.common.config.AppConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -125,12 +126,8 @@ class NfcManager @Inject constructor(
         val appConfig = AppConfig(context)
         val merchantPhone = appConfig.getMerchantPhone()
         
-        // Update PaymentState for HCE service
-        com.momoterminal.feature.payment.nfc.PaymentState.setPaymentData(
-            amount = paymentData.amountInMinorUnits / 100, // Convert back to whole units
-            merchantPhone = if (merchantPhone.isBlank()) paymentData.merchantPhone else merchantPhone,
-            currency = paymentData.currency
-        )
+        // TODO: Notify payment module via shared state in core:domain
+        // Payment state management should be handled via dependency inversion
         
         // Update state to activating
         _nfcState.value = NfcState.Activating
@@ -159,8 +156,7 @@ class NfcManager @Inject constructor(
         _currentPaymentData.value = null
         _nfcState.value = NfcState.Ready
         
-        // Clear PaymentState
-        com.momoterminal.feature.payment.nfc.PaymentState.reset()
+        // TODO: Clear payment state via shared repository
     }
     
     /**

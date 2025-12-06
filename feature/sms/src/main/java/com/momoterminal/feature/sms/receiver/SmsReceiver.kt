@@ -4,8 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
-import com.momoterminal.sms.MomoSmsParser
-import com.momoterminal.sms.VendorSmsProcessor
+import com.momoterminal.feature.sms.MomoSmsParser
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,11 +23,6 @@ import javax.inject.Inject
 class SmsReceiver : BroadcastReceiver() {
     
     @Inject lateinit var smsParser: MomoSmsParser
-    @Inject lateinit var vendorProcessor: VendorSmsProcessor
-    
-    // TODO: Get from secure config/environment variables
-    private val AI_API_KEY = System.getenv("OPENAI_API_KEY") ?: ""
-    private val USE_OPENAI = true // Set to false to use Gemini
     
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
@@ -58,63 +52,19 @@ class SmsReceiver : BroadcastReceiver() {
             try {
                 Timber.i("Processing MoMo SMS from $sender")
                 
-                // Process with AI and save to Supabase
-                val result = vendorProcessor.processSms(
-                    rawSms = body,
-                    senderAddress = sender,
-                    receivedAt = timestamp,
-                    useOpenAI = USE_OPENAI,
-                    apiKey = AI_API_KEY
-                )
+                // Parse SMS with MomoSmsParser
+                val parsedData = smsParser.parse(sender, body)
                 
-                result.onSuccess { transactionId ->
-                    Timber.i("✅ SMS processed successfully: $transactionId")
-                }.onFailure { error ->
-                    Timber.e(error, "❌ Failed to process SMS")
+                if (parsedData != null) {
+                    Timber.i("✅ SMS parsed successfully: type=${parsedData.type}")
+                    // TODO: Save to database or send to backend
+                } else {
+                    Timber.w("⚠️ Failed to parse SMS from $sender")
                 }
                 
             } catch (e: Exception) {
                 Timber.e(e, "Failed to process MoMo SMS")
             }
         }
-    }
-}
-                    Log.d(TAG, "SMS wallet processing result: $result")
-                    
-                    when (result) {
-                        is SmsWalletIntegrationService.ProcessResult.CreditedWallet -> {
-                            broadcastPaymentReceived(context, result.tokens, sender, result.smsId, timestamp)
-                        }
-                        else -> {}
-                    }
-                }
-                
-                // Save to transactions table
-                val transaction = TransactionEntity(
-                    sender = sender,
-                    body = body,
-                    timestamp = timestamp,
-                    status = "PENDING",
-                    amount = null, // TODO: Parse from SMS
-                    currency = "RWF",
-                    transactionId = null,
-                    merchantCode = ""
-                )
-                transactionDao.insert(transaction)
-                
-            } catch (e: Exception) {
-                Log.e(TAG, "Error saving to database", e)
-            }
-        }
-    }
-    
-    private fun broadcastPaymentReceived(context: Context, amount: Long, sender: String, txnId: String, timestamp: Long) {
-        val intent = Intent(BROADCAST_PAYMENT_RECEIVED).apply {
-            putExtra(EXTRA_AMOUNT, amount)
-            putExtra(EXTRA_SENDER, sender)
-            putExtra(EXTRA_TRANSACTION_ID, txnId)
-            putExtra(EXTRA_TIMESTAMP, timestamp)
-        }
-        context.sendBroadcast(intent)
     }
 }

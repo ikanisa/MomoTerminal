@@ -40,4 +40,5 @@ dependencies {
     implementation(libs.play.services.auth.api.phone)
     
     implementation(libs.coroutines.android)
+    implementation(libs.timber)
 }

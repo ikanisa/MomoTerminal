@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.compose.runtime)
     
     implementation(project(":core:designsystem"))
+    implementation(project(":feature:payment")) // For PaymentState
     implementation(libs.coroutines.android)
     implementation(libs.gson)
 }
