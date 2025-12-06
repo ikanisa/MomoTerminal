@@ -1,5 +1,6 @@
 package com.momoterminal.util
 
+import com.momoterminal.core.common.PhoneNumberValidator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
