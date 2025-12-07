@@ -12,6 +12,7 @@ import com.momoterminal.core.database.entity.SmsTransactionEntity
 import com.momoterminal.core.database.entity.SmsTransactionType
 import com.momoterminal.core.database.entity.SyncStatus
 import com.momoterminal.feature.sms.MomoSmsParser
+import com.momoterminal.worker.SmsTransactionSyncWorker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +33,11 @@ class SmsReceiver : BroadcastReceiver() {
     @Inject lateinit var smsParser: MomoSmsParser
     @Inject lateinit var aiSmsParserService: AiSmsParserService
     @Inject lateinit var smsTransactionDao: SmsTransactionDao
+    
+    companion object {
+        private const val AI_CONFIDENCE_HIGH = 0.9f
+        private const val REGEX_CONFIDENCE_DEFAULT = 0.7f
+    }
     
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
@@ -80,7 +86,7 @@ class SmsReceiver : BroadcastReceiver() {
                         synced = false,
                         syncStatus = SyncStatus.PENDING,
                         parsedBy = aiParsedData.parsedBy,
-                        aiConfidence = if (aiParsedData.parsedBy == "gemini") 0.9f else 0.7f
+                        aiConfidence = if (aiParsedData.parsedBy == "gemini") AI_CONFIDENCE_HIGH else REGEX_CONFIDENCE_DEFAULT
                     )
                     
                     // Save to local database
@@ -101,7 +107,7 @@ class SmsReceiver : BroadcastReceiver() {
     
     private fun scheduleSyncWorker(context: Context) {
         try {
-            val syncWorkRequest = OneTimeWorkRequestBuilder<com.momoterminal.worker.SmsTransactionSyncWorker>()
+            val syncWorkRequest = OneTimeWorkRequestBuilder<SmsTransactionSyncWorker>()
                 .build()
             
             WorkManager.getInstance(context).enqueue(syncWorkRequest)

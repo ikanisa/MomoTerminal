@@ -100,6 +100,8 @@ class SmsTransactionSyncWorker @AssistedInject constructor(
     
     private suspend fun handleSyncFailure(transaction: com.momoterminal.core.database.entity.SmsTransactionEntity) {
         val newRetryCount = transaction.retryCount + 1
+        smsTransactionDao.updateRetryCount(transaction.id, newRetryCount)
+        
         if (newRetryCount >= MAX_RETRY_COUNT) {
             smsTransactionDao.updateSyncStatus(transaction.id, SyncStatus.FAILED)
             Timber.w("$TAG: Transaction ${transaction.id} marked as FAILED after $newRetryCount retries")

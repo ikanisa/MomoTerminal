@@ -184,13 +184,16 @@ class SupabasePaymentRepository @Inject constructor(
 
     /**
      * Extract phone number from transaction based on type.
+     * TODO: Implement proper phone number extraction from transaction data.
+     * This is a temporary placeholder that returns the reference field.
+     * In production, this should parse the raw SMS message to extract
+     * the actual phone number of the sender/recipient.
      */
     private fun extractPhoneNumber(transaction: SmsTransactionEntity): String? {
-        // For received transactions, we might need to extract the sender's phone
-        // from the raw message or other fields. For now, we'll return null
-        // and let the sync work without vendor matching.
-        // This can be enhanced based on actual data structure.
-        return transaction.reference // Placeholder - adjust based on actual requirements
+        // Placeholder - adjust based on actual requirements
+        // Future implementation should parse transaction.rawMessage or use
+        // additional fields added to SmsTransactionEntity
+        return transaction.reference
     }
 }
 
