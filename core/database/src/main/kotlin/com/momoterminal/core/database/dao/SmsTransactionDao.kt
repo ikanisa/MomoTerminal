@@ -33,4 +33,10 @@ interface SmsTransactionDao {
 
     @Query("SELECT COUNT(*) FROM sms_transactions WHERE synced = 0")
     fun observeUnsyncedCount(): Flow<Int>
+
+    @Query("SELECT * FROM sms_transactions WHERE sync_status = 'PENDING' ORDER BY timestamp ASC")
+    suspend fun getPendingSyncTransactions(): List<SmsTransactionEntity>
+
+    @Query("UPDATE sms_transactions SET sync_status = :status, supabase_id = :supabaseId, synced = CASE WHEN :status = 'SYNCED' THEN 1 ELSE synced END WHERE id = :id")
+    suspend fun updateSyncStatus(id: String, status: com.momoterminal.core.database.entity.SyncStatus, supabaseId: String? = null)
 }

@@ -14,7 +14,8 @@ import java.util.UUID
     indices = [
         Index(value = ["reference"], unique = true),
         Index(value = ["timestamp"]),
-        Index(value = ["synced"])
+        Index(value = ["synced"]),
+        Index(value = ["sync_status"])
     ]
 )
 data class SmsTransactionEntity(
@@ -37,7 +38,19 @@ data class SmsTransactionEntity(
     val walletCredited: Boolean = false,
     
     @ColumnInfo(name = "retry_count")
-    val retryCount: Int = 0
+    val retryCount: Int = 0,
+    
+    @ColumnInfo(name = "sync_status")
+    val syncStatus: SyncStatus = SyncStatus.PENDING,
+    
+    @ColumnInfo(name = "parsed_by")
+    val parsedBy: String = "regex",
+    
+    @ColumnInfo(name = "ai_confidence")
+    val aiConfidence: Float = 0.0f,
+    
+    @ColumnInfo(name = "supabase_id")
+    val supabaseId: String? = null
 )
 
 enum class SmsTransactionType {

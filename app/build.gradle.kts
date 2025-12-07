@@ -329,6 +329,7 @@ dependencies {
     // Feature modules
     implementation(project(":feature:nfc"))
     implementation(project(":feature:payment")) // For PaymentState in NfcHceService
+    implementation(project(":feature:sms")) // For SMS parsing functionality
     
     // Core Android
     implementation(libs.androidx.core.ktx)
