@@ -15,6 +15,7 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 import com.momoterminal.core.database.migration.MIGRATION_4_5
+import com.momoterminal.core.database.migration.MIGRATION_5_6
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -145,7 +146,7 @@ object DatabaseModule {
         val supportFactory = EncryptedDatabaseFactory.getSupportFactory(context)
         return Room.databaseBuilder(context, MomoDatabase::class.java, DATABASE_NAME)
             .openHelperFactory(supportFactory)
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
             .build()
     }
 
