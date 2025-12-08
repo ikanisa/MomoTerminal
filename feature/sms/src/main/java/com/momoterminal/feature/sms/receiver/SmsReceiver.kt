@@ -6,13 +6,13 @@ import android.content.Intent
 import android.provider.Telephony
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import com.momoterminal.ai.AiSmsParserService
+// TODO: Fix circular dependency - import com.momoterminal.ai.AiSmsParserService
 import com.momoterminal.core.database.dao.SmsTransactionDao
 import com.momoterminal.core.database.entity.SmsTransactionEntity
 import com.momoterminal.core.database.entity.SmsTransactionType
 import com.momoterminal.core.database.entity.SyncStatus
 import com.momoterminal.feature.sms.MomoSmsParser
-import com.momoterminal.worker.SmsTransactionSyncWorker
+// TODO: Fix circular dependency - import com.momoterminal.worker.SmsTransactionSyncWorker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +31,8 @@ import javax.inject.Inject
 class SmsReceiver : BroadcastReceiver() {
     
     @Inject lateinit var smsParser: MomoSmsParser
-    @Inject lateinit var aiSmsParserService: AiSmsParserService
+    // TODO: Fix circular dependency - AiSmsParserService is in app module
+    // @Inject lateinit var aiSmsParserService: AiSmsParserService
     @Inject lateinit var smsTransactionDao: SmsTransactionDao
     
     companion object {
@@ -67,34 +68,28 @@ class SmsReceiver : BroadcastReceiver() {
             try {
                 Timber.i("Processing MoMo SMS from $sender")
                 
-                // Parse SMS with AI parser (with regex fallback)
-                val aiParsedData = aiSmsParserService.parseSmartly(sender, body)
+                // Parse SMS with regex parser (AI parser disabled due to circular dependency)
+                // TODO: Move AiSmsParserService to a shared module or use interface
+                val parsedData = smsParser.parse(sender, body)
                 
-                if (aiParsedData != null) {
-                    Timber.i("✅ SMS parsed successfully: type=${aiParsedData.transactionType}, parsedBy=${aiParsedData.parsedBy}")
+                if (parsedData != null) {
+                    Timber.i("✅ SMS parsed successfully: type=${parsedData.type}")
                     
-                    // Convert AI parsed data to entity
-                    val entity = SmsTransactionEntity(
-                        rawMessage = body,
-                        sender = sender,
-                        amount = aiParsedData.getDisplayAmount(),
-                        currency = aiParsedData.currency,
-                        type = mapTransactionType(aiParsedData.transactionType),
-                        balance = aiParsedData.getDisplayBalance(),
-                        reference = aiParsedData.transactionId,
+                    // Update timestamp and sync status
+                    val entity = parsedData.copy(
                         timestamp = timestamp,
                         synced = false,
                         syncStatus = SyncStatus.PENDING,
-                        parsedBy = aiParsedData.parsedBy,
-                        aiConfidence = if (aiParsedData.parsedBy == "gemini") AI_CONFIDENCE_HIGH else REGEX_CONFIDENCE_DEFAULT
+                        parsedBy = "regex",
+                        aiConfidence = REGEX_CONFIDENCE_DEFAULT
                     )
                     
                     // Save to local database
                     smsTransactionDao.insert(entity)
                     Timber.i("SMS transaction saved to database: id=${entity.id}")
                     
-                    // Schedule sync worker
-                    scheduleSyncWorker(context)
+                    // TODO: Re-enable sync worker after fixing circular dependency
+                    // scheduleSyncWorker(context)
                 } else {
                     Timber.w("⚠️ Failed to parse SMS from $sender")
                 }
@@ -105,6 +100,7 @@ class SmsReceiver : BroadcastReceiver() {
         }
     }
     
+    /* TODO: Re-enable after fixing circular dependency
     private fun scheduleSyncWorker(context: Context) {
         try {
             val syncWorkRequest = OneTimeWorkRequestBuilder<SmsTransactionSyncWorker>()
@@ -116,6 +112,7 @@ class SmsReceiver : BroadcastReceiver() {
             Timber.e(e, "Failed to schedule sync worker")
         }
     }
+    */
     
     private fun mapTransactionType(type: String): SmsTransactionType {
         return when (type.uppercase()) {
