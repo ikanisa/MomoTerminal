@@ -1,6 +1,7 @@
 package com.momoterminal.core.data.di
 
 import com.momoterminal.core.data.repository.*
+import com.momoterminal.core.domain.repository.SettingsRepository
 import com.momoterminal.core.domain.repository.TransactionRepository
 import dagger.Binds
 import dagger.Module
@@ -31,4 +32,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindNfcRepository(impl: NfcRepositoryImpl): NfcRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository
 }
