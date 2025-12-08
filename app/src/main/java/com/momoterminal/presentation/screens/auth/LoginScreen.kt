@@ -261,6 +261,21 @@ fun LoginScreen(
                 )
             }
 
+            // Forgot PIN button
+            if (!uiState.isOtpSent) {
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(
+                    onClick = onNavigateToForgotPin,
+                    enabled = !uiState.isLoading
+                ) {
+                    Text(
+                        text = stringResource(R.string.auth_forgot_pin),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(200.dp)) // Extra space for keyboard
 
             Row(

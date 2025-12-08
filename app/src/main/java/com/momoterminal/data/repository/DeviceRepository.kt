@@ -4,7 +4,7 @@ package com.momoterminal.data.repository
 import com.momoterminal.api.MomoApiService
 import com.momoterminal.core.common.DeviceInfoProvider
 import com.momoterminal.core.common.preferences.UserPreferences
-import com.momoterminal.core.network.dto.RegisterDeviceRequest
+import com.momoterminal.data.remote.dto.RegisterDeviceRequest
 // import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import javax.inject.Inject

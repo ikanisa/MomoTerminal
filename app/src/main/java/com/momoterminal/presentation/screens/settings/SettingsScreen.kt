@@ -284,6 +284,14 @@ fun SettingsScreen(
                 onCheckedChange = viewModel::toggleVibration
             )
             
+            SettingsToggle(
+                icon = Icons.Default.Message,
+                title = "Auto-Sync SMS Transactions",
+                description = "Automatically sync SMS transactions to backend",
+                checked = uiState.smsAutoSyncEnabled,
+                onCheckedChange = viewModel::toggleSmsAutoSync
+            )
+            
             // About Section
             SectionHeader(
                 title = stringResource(R.string.about),
