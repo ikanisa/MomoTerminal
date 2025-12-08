@@ -10,15 +10,17 @@ data class VendingMachine(
     val status: MachineStatus,
     val productId: String,
     val productName: String,
-    val productSizeML: Int = 500,
-    val price: Long,
+    val productCategory: ProductCategory,
+    val servingSizeML: Int = 500,
+    val pricePerServing: Long,
     val currency: String = "XAF",
     val stockLevel: StockLevel,
-    val imageUrl: String? = null
+    val imageUrl: String? = null,
+    val isAgeRestricted: Boolean = false
 ) {
     fun formattedPrice(): String {
-        val major = price / 100
-        val minor = price % 100
+        val major = pricePerServing / 100
+        val minor = pricePerServing % 100
         return String.format("%,d.%02d", major, minor)
     }
     
@@ -30,6 +32,8 @@ data class VendingMachine(
             }
         }
     }
+    
+    fun isAvailable(): Boolean = status == MachineStatus.AVAILABLE && stockLevel != StockLevel.OUT_OF_STOCK
 }
 
 enum class MachineStatus {

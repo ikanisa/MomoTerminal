@@ -5,14 +5,21 @@ data class VendingCode(
     val orderId: String,
     val machineId: String,
     val expiresAt: Long,
-    val usedAt: Long? = null
+    val usedAt: Long? = null,
+    val totalServes: Int = 1,
+    val remainingServes: Int = 1,
+    val closedAt: Long? = null
 ) {
     fun isExpired(): Boolean {
         return System.currentTimeMillis() > expiresAt
     }
     
     fun isUsed(): Boolean {
-        return usedAt != null
+        return remainingServes <= 0 || usedAt != null
+    }
+    
+    fun isInProgress(): Boolean {
+        return !isExpired() && !isUsed() && usedAt != null && remainingServes > 0
     }
     
     fun remainingSeconds(): Long {
@@ -23,4 +30,6 @@ data class VendingCode(
     fun formattedCode(): String {
         return code.chunked(2).joinToString(" ")
     }
+    
+    fun servesUsed(): Int = totalServes - remainingServes
 }

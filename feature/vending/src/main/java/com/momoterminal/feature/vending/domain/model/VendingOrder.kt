@@ -7,15 +7,18 @@ data class VendingOrder(
     val machineName: String,
     val machineLocation: String,
     val productName: String,
-    val productSizeML: Int,
-    val amount: Long,
+    val productCategory: ProductCategory,
+    val quantity: Int,
+    val servingSizeML: Int = 500,
+    val pricePerServing: Long,
+    val totalAmount: Long,
     val status: OrderStatus,
     val createdAt: Long,
     val code: VendingCode? = null
 ) {
     fun formattedAmount(): String {
-        val major = amount / 100
-        val minor = amount % 100
+        val major = totalAmount / 100
+        val minor = totalAmount % 100
         return String.format("%,d.%02d", major, minor)
     }
     
@@ -24,12 +27,16 @@ data class VendingOrder(
         val format = java.text.SimpleDateFormat("MMM dd, yyyy HH:mm", java.util.Locale.getDefault())
         return format.format(date)
     }
+    
+    fun quantityLabel(): String = "$quantity cup${if (quantity > 1) "s" else ""} (${quantity * servingSizeML}ml)"
 }
 
 enum class OrderStatus {
-    PENDING,
-    CODE_GENERATED,
-    DISPENSED,
+    CREATED,
+    PAID,
+    CODE_ISSUED,
+    IN_PROGRESS,
+    COMPLETED,
     EXPIRED,
     REFUNDED,
     FAILED
