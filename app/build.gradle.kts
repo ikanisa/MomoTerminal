@@ -337,6 +337,8 @@ dependencies {
     implementation(project(":feature:nfc"))
     implementation(project(":feature:payment")) // For PaymentState in NfcHceService
     implementation(project(":feature:sms")) // For SMS parsing functionality
+    implementation(project(":feature:vending")) // Vending machines feature
+    implementation(project(":feature:wallet")) // Wallet for vending payments
     
     // Core Android
     implementation(libs.androidx.core.ktx)

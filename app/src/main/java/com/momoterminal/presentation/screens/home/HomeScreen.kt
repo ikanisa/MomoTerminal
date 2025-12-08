@@ -84,6 +84,7 @@ fun HomeScreen(
     onNavigateToTerminal: () -> Unit = {},
     onNavigateToTransactions: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToVending: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -170,6 +171,7 @@ fun HomeScreen(
                         onActivate = viewModel::activatePayment,
                         onToggleNfc = viewModel::toggleNfcEnabled,
                         onNavigateToSettings = onNavigateToSettings,
+                        onNavigateToVending = onNavigateToVending,
                         onAmountFocused = { isAmountFocused = it },
                         isAmountFocused = isAmountFocused,
                         isAmountValid = viewModel.isAmountValid(),
@@ -192,6 +194,7 @@ private fun PaymentInputContent(
     onActivate: () -> Unit,
     onToggleNfc: (Boolean) -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToVending: () -> Unit,
     onAmountFocused: (Boolean) -> Unit,
     isAmountFocused: Boolean,
     isAmountValid: Boolean,
@@ -245,6 +248,27 @@ private fun PaymentInputContent(
                 providerName = uiState.providerName,
                 countryCode = uiState.countryCode
             )
+        }
+        
+        // Quick Actions
+        AnimatedVisibility(
+            visible = !isAmountFocused && uiState.amount.isEmpty(),
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                MomoButton(
+                    text = "🧃 Get Juice from Vending",
+                    onClick = onNavigateToVending,
+                    modifier = Modifier.fillMaxWidth(),
+                    type = ButtonType.OUTLINE
+                )
+            }
         }
 
         Spacer(modifier = Modifier.weight(1f))

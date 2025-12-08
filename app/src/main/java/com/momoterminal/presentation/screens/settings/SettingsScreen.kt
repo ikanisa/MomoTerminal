@@ -54,6 +54,7 @@ import com.momoterminal.presentation.theme.SuccessGreen
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onLogout: () -> Unit = {},
+    onNavigateToVending: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -129,6 +130,20 @@ fun SettingsScreen(
                 currency = uiState.momoCurrency,
                 providerName = uiState.momoProviderName,
                 onClick = { showMomoCountryPicker = true }
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // ==================== FEATURES SECTION ====================
+            SectionHeader(title = "Features", icon = Icons.Default.Apps)
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Vending Feature
+            FeatureCard(
+                icon = Icons.Default.LocalCafe,
+                title = "Juice Vending",
+                description = "Buy fresh drinks from vending machines",
+                onClick = onNavigateToVending
             )
             
             Spacer(modifier = Modifier.height(12.dp))
@@ -884,6 +899,61 @@ private fun SettingsToggle(
                 Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Switch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
+        }
+    }
+}
+
+@Composable
+private fun FeatureCard(
+    icon: ImageVector,
+    title: String,
+    description: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Column {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Go",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

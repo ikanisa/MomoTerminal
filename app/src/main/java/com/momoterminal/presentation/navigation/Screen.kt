@@ -114,6 +114,12 @@ sealed class Screen(
         unselectedIcon = Icons.Outlined.Nfc
     )
     
+    // Vending - Vending machines feature
+    data object Vending : Screen(
+        route = "vending",
+        title = "Vending"
+    )
+    
     companion object {
         /**
          * All screens that appear in the bottom navigation bar.

@@ -15,9 +15,10 @@ import com.momoterminal.core.designsystem.theme.MomoTheme
 
 @Composable
 fun PaymentConfirmationScreen(
+    machineId: String,
+    productId: String,
+    onNavigateToCode: (String) -> Unit, // orderId
     onNavigateBack: () -> Unit,
-    onPaymentSuccess: (orderId: String) -> Unit,
-    onTopUpClick: () -> Unit,
     viewModel: PaymentViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -25,7 +26,7 @@ fun PaymentConfirmationScreen(
     
     LaunchedEffect(uiState) {
         when (val state = uiState) {
-            is PaymentUiState.Success -> onPaymentSuccess(state.order.id)
+            is PaymentUiState.Success -> onNavigateToCode(state.order.id)
             else -> {}
         }
     }
@@ -41,7 +42,7 @@ fun PaymentConfirmationScreen(
                         Text("Processing payment...", style = MaterialTheme.typography.bodyLarge)
                     }
                 }
-                is PaymentUiState.InsufficientBalance -> InsufficientBalanceContent(state.currentBalance, state.requiredAmount, onTopUpClick, onNavigateBack)
+                is PaymentUiState.InsufficientBalance -> InsufficientBalanceContent(state.currentBalance, state.requiredAmount, onNavigateBack)
                 is PaymentUiState.Error -> EmptyState(
                     title = "Payment Failed",
                     modifier = Modifier.fillMaxSize(),
@@ -85,7 +86,7 @@ private fun PaymentConfirmationContent(walletBalance: com.momoterminal.feature.w
 }
 
 @Composable
-private fun InsufficientBalanceContent(currentBalance: Long, requiredAmount: Long, onTopUpClick: () -> Unit, onCancel: () -> Unit) {
+private fun InsufficientBalanceContent(currentBalance: Long, requiredAmount: Long, onCancel: () -> Unit) {
     Column(Modifier.fillMaxSize(), Arrangement.spacedBy(MomoTheme.spacing.md)) {
         EmptyState(
             title = "Insufficient Balance",
@@ -100,7 +101,6 @@ private fun InsufficientBalanceContent(currentBalance: Long, requiredAmount: Lon
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(MomoTheme.spacing.sm)) {
-            PrimaryActionButton("Top Up Wallet", onTopUpClick, Modifier.fillMaxWidth())
             OutlinedButton(onCancel, Modifier.fillMaxWidth()) { Text("Cancel") }
         }
     }

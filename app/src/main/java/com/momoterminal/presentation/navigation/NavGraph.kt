@@ -16,8 +16,10 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation.compose.rememberNavController
 import com.momoterminal.capabilities.CapabilitiesDemoScreen
 import com.momoterminal.designsystem.motion.MotionTokens
+import com.momoterminal.feature.vending.navigation.vendingNavGraph
 import com.momoterminal.presentation.screens.auth.ForgotPinScreen
 import com.momoterminal.presentation.screens.auth.LoginScreen
 import com.momoterminal.presentation.screens.auth.PinScreen
@@ -28,6 +30,8 @@ import com.momoterminal.presentation.screens.nfc.NfcTerminalScreen
 import com.momoterminal.presentation.screens.settings.SettingsScreen
 import com.momoterminal.presentation.screens.transaction.TransactionDetailScreen
 import com.momoterminal.presentation.screens.transactions.TransactionsScreen
+import com.momoterminal.feature.vending.navigation.VendingDestination
+import com.momoterminal.feature.vending.navigation.vendingNavGraph
 
 /**
  * Main navigation graph for the app.
@@ -178,6 +182,9 @@ fun NavGraph(
                 },
                 onNavigateToSettings = {
                     navController.navigate(Screen.Settings.route)
+                },
+                onNavigateToVending = {
+                    navController.navigate(VendingDestination.Root.route)
                 }
             )
         }
@@ -246,6 +253,9 @@ fun NavGraph(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
+                onNavigateToVending = {
+                    navController.navigate(Screen.Vending.route)
+                },
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { saveState = false }
@@ -306,5 +316,13 @@ fun NavGraph(
                 }
             )
         }
+        
+        // Vending navigation graph
+        vendingNavGraph(
+            navController = navController,
+            onNavigateBack = {
+                navController.popBackStack()
+            }
+        )
     }
 }

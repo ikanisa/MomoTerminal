@@ -15,7 +15,7 @@ interface VendingRepository {
     
     suspend fun createOrder(
         machineId: String,
-        amount: Long
+        quantity: Int
     ): Result<VendingOrder>
     
     fun getOrders(): Flow<Result<List<VendingOrder>>>

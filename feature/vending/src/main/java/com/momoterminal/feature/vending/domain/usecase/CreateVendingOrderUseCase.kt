@@ -8,11 +8,25 @@ class CreateVendingOrderUseCase @Inject constructor(
     private val vendingRepository: VendingRepository,
     private val getWalletBalanceUseCase: GetWalletBalanceUseCase
 ) {
-    suspend operator fun invoke(machineId: String, amount: Long): Result<com.momoterminal.feature.vending.domain.model.VendingOrder> {
+    suspend operator fun invoke(machineId: String, quantity: Int): Result<com.momoterminal.feature.vending.domain.model.VendingOrder> {
+        if (quantity < 1 || quantity > 10) {
+            return Result.failure(IllegalArgumentException("Quantity must be between 1 and 10 cups"))
+        }
+        
         val balance = getWalletBalanceUseCase().first()
         if (balance == null) return Result.failure(Exception("Unable to fetch wallet balance"))
-        if (balance.totalTokens < amount) return Result.failure(InsufficientBalanceException(balance.totalTokens, amount))
-        return vendingRepository.createOrder(machineId, amount)
+        
+        val machine = vendingRepository.getMachineById(machineId).getOrElse {
+            return Result.failure(it)
+        }
+        
+        val totalAmount = machine.pricePerServing * quantity
+        
+        if (balance.totalTokens < totalAmount) {
+            return Result.failure(InsufficientBalanceException(balance.totalTokens, totalAmount))
+        }
+        
+        return vendingRepository.createOrder(machineId, quantity)
     }
 }
 

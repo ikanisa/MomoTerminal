@@ -16,9 +16,9 @@ import com.momoterminal.feature.vending.domain.model.*
 
 @Composable
 fun MachineDetailScreen(
+    machineId: String,
+    onNavigateToPayment: (String, String) -> Unit, // machineId, productId
     onNavigateBack: () -> Unit,
-    onPayClick: (machineId: String, amount: Long) -> Unit,
-    onTopUpClick: () -> Unit,
     viewModel: MachineDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -40,21 +40,21 @@ fun MachineDetailScreen(
             is MachineDetailUiState.Success -> {
                 val machine = state.machine
                 val canPurchase = machine.status == MachineStatus.AVAILABLE
-                val hasBalance = walletBalance != null && walletBalance!!.totalTokens >= machine.price
+                val hasBalance = walletBalance != null && walletBalance!!.totalTokens >= machine.pricePerServing
                 
                 Column(Modifier.fillMaxSize().padding(MomoTheme.spacing.md), Arrangement.spacedBy(MomoTheme.spacing.md)) {
                     GlassCard(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(MomoTheme.spacing.md), Arrangement.spacedBy(MomoTheme.spacing.sm)) {
                             Text(machine.name, style = MaterialTheme.typography.headlineMedium)
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row {
                                 Icon(Icons.Default.LocalDrink, null, Modifier.size(24.dp), MaterialTheme.colorScheme.primary)
                                 Column {
                                     Text(machine.productName, style = MaterialTheme.typography.titleLarge)
-                                    Text("Serving size: ${machine.productSizeML}ml", style = MaterialTheme.typography.bodyMedium)
+                                    Text("Serving size: ${machine.servingSizeML}ml", style = MaterialTheme.typography.bodyMedium)
                                 }
                             }
                             HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                            DetailRow(Icons.Default.AttachMoney, "Price", "${machine.formattedPrice()} ${machine.currency}")
+                            DetailRow(Icons.Default.AttachMoney, "Price per cup", "${machine.formattedPrice()} ${machine.currency}")
                             DetailRow(Icons.Default.LocationOn, "Location", machine.location)
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Icon(Icons.Default.CheckCircle, null, Modifier.size(20.dp), MaterialTheme.colorScheme.onSurfaceVariant)
@@ -78,26 +78,19 @@ fun MachineDetailScreen(
                     GlassCard(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(MomoTheme.spacing.md), Arrangement.spacedBy(MomoTheme.spacing.sm)) {
                             Text("How It Works", style = MaterialTheme.typography.titleMedium)
-                            HowItWorksStep(1, "Pay from your wallet")
-                            HowItWorksStep(2, "Receive 4-digit code")
-                            HowItWorksStep(3, "Enter code at machine")
-                            HowItWorksStep(4, "Pour your ${machine.productSizeML}ml drink")
+                            HowItWorksStep(1, "Choose quantity (1-10 cups)")
+                            HowItWorksStep(2, "Pay from your wallet")
+                            HowItWorksStep(3, "Receive 4-digit code")
+                            HowItWorksStep(4, "Enter code at machine")
+                            HowItWorksStep(5, "Pour your ${machine.servingSizeML}ml drinks")
                         }
                     }
                     
                     Spacer(Modifier.weight(1f))
                     
-                    if (!hasBalance && canPurchase) {
-                        OutlinedButton(onTopUpClick, Modifier.fillMaxWidth()) {
-                            Icon(Icons.Default.Add, null)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Top Up Wallet")
-                        }
-                    }
-                    
                     PrimaryActionButton(
-                        text = if (hasBalance) "Pay ${machine.formattedPrice()}" else "Insufficient Balance",
-                        onClick = { onPayClick(machine.id, machine.price) },
+                        text = if (hasBalance) "Continue to Payment" else "Insufficient Balance",
+                        onClick = { onNavigateToPayment(machineId, state.machine.productId) },
                         enabled = canPurchase && hasBalance,
                         modifier = Modifier.fillMaxWidth()
                     )

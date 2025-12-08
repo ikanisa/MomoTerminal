@@ -18,9 +18,11 @@ import com.momoterminal.feature.vending.domain.model.*
 
 @Composable
 fun MachinesScreen(
-    onMachineClick: (String) -> Unit,
-    onHistoryClick: () -> Unit,
-    onHelpClick: () -> Unit,
+    onNavigateToDetail: (String) -> Unit,
+    onNavigateToEventOrder: () -> Unit,
+    onNavigateToHistory: () -> Unit,
+    onNavigateToHelp: () -> Unit,
+    onNavigateBack: () -> Unit,
     viewModel: MachinesViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -29,11 +31,12 @@ fun MachinesScreen(
     Column(modifier = Modifier.fillMaxSize()) {
         MomoTopAppBar(
             title = "Juice Vending",
+            onNavigateBack = onNavigateBack,
             actions = {
-                IconButton(onClick = onHistoryClick) {
+                IconButton(onClick = onNavigateToHistory) {
                     Icon(Icons.Default.History, contentDescription = "Order History")
                 }
-                IconButton(onClick = onHelpClick) {
+                IconButton(onClick = onNavigateToHelp) {
                     Icon(Icons.Default.Help, contentDescription = "Help")
                 }
             }
@@ -70,7 +73,7 @@ fun MachinesScreen(
                         verticalArrangement = Arrangement.spacedBy(MomoTheme.spacing.sm)
                     ) {
                         items(state.machines) { machine ->
-                            MachineCard(machine, onClick = { onMachineClick(machine.id) })
+                            MachineCard(machine, onClick = { onNavigateToDetail(machine.id) })
                         }
                     }
                 }
@@ -111,7 +114,7 @@ private fun MachineCard(machine: VendingMachine, onClick: () -> Unit, modifier: 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.LocalDrink, null, Modifier.size(16.dp), MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(4.dp))
-                    Text("${machine.productName} (${machine.productSizeML}ml)", style = MaterialTheme.typography.bodyMedium)
+                    Text("${machine.productName} (${machine.servingSizeML}ml)", style = MaterialTheme.typography.bodyMedium)
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {

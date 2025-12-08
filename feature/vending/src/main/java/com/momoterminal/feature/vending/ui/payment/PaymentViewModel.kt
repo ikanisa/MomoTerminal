@@ -15,7 +15,7 @@ class PaymentViewModel @Inject constructor(
     getWalletBalanceUseCase: GetWalletBalanceUseCase
 ) : ViewModel() {
     private val machineId: String = checkNotNull(savedStateHandle["machineId"])
-    private val amount: Long = checkNotNull(savedStateHandle["amount"])
+    private val quantity: Int = savedStateHandle.get<String>("quantity")?.toIntOrNull() ?: 1
     val walletBalance = getWalletBalanceUseCase().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
     private val _uiState = MutableStateFlow<PaymentUiState>(PaymentUiState.Idle)
     val uiState: StateFlow<PaymentUiState> = _uiState.asStateFlow()
@@ -23,7 +23,7 @@ class PaymentViewModel @Inject constructor(
     fun confirmPayment() {
         viewModelScope.launch {
             _uiState.value = PaymentUiState.Processing
-            createVendingOrderUseCase(machineId, amount).fold(
+            createVendingOrderUseCase(machineId, quantity).fold(
                 onSuccess = { _uiState.value = PaymentUiState.Success(it) },
                 onFailure = {
                     _uiState.value = when (it) {

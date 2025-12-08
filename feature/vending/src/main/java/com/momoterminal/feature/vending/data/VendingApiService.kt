@@ -25,4 +25,7 @@ interface VendingApiService {
     
     @POST("vending/orders/{id}/cancel")
     suspend fun cancelOrder(@Path("id") orderId: String): Response<Unit>
+    
+    @GET("vending/age-verification")
+    suspend fun getAgeVerification(): Response<AgeVerificationDto>
 }

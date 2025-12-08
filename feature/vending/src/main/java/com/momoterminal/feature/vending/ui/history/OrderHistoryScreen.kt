@@ -18,8 +18,8 @@ import com.momoterminal.feature.vending.domain.model.*
 
 @Composable
 fun OrderHistoryScreen(
+    onNavigateToCode: (String) -> Unit, // orderId
     onNavigateBack: () -> Unit,
-    onOrderClick: (String) -> Unit,
     viewModel: OrderHistoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -48,7 +48,7 @@ fun OrderHistoryScreen(
                     contentPadding = PaddingValues(MomoTheme.spacing.md),
                     verticalArrangement = Arrangement.spacedBy(MomoTheme.spacing.sm)
                 ) {
-                    items(state.orders) { order -> OrderCard(order, { onOrderClick(order.id) }) }
+                    items(state.orders) { order -> OrderCard(order, { onNavigateToCode(order.id) }) }
                 }
             }
             is OrderHistoryUiState.Error -> EmptyState(
@@ -77,15 +77,18 @@ private fun OrderCard(order: VendingOrder, onClick: () -> Unit, modifier: Modifi
                     Text(order.formattedAmount(), style = MaterialTheme.typography.titleMedium)
                     StatusPill(
                         status = when (order.status) {
-                            OrderStatus.PENDING -> StatusType.PENDING
-                            OrderStatus.CODE_GENERATED -> StatusType.INFO
-                            OrderStatus.DISPENSED -> StatusType.SUCCESS
-                            OrderStatus.EXPIRED, OrderStatus.REFUNDED, OrderStatus.FAILED -> StatusType.ERROR
+                            OrderStatus.CREATED, OrderStatus.PAID -> StatusType.INFO
+                            OrderStatus.CODE_ISSUED, OrderStatus.IN_PROGRESS -> StatusType.WARNING
+                            OrderStatus.COMPLETED -> StatusType.SUCCESS
+                            OrderStatus.EXPIRED, OrderStatus.FAILED -> StatusType.ERROR
+                            OrderStatus.REFUNDED -> StatusType.INFO
                         },
                         label = when (order.status) {
-                            OrderStatus.PENDING -> "Pending"
-                            OrderStatus.CODE_GENERATED -> "Active"
-                            OrderStatus.DISPENSED -> "Completed"
+                            OrderStatus.CREATED -> "Created"
+                            OrderStatus.PAID -> "Paid"
+                            OrderStatus.CODE_ISSUED -> "Active"
+                            OrderStatus.IN_PROGRESS -> "In Progress"
+                            OrderStatus.COMPLETED -> "Completed"
                             OrderStatus.EXPIRED -> "Expired"
                             OrderStatus.REFUNDED -> "Refunded"
                             OrderStatus.FAILED -> "Failed"
@@ -97,7 +100,7 @@ private fun OrderCard(order: VendingOrder, onClick: () -> Unit, modifier: Modifi
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Default.LocalDrink, null, Modifier.size(16.dp), MaterialTheme.colorScheme.primary)
-                    Text("${order.productName} (${order.productSizeML}ml)", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${order.productName} (${order.servingSizeML}ml)", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Default.LocationOn, null, Modifier.size(16.dp), MaterialTheme.colorScheme.onSurfaceVariant)

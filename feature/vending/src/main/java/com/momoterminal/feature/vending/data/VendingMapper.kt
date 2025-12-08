@@ -3,23 +3,56 @@ package com.momoterminal.feature.vending.data
 import com.momoterminal.feature.vending.domain.model.*
 
 object VendingMapper {
-    fun mapMachine(dto: VendingMachineDto) = VendingMachine(
-        id = dto.id, name = dto.name, location = dto.location,
-        latitude = dto.latitude, longitude = dto.longitude,
-        distanceMeters = dto.distanceMeters, status = mapMachineStatus(dto.status),
-        productId = dto.productId, productName = dto.productName,
-        productSizeML = dto.productSizeML, price = dto.price, currency = dto.currency,
-        stockLevel = mapStockLevel(dto.stockLevel), imageUrl = dto.imageUrl
-    )
+    fun mapMachine(dto: VendingMachineDto): VendingMachine {
+        return VendingMachine(
+            id = dto.id,
+            name = dto.name,
+            location = dto.location,
+            latitude = dto.latitude,
+            longitude = dto.longitude,
+            distanceMeters = dto.distanceMeters,
+            status = mapMachineStatus(dto.status),
+            productId = dto.productId,
+            productName = dto.productName,
+            productCategory = mapProductCategory(dto.productCategory),
+            servingSizeML = dto.servingSizeML,
+            pricePerServing = dto.pricePerServing,
+            currency = dto.currency,
+            stockLevel = mapStockLevel(dto.stockLevel),
+            imageUrl = dto.imageUrl,
+            isAgeRestricted = dto.isAgeRestricted
+        )
+    }
     
     fun mapOrder(dto: VendingOrderDto): VendingOrder {
-        val code = if (dto.code != null && dto.codeExpiresAt != null) {
-            VendingCode(dto.code, dto.id, dto.machineId, dto.codeExpiresAt, dto.codeUsedAt)
-        } else null
         return VendingOrder(
-            dto.id, dto.userId, dto.machineId, dto.machineName, dto.machineLocation,
-            dto.productName, dto.productSizeML, dto.amount, mapOrderStatus(dto.status),
-            dto.createdAt, code
+            id = dto.id,
+            userId = dto.userId,
+            machineId = dto.machineId,
+            machineName = dto.machineName,
+            machineLocation = dto.machineLocation,
+            productName = dto.productName,
+            productCategory = mapProductCategory(dto.productCategory),
+            quantity = dto.quantity,
+            servingSizeML = dto.servingSizeML,
+            pricePerServing = dto.pricePerServing,
+            totalAmount = dto.totalAmount,
+            status = mapOrderStatus(dto.status),
+            createdAt = dto.createdAt,
+            code = dto.code?.let { mapCode(it, dto.id, dto.machineId) }
+        )
+    }
+    
+    fun mapCode(dto: VendingCodeDto, orderId: String, machineId: String): VendingCode {
+        return VendingCode(
+            code = dto.code,
+            orderId = orderId,
+            machineId = machineId,
+            expiresAt = dto.expiresAt,
+            usedAt = dto.usedAt,
+            totalServes = dto.totalServes,
+            remainingServes = dto.remainingServes,
+            closedAt = dto.closedAt
         )
     }
     
@@ -39,12 +72,26 @@ object VendingMapper {
     }
     
     private fun mapOrderStatus(status: String) = when (status.uppercase()) {
-        "PENDING" -> OrderStatus.PENDING
-        "CODE_GENERATED" -> OrderStatus.CODE_GENERATED
-        "DISPENSED" -> OrderStatus.DISPENSED
+        "CREATED" -> OrderStatus.CREATED
+        "PAID" -> OrderStatus.PAID
+        "CODE_ISSUED" -> OrderStatus.CODE_ISSUED
+        "CODE_GENERATED" -> OrderStatus.CODE_ISSUED
+        "IN_PROGRESS" -> OrderStatus.IN_PROGRESS
+        "COMPLETED" -> OrderStatus.COMPLETED
+        "DISPENSED" -> OrderStatus.COMPLETED
         "EXPIRED" -> OrderStatus.EXPIRED
         "REFUNDED" -> OrderStatus.REFUNDED
         "FAILED" -> OrderStatus.FAILED
-        else -> OrderStatus.PENDING
+        "PENDING" -> OrderStatus.CREATED
+        else -> OrderStatus.FAILED
+    }
+    
+    private fun mapProductCategory(category: String) = when (category.uppercase()) {
+        "JUICE" -> ProductCategory.JUICE
+        "HOT_COFFEE" -> ProductCategory.HOT_COFFEE
+        "COCKTAIL" -> ProductCategory.COCKTAIL
+        "ALCOHOL" -> ProductCategory.ALCOHOL
+        "BEER" -> ProductCategory.BEER
+        else -> ProductCategory.JUICE
     }
 }

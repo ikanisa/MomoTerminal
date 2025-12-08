@@ -29,11 +29,35 @@ class VendingRepositoryImpl @Inject constructor(
         } else Result.failure(Exception("Failed: ${response.message()}"))
     } catch (e: Exception) { Result.failure(e) }
     
-    override suspend fun createOrder(machineId: String, amount: Long) = try {
-        val response = apiService.createOrder(CreateOrderRequest(machineId, amount))
+    override suspend fun createOrder(machineId: String, quantity: Int) = try {
+        val response = apiService.createOrder(CreateOrderRequest(machineId, quantity))
         if (response.isSuccessful && response.body() != null) {
             val body = response.body()!!
-            Result.success(VendingMapper.mapOrder(body.order.copy(code = body.code, codeExpiresAt = body.codeExpiresAt)))
+            val codeDto = VendingCodeDto(
+                code = body.code,
+                expiresAt = body.codeExpiresAt,
+                totalServes = body.totalServes,
+                remainingServes = body.remainingServes,
+                usedAt = null,
+                closedAt = null
+            )
+            val orderDto = VendingOrderDto(
+                id = body.orderId,
+                userId = "",
+                machineId = machineId,
+                machineName = "",
+                machineLocation = "",
+                productName = "",
+                productCategory = "JUICE",
+                quantity = quantity,
+                servingSizeML = 500,
+                pricePerServing = 0,
+                totalAmount = 0,
+                status = body.orderStatus,
+                createdAt = System.currentTimeMillis(),
+                code = codeDto
+            )
+            Result.success(VendingMapper.mapOrder(orderDto))
         } else Result.failure(Exception("Failed: ${response.message()}"))
     } catch (e: Exception) { Result.failure(e) }
     

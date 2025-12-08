@@ -12,11 +12,13 @@ data class VendingMachineDto(
     val status: String,
     @SerializedName("product_id") val productId: String,
     @SerializedName("product_name") val productName: String,
-    @SerializedName("product_size_ml") val productSizeML: Int = 500,
-    val price: Long,
+    @SerializedName("product_category") val productCategory: String,
+    @SerializedName("serving_size_ml") val servingSizeML: Int = 500,
+    @SerializedName("price_per_serving") val pricePerServing: Long,
     val currency: String = "XAF",
     @SerializedName("stock_level") val stockLevel: String,
-    @SerializedName("image_url") val imageUrl: String? = null
+    @SerializedName("image_url") val imageUrl: String? = null,
+    @SerializedName("is_age_restricted") val isAgeRestricted: Boolean = false
 )
 
 data class VendingOrderDto(
@@ -26,24 +28,38 @@ data class VendingOrderDto(
     @SerializedName("machine_name") val machineName: String,
     @SerializedName("machine_location") val machineLocation: String,
     @SerializedName("product_name") val productName: String,
-    @SerializedName("product_size_ml") val productSizeML: Int,
-    val amount: Long,
+    @SerializedName("product_category") val productCategory: String,
+    val quantity: Int,
+    @SerializedName("serving_size_ml") val servingSizeML: Int,
+    @SerializedName("price_per_serving") val pricePerServing: Long,
+    @SerializedName("total_amount") val totalAmount: Long,
     val status: String,
     @SerializedName("created_at") val createdAt: Long,
-    val code: String? = null,
-    @SerializedName("code_expires_at") val codeExpiresAt: Long? = null,
-    @SerializedName("code_used_at") val codeUsedAt: Long? = null
+    val code: VendingCodeDto? = null
+)
+
+data class VendingCodeDto(
+    val code: String,
+    @SerializedName("expires_at") val expiresAt: Long,
+    @SerializedName("total_serves") val totalServes: Int,
+    @SerializedName("remaining_serves") val remainingServes: Int,
+    @SerializedName("used_at") val usedAt: Long? = null,
+    @SerializedName("closed_at") val closedAt: Long? = null
 )
 
 data class CreateOrderRequest(
     @SerializedName("machine_id") val machineId: String,
-    val amount: Long
+    val quantity: Int
 )
 
 data class CreateOrderResponse(
-    val order: VendingOrderDto,
+    @SerializedName("order_id") val orderId: String,
+    @SerializedName("order_status") val orderStatus: String,
     val code: String,
-    @SerializedName("code_expires_at") val codeExpiresAt: Long
+    @SerializedName("code_expires_at") val codeExpiresAt: Long,
+    @SerializedName("total_serves") val totalServes: Int,
+    @SerializedName("remaining_serves") val remainingServes: Int,
+    @SerializedName("wallet_balance") val walletBalance: Long
 )
 
 data class MachinesResponse(
@@ -52,4 +68,10 @@ data class MachinesResponse(
 
 data class OrdersResponse(
     val orders: List<VendingOrderDto>
+)
+
+data class AgeVerificationDto(
+    @SerializedName("is_verified") val isVerified: Boolean,
+    @SerializedName("date_of_birth") val dateOfBirth: String? = null,
+    @SerializedName("verification_method") val verificationMethod: String? = null
 )
