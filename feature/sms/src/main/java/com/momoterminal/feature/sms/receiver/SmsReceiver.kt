@@ -4,9 +4,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.momoterminal.core.ai.AiParserChain
+import com.momoterminal.core.common.worker.SmsTransactionSyncScheduler
 import com.momoterminal.core.database.dao.SmsTransactionDao
 import com.momoterminal.core.database.entity.SmsTransactionEntity
 import com.momoterminal.core.database.entity.SmsTransactionType
@@ -32,6 +31,7 @@ class SmsReceiver : BroadcastReceiver() {
     @Inject lateinit var smsParser: MomoSmsParser
     @Inject lateinit var aiParserChain: AiParserChain
     @Inject lateinit var smsTransactionDao: SmsTransactionDao
+    @Inject lateinit var syncScheduler: SmsTransactionSyncScheduler
     
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
@@ -76,25 +76,11 @@ class SmsReceiver : BroadcastReceiver() {
                 Timber.i("SMS transaction saved to database: id=${entity.id}")
                 
                 // Schedule sync worker to upload to Supabase
-                scheduleSyncWorker(context)
+                syncScheduler.scheduleSync(context)
                 
             } catch (e: Exception) {
                 Timber.e(e, "Failed to process MoMo SMS")
             }
-        }
-    }
-    
-    private fun scheduleSyncWorker(context: Context) {
-        try {
-            // Use reflection to avoid direct dependency on app module
-            val syncWorkerClass = Class.forName("com.momoterminal.worker.SmsTransactionSyncWorker")
-            val syncWorkRequest = OneTimeWorkRequestBuilder<androidx.work.ListenableWorker>(syncWorkerClass as Class<out androidx.work.ListenableWorker>)
-                .build()
-            
-            WorkManager.getInstance(context).enqueue(syncWorkRequest)
-            Timber.d("SmsTransactionSyncWorker scheduled")
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to schedule sync worker - will retry on next app launch")
         }
     }
 }

@@ -31,7 +31,6 @@ dependencies {
     // Core modules
     implementation(project(":core:common"))
     implementation(project(":core:database"))
-    implementation(project(":feature:sms"))
     
     // Hilt
     implementation(libs.hilt.android)

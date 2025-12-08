@@ -9,21 +9,25 @@ package com.momoterminal.core.ai
 object AiConfig {
     
     // PRIMARY: OpenAI GPT-3.5-turbo (higher accuracy)
-    var openAiApiKey: String = ""
-        private set
+    private var _openAiApiKey: String = ""
+    val openAiApiKey: String
+        get() = _openAiApiKey
     
-    var isOpenAiEnabled: Boolean = false
-        private set
+    private var _isOpenAiEnabled: Boolean = false
+    val isOpenAiEnabled: Boolean
+        get() = _isOpenAiEnabled
     
     const val OPENAI_MODEL = "gpt-3.5-turbo"
     const val OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions"
     
     // FALLBACK: Google Gemini 1.5 Flash (cost-effective backup)
-    var geminiApiKey: String = ""
-        private set
+    private var _geminiApiKey: String = ""
+    val geminiApiKey: String
+        get() = _geminiApiKey
     
-    var isGeminiEnabled: Boolean = false
-        private set
+    private var _isGeminiEnabled: Boolean = false
+    val isGeminiEnabled: Boolean
+        get() = _isGeminiEnabled
     
     const val GEMINI_MODEL = "gemini-1.5-flash"
     
@@ -40,20 +44,29 @@ object AiConfig {
         ParserPriority.REGEX
     )
     
+    private var _initialized = false
+    
     /**
      * Initialize AI configuration with API keys.
      * This should be called from Application.onCreate() with BuildConfig values.
+     * Can only be called once.
      */
     fun initialize(
         openAiKey: String,
         geminiKey: String,
         aiParsingEnabled: Boolean
     ) {
-        openAiApiKey = openAiKey
-        geminiApiKey = geminiKey
+        if (_initialized) {
+            return // Already initialized, ignore subsequent calls
+        }
         
-        isOpenAiEnabled = aiParsingEnabled && openAiKey.isNotBlank()
-        isGeminiEnabled = geminiKey.isNotBlank()
+        _openAiApiKey = openAiKey
+        _geminiApiKey = geminiKey
+        
+        _isOpenAiEnabled = aiParsingEnabled && openAiKey.isNotBlank()
+        _isGeminiEnabled = geminiKey.isNotBlank()
+        
+        _initialized = true
     }
     
     /**

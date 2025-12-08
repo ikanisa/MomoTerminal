@@ -2,7 +2,6 @@ package com.momoterminal.core.ai
 
 import com.momoterminal.core.database.entity.SmsTransactionEntity
 import com.momoterminal.core.database.entity.SyncStatus
-import com.momoterminal.feature.sms.MomoSmsParser
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,7 +18,7 @@ import javax.inject.Singleton
 class AiParserChain @Inject constructor(
     private val openAiParser: OpenAiParser,
     private val geminiParser: GeminiParser,
-    private val regexParser: MomoSmsParser
+    private val regexParser: RegexSmsParser
 ) {
     
     companion object {
