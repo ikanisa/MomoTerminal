@@ -91,7 +91,13 @@ android {
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
         
-        // Gemini AI configuration
+        // OpenAI configuration (PRIMARY AI parser)
+        val openAiApiKey = localProps.getProperty("OPENAI_API_KEY")
+            ?: System.getenv("OPENAI_API_KEY")
+            ?: ""
+        buildConfigField("String", "OPENAI_API_KEY", "\"$openAiApiKey\"")
+        
+        // Gemini AI configuration (FALLBACK AI parser)
         val geminiApiKey = localProps.getProperty("GEMINI_API_KEY")
             ?: System.getenv("GEMINI_API_KEY")
             ?: ""
@@ -99,7 +105,7 @@ android {
         
         // AI parsing feature flag (enabled by default when API key is present)
         val aiParsingEnabled = localProps.getProperty("AI_PARSING_ENABLED")?.toBoolean()
-            ?: geminiApiKey.isNotBlank()
+            ?: (openAiApiKey.isNotBlank() || geminiApiKey.isNotBlank())
         buildConfigField("boolean", "AI_PARSING_ENABLED", "$aiParsingEnabled")
         
         // Certificate pinning configuration
@@ -325,6 +331,7 @@ dependencies {
     implementation(project(":core:performance"))
     implementation(project(":core:i18n"))
     implementation(project(":core:security"))
+    implementation(project(":core:ai"))
     
     // Feature modules
     implementation(project(":feature:nfc"))

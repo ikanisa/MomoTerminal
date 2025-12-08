@@ -10,7 +10,7 @@
 
 ### ✅ Complete SMS-to-Supabase Flow
 - **SMS Receiver**: Catches Mobile Money SMS
-- **AI Parser**: Google Gemini (PRIMARY) + OpenAI (backup)
+- **AI Parser**: OpenAI GPT-3.5 (PRIMARY) → Google Gemini (FALLBACK) → Regex (FINAL FALLBACK)
 - **Vendor Matching**: Auto-matches by MOMO number
 - **Supabase Sync**: Saves to `vendor_sms_transactions` table
 
@@ -22,31 +22,41 @@
 ### ✅ Production Configuration
 - API keys from `local.properties` (gitignored)
 - BuildConfig auto-reads keys at build time
-- Gemini as PRIMARY (10x cheaper than OpenAI)
+- **OpenAI as PRIMARY** (higher accuracy for financial transactions)
+- **Gemini as FALLBACK** (cost-effective backup)
+- **Regex as FINAL FALLBACK** (free, always available)
 - All security best practices followed
 
 ---
 
-## 💰 Cost Structure
+## 💰 Cost Structure & Parsing Flow
 
-### Google Gemini (PRIMARY)
+### OpenAI GPT-3.5 (PRIMARY)
 ```
-Cost: $0.0001 per SMS
+Cost: $0.002 per SMS
+Monthly (1000 SMS/day): ~$60
+Speed: 2-3 seconds
+Accuracy: 95-97% (BEST for financial transactions)
+```
+
+### Google Gemini 1.5 Flash (FALLBACK)
+```
+Cost: $0.0001 per SMS (10x cheaper than OpenAI)
 Free tier: 15 requests/minute
 Monthly (1000 SMS/day): ~$3
 Speed: 1-2 seconds
 Accuracy: 93-95%
 ```
 
-### OpenAI GPT-3.5 (Backup)
+### Regex Parser (FINAL FALLBACK)
 ```
-Cost: $0.002 per SMS (20x more expensive)
-Monthly (1000 SMS/day): ~$60
-Speed: 2-3 seconds
-Accuracy: 95-97%
+Cost: $0 (local processing)
+Speed: <0.1 seconds
+Accuracy: 80-85%
+Always available as last resort
 ```
 
-**Cost Savings**: 95% by using Gemini! 💸
+**Parsing Flow**: OpenAI (PRIMARY) → Gemini (FALLBACK) → Regex (FINAL FALLBACK)
 
 ---
 
@@ -55,8 +65,14 @@ Accuracy: 95-97%
 ### 1. API Key (Already Done!)
 ```properties
 # local.properties
+# PRIMARY: OpenAI (highest accuracy)
+OPENAI_API_KEY=sk-your-openai-key-here
+
+# FALLBACK: Gemini (cost-effective backup)
 GEMINI_API_KEY=AIzaSyAOvF8vW9mPxKvxqK8zT0J0aH5d3qL8Wc4
-AI_PROVIDER=gemini
+
+# Enable AI parsing
+AI_PARSING_ENABLED=true
 ```
 
 ### 2. Build & Deploy

@@ -31,6 +31,7 @@ include(":core:os-integration")
 include(":core:performance")
 include(":core:i18n")
 include(":core:security")
+include(":core:ai")
 
 // Feature modules
 include(":feature:payment")

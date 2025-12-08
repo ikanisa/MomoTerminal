@@ -7,6 +7,7 @@ import androidx.multidex.MultiDexApplication
 import androidx.work.Configuration
 import com.google.firebase.FirebaseApp
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.momoterminal.core.ai.AiConfig
 import com.momoterminal.monitoring.AnalyticsHelper
 import com.momoterminal.monitoring.CrashlyticsHelper
 import com.momoterminal.monitoring.PerformanceHelper
@@ -49,6 +50,7 @@ class MomoTerminalApp : MultiDexApplication(), Configuration.Provider {
         initializeCrashRecovery()
         initializeFirebase()
         initializeTimber()
+        initializeAiConfig()
         initializeOfflineSync()
     }
 
@@ -93,6 +95,19 @@ class MomoTerminalApp : MultiDexApplication(), Configuration.Provider {
             // Plant a Crashlytics tree for production
             Timber.plant(CrashlyticsTree(crashlyticsHelper))
         }
+    }
+
+    /**
+     * Initialize AI configuration for SMS parsing.
+     */
+    private fun initializeAiConfig() {
+        AiConfig.initialize(
+            openAiKey = BuildConfig.OPENAI_API_KEY,
+            geminiKey = BuildConfig.GEMINI_API_KEY,
+            aiParsingEnabled = BuildConfig.AI_PARSING_ENABLED
+        )
+        
+        Timber.d("AI Config initialized - OpenAI: ${AiConfig.isOpenAiEnabled}, Gemini: ${AiConfig.isGeminiEnabled}")
     }
 
     /**

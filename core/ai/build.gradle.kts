@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.momoterminal.feature.sms"
+    namespace = "com.momoterminal.core.ai"
     compileSdk = 35
 
     defaultConfig {
@@ -21,25 +21,35 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 dependencies {
+    // Core modules
     implementation(project(":core:common"))
-    implementation(project(":core:domain"))
-    implementation(project(":core:data"))
     implementation(project(":core:database"))
-    implementation(project(":core:designsystem"))
-    implementation(project(":core:ai"))
+    implementation(project(":feature:sms"))
     
+    // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     
-    implementation(libs.hilt.work)
-    implementation(libs.work.runtime)
-    
-    implementation(libs.play.services.auth)
-    implementation(libs.play.services.auth.api.phone)
-    
+    // Coroutines
     implementation(libs.coroutines.android)
+    
+    // Logging
     implementation(libs.timber)
+    
+    // Google Generative AI (Gemini)
+    implementation(libs.generativeai)
+    
+    // OkHttp for OpenAI API calls
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+    
+    // JSON parsing
+    implementation(libs.gson)
 }
