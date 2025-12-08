@@ -1,10 +1,12 @@
 package com.momoterminal.presentation.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Animation
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.Animation
 import androidx.compose.material.icons.outlined.Nfc
 import androidx.compose.material.icons.filled.Settings
@@ -83,7 +85,9 @@ sealed class Screen(
     
     data object Wallet : Screen(
         route = "wallet",
-        title = "Wallet"
+        title = "Wallet",
+        selectedIcon = Icons.Filled.AccountBalanceWallet,
+        unselectedIcon = Icons.Outlined.AccountBalanceWallet
     )
     
     // Capabilities Demo screen - demonstrates various Android app capabilities
@@ -113,9 +117,9 @@ sealed class Screen(
     companion object {
         /**
          * All screens that appear in the bottom navigation bar.
-         * Terminal is now integrated into Home screen.
+         * History moved to Settings, Wallet added to main nav.
          */
-        val bottomNavItems = listOf(Home, Transactions, Settings)
+        val bottomNavItems = listOf(Home, Wallet, Settings)
         
         /**
          * Authentication screens.
