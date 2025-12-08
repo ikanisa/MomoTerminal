@@ -16,7 +16,7 @@ import com.momoterminal.core.database.entity.*
         NfcTagEntity::class,
         TokenEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class MomoDatabase : RoomDatabase() {

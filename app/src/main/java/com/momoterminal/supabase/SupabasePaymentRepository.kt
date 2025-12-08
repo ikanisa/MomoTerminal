@@ -1,5 +1,6 @@
 package com.momoterminal.supabase
 
+import com.momoterminal.core.database.entity.SmsTransactionEntity
 import com.momoterminal.core.database.entity.TransactionEntity
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.query.Columns
@@ -16,6 +17,8 @@ class SupabasePaymentRepository @Inject constructor(
     companion object {
         private const val TRANSACTIONS_TABLE = "transactions"
         private const val MERCHANTS_TABLE = "merchants"
+        private const val VENDOR_SMS_TRANSACTIONS_TABLE = "vendor_sms_transactions"
+        private const val SMS_PARSING_VENDORS_TABLE = "sms_parsing_vendors"
     }
 
     /**
@@ -115,6 +118,83 @@ class SupabasePaymentRepository @Inject constructor(
             emptyList()
         }
     }
+
+    /**
+     * Sync SMS transaction to Supabase.
+     * Looks up vendor by MOMO number and inserts into vendor_sms_transactions table.
+     */
+    suspend fun syncSmsTransaction(transaction: SmsTransactionEntity): Result<String> {
+        return try {
+            // Extract phone number from transaction (sender or recipient based on type)
+            val phoneNumber = extractPhoneNumber(transaction)
+            
+            // Find vendor by MOMO number
+            val vendorId = if (phoneNumber != null) {
+                findVendorByMomoNumber(phoneNumber)
+            } else {
+                null
+            }
+            
+            // Prepare transaction data for sync
+            val insert = VendorSmsTransactionInsert(
+                vendor_id = vendorId,
+                raw_message = transaction.rawMessage,
+                sender = transaction.sender,
+                amount_in_pesewas = (transaction.amount * 100).toLong(),
+                currency = transaction.currency,
+                transaction_type = transaction.type.name,
+                balance_in_pesewas = transaction.balance?.let { (it * 100).toLong() },
+                reference = transaction.reference,
+                timestamp = java.time.Instant.ofEpochMilli(transaction.timestamp).toString(),
+                parsed_by = transaction.parsedBy,
+                ai_confidence = transaction.aiConfidence,
+                payee_momo_number = phoneNumber
+            )
+
+            val result = postgrest.from(VENDOR_SMS_TRANSACTIONS_TABLE)
+                .insert(insert) { select(Columns.list("id")) }
+                .decodeSingle<IdResponse>()
+
+            Timber.d("SMS transaction synced: ${result.id}")
+            Result.success(result.id)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to sync SMS transaction")
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Find vendor by their registered MOMO number.
+     */
+    private suspend fun findVendorByMomoNumber(momoNumber: String): String? {
+        return try {
+            val result = postgrest.from(SMS_PARSING_VENDORS_TABLE)
+                .select(Columns.list("vendor_id")) {
+                    filter { eq("momo_number", momoNumber) }
+                    limit(1)
+                }
+                .decodeList<VendorIdResponse>()
+            
+            result.firstOrNull()?.vendor_id
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to find vendor by MOMO number: $momoNumber")
+            null
+        }
+    }
+
+    /**
+     * Extract phone number from transaction based on type.
+     * TODO: Implement proper phone number extraction from transaction data.
+     * This is a temporary placeholder that returns the reference field.
+     * In production, this should parse the raw SMS message to extract
+     * the actual phone number of the sender/recipient.
+     */
+    private fun extractPhoneNumber(transaction: SmsTransactionEntity): String? {
+        // Placeholder - adjust based on actual requirements
+        // Future implementation should parse transaction.rawMessage or use
+        // additional fields added to SmsTransactionEntity
+        return transaction.reference
+    }
 }
 
 @Serializable
@@ -136,6 +216,22 @@ data class TransactionInsert(
 )
 
 @Serializable
+data class VendorSmsTransactionInsert(
+    val vendor_id: String? = null,
+    val raw_message: String,
+    val sender: String,
+    val amount_in_pesewas: Long,
+    val currency: String,
+    val transaction_type: String,
+    val balance_in_pesewas: Long? = null,
+    val reference: String? = null,
+    val timestamp: String,
+    val parsed_by: String,
+    val ai_confidence: Float,
+    val payee_momo_number: String? = null
+)
+
+@Serializable
 data class MerchantInsert(
     val phone: String,
     val country_code: String,
@@ -144,6 +240,9 @@ data class MerchantInsert(
 
 @Serializable
 data class IdResponse(val id: String)
+
+@Serializable
+data class VendorIdResponse(val vendor_id: String)
 
 @Serializable
 data class TransactionResponse(

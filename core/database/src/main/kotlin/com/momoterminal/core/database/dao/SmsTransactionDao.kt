@@ -3,6 +3,7 @@ package com.momoterminal.core.database.dao
 import androidx.room.*
 import com.momoterminal.core.database.entity.SmsTransactionEntity
 import com.momoterminal.core.database.entity.SmsTransactionType
+import com.momoterminal.core.database.entity.SyncStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -33,4 +34,13 @@ interface SmsTransactionDao {
 
     @Query("SELECT COUNT(*) FROM sms_transactions WHERE synced = 0")
     fun observeUnsyncedCount(): Flow<Int>
+
+    @Query("SELECT * FROM sms_transactions WHERE sync_status = 'PENDING' ORDER BY timestamp ASC")
+    suspend fun getPendingSyncTransactions(): List<SmsTransactionEntity>
+
+    @Query("UPDATE sms_transactions SET sync_status = :status, supabase_id = :supabaseId, synced = CASE WHEN :status = 'SYNCED' THEN 1 ELSE synced END WHERE id = :id")
+    suspend fun updateSyncStatus(id: String, status: SyncStatus, supabaseId: String? = null)
+
+    @Query("UPDATE sms_transactions SET retry_count = :retryCount WHERE id = :id")
+    suspend fun updateRetryCount(id: String, retryCount: Int)
 }

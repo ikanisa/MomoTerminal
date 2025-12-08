@@ -4,7 +4,7 @@ import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import com.google.ai.client.generativeai.type.generationConfig
 import com.momoterminal.core.database.entity.SmsTransactionType
-import com.momoterminal.sms.MomoSmsParser
+import com.momoterminal.feature.sms.MomoSmsParser
 import org.json.JSONObject
 import timber.log.Timber
 import javax.inject.Inject
