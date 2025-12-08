@@ -70,6 +70,7 @@ class SettingsViewModel @Inject constructor(
         val isBiometricEnabled: Boolean = false,
         val isBiometricAvailable: Boolean = false,
         val smsAutoSyncEnabled: Boolean = true,
+        val isDarkModeEnabled: Boolean = false,
         val isNfcTerminalEnabled: Boolean = false,
         val appVersion: String = "1.0.0",
         val isConfigured: Boolean = false,
@@ -180,6 +181,12 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             userPreferences.nfcTerminalEnabledFlow.collect { enabled ->
                 _uiState.update { it.copy(isNfcTerminalEnabled = enabled) }
+            }
+        }
+        
+        viewModelScope.launch {
+            userPreferences.darkModeEnabledFlow.collect { enabled ->
+                _uiState.update { it.copy(isDarkModeEnabled = enabled) }
             }
         }
     }
@@ -335,6 +342,26 @@ class SettingsViewModel @Inject constructor(
             userPreferences.clearAll()
         }
         authRepository.logout()
+    }
+
+    fun toggleDarkMode(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferences.setDarkModeEnabled(enabled)
+            _uiState.update { it.copy(isDarkModeEnabled = enabled) }
+            Timber.d("Dark mode ${if (enabled) "enabled" else "disabled"}")
+        }
+    }
+
+    fun clearCache() {
+        viewModelScope.launch {
+            try {
+                // Clear app cache
+                context.cacheDir.deleteRecursively()
+                Timber.d("Cache cleared successfully")
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to clear cache")
+            }
+        }
     }
 
     fun isPhoneValid(): Boolean = _uiState.value.isMomoIdentifierValid && _uiState.value.momoIdentifier.isNotBlank()

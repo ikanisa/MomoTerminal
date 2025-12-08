@@ -292,6 +292,31 @@ fun SettingsScreen(
                 onCheckedChange = viewModel::toggleSmsAutoSync
             )
             
+            SettingsToggle(
+                icon = Icons.Default.DarkMode,
+                title = "Dark Mode",
+                description = "Use dark theme throughout the app",
+                checked = uiState.isDarkModeEnabled,
+                onCheckedChange = viewModel::toggleDarkMode
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Clear Cache Button
+            OutlinedButton(
+                onClick = { viewModel.clearCache() },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors()
+            ) {
+                Icon(Icons.Default.DeleteSweep, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Clear Cache")
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(16.dp))
+            
             // About Section
             SectionHeader(
                 title = stringResource(R.string.about),

@@ -147,6 +147,15 @@ class UserPreferences @Inject constructor(
     
     suspend fun getNfcTerminalEnabled() = nfcTerminalEnabledFlow.first()
     
+    // Dark Mode
+    val darkModeEnabledFlow: Flow<Boolean> = context.dataStore.data.map { it[KEY_DARK_MODE_ENABLED] ?: false }
+    
+    suspend fun setDarkModeEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[KEY_DARK_MODE_ENABLED] = enabled }
+    }
+    
+    suspend fun getDarkModeEnabled() = darkModeEnabledFlow.first()
+    
     // Device UUID
     suspend fun saveDeviceUuid(uuid: String) {
         context.dataStore.edit { it[KEY_DEVICE_UUID] = uuid }
@@ -175,6 +184,7 @@ class UserPreferences @Inject constructor(
         // Settings keys
         private val KEY_BIOMETRIC_ENABLED = booleanPreferencesKey("biometric_enabled")
         private val KEY_SMS_AUTO_SYNC_ENABLED = booleanPreferencesKey("sms_auto_sync_enabled")
+        private val KEY_DARK_MODE_ENABLED = booleanPreferencesKey("dark_mode_enabled")
         private val KEY_KEEP_SCREEN_ON = booleanPreferencesKey("keep_screen_on")
         private val KEY_VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
         private val KEY_AUTO_LOCK_TIMEOUT = intPreferencesKey("auto_lock_timeout_minutes")
