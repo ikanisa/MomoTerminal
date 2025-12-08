@@ -2,22 +2,35 @@
 
 ## ⚡ Quick Start (2 Minutes)
 
-### 1. Get FREE Gemini API Key
+### 1. Get API Keys
 
+**PRIMARY: OpenAI GPT-3.5 (Recommended for Production)**
+```bash
+1. Visit: https://platform.openai.com/api-keys
+2. Click "Create new secret key"
+3. Copy the key (starts with sk-...)
+```
+**Cost**: $0.002/SMS, Accuracy: 95-97%
+
+**FALLBACK: Google Gemini (Cost-Effective Backup)**
 ```bash
 1. Visit: https://aistudio.google.com/app/apikey
 2. Click "Create API Key"
 3. Copy the key (starts with AIza...)
 ```
-
 **Cost**: FREE tier = 15 requests/minute, then $0.0001/SMS (~10,000 SMS = $1)
 
-### 2. Add Key to local.properties
+### 2. Add Keys to local.properties
 
-Already done! Just verify:
 ```properties
+# PRIMARY: OpenAI (highest accuracy for financial transactions)
+OPENAI_API_KEY=sk-your-openai-key-here
+
+# FALLBACK: Gemini (cost-effective backup)
 GEMINI_API_KEY=AIzaSyAOvF8vW9mPxKvxqK8zT0J0aH5d3qL8Wc4
-AI_PROVIDER=gemini
+
+# Enable AI parsing
+AI_PARSING_ENABLED=true
 ```
 
 ### 3. Build & Test
@@ -34,15 +47,24 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb emu sms send 5556 "You received RWF 5000 from John BOSCO (250788123). Transaction ID: MP123456"
 
 # Check logs
-adb logcat | grep -E "SMS|Vendor|AI|Gemini"
+adb logcat | grep -E "SMS|Vendor|AI|OpenAI|Gemini"
 ```
 
 Expected output:
 ```
 ✅ SMS received from: 5556
-✅ Processing MoMo SMS from 5556  
-✅ AI parsed: ParsedSmsData(payerName=John BOSCO, amount=5000.0, ...)
+✅ Processing MoMo SMS from 5556
+✅ Trying OpenAI parser (PRIMARY)
+✅ Successfully parsed with OpenAI
+✅ SMS parsed successfully: parsedBy=openai, confidence=0.96
 ✅ SMS processed successfully: <uuid>
+```
+
+If OpenAI fails, you'll see:
+```
+⚠️ OpenAI parsing failed, trying Gemini
+✅ Trying Gemini parser (FALLBACK)
+✅ Successfully parsed with Gemini
 ```
 
 ---
@@ -58,7 +80,9 @@ Expected output:
    → payee_momo_number updated in database
    
 3. SMS arrives: "You received RWF 5000 from Jane (250788999)"
-   → Gemini AI parses SMS
+   → OpenAI GPT-3.5 parses SMS (PRIMARY)
+   → If OpenAI fails → Gemini parses SMS (FALLBACK)
+   → If Gemini fails → Regex parses SMS (FINAL FALLBACK)
    → Matches vendor by MOMO number
    → Saves to vendor_sms_transactions
    
@@ -83,20 +107,28 @@ Expected output:
 
 ## 💰 Cost Breakdown
 
-### Gemini (PRIMARY - Recommended)
+### OpenAI GPT-3.5-turbo (PRIMARY - Highest Accuracy)
+- **Cost**: $0.002 per SMS
+- **Monthly Cost** (1000 SMS/day): ~$60/month
+- **Speed**: 2-3 seconds
+- **Accuracy**: 95-97% (BEST for financial transactions)
+
+### Google Gemini 1.5 Flash (FALLBACK - Cost-Effective)
 - **Free Tier**: 15 requests/minute
 - **Paid**: $0.075 per 1M input tokens (~$0.0001 per SMS)
 - **Monthly Cost** (1000 SMS/day): ~$3/month
 - **Speed**: 1-2 seconds
 - **Accuracy**: 93-95%
 
-### OpenAI (Backup - If Gemini fails)
-- **Cost**: $0.002 per SMS
-- **Monthly Cost** (1000 SMS/day): ~$60/month
-- **Speed**: 2-3 seconds  
-- **Accuracy**: 95-97%
+### Regex Parser (FINAL FALLBACK - Always Available)
+- **Cost**: $0 (local processing)
+- **Speed**: <0.1 seconds
+- **Accuracy**: 80-85%
 
-**Recommendation**: Use Gemini primary, OpenAI as fallback = Best cost/performance
+**Recommended Setup**: 
+- Use OpenAI as PRIMARY for maximum accuracy on financial transactions
+- Use Gemini as FALLBACK for cost-effective backup
+- Regex ensures parsing never completely fails
 
 ---
 
