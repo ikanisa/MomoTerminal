@@ -74,19 +74,52 @@ class WalletViewModel @Inject constructor(
         }
     }
 
-    fun initiateTopUp(amount: Long) {
+    data class TopUpResult(
+        val success: Boolean,
+        val ussdCode: String? = null,
+        val errorMessage: String? = null
+    )
+
+    fun validateAndInitiateTopUp(amount: Long): TopUpResult {
+        val state = _uiState.value
+        
+        // Validate mobile money number is set
+        if (state.merchantPhone.isBlank()) {
+            _uiState.update { it.copy(error = "Mobile Money number not set. Please add it in Settings.") }
+            return TopUpResult(
+                success = false,
+                errorMessage = "Mobile Money number not set. Please add it in Settings."
+            )
+        }
+        
+        // Validate amount range
+        if (amount !in 100..4000) {
+            _uiState.update { it.copy(error = "Amount must be between 100 and 4,000 FRW") }
+            return TopUpResult(
+                success = false,
+                errorMessage = "Amount must be between 100 and 4,000 FRW"
+            )
+        }
+        
         viewModelScope.launch {
             try {
-                Timber.d("Initiating top-up for amount: $amount")
+                Timber.d("Initiating top-up for amount: $amount to ${state.merchantPhone}")
+                // Clear any previous errors
+                _uiState.update { it.copy(error = null) }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to initiate top-up")
+                _uiState.update { it.copy(error = e.message) }
             }
         }
+        
+        val ussdCode = generateTopUpUssd(amount)
+        return TopUpResult(success = true, ussdCode = ussdCode)
     }
 
-    fun generateTopUpUssd(amount: Long): String {
+    private fun generateTopUpUssd(amount: Long): String {
         val state = _uiState.value
-        val phone = state.merchantPhone.ifEmpty { "250782123456" }
+        val phone = state.merchantPhone
+        // MTN Rwanda top-up USSD: *182*8*1*merchantPhone*amount#
         val ussdCode = "*182*8*1*$phone*$amount#"
         Timber.d("Generated USSD: $ussdCode")
         return ussdCode

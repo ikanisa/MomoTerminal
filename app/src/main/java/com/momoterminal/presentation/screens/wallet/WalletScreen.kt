@@ -131,13 +131,18 @@ fun WalletScreen(
             onAmountChange = { topUpAmount = it },
             onDismiss = { showTopUpDialog = false; topUpAmount = "" },
             onTopUp = { amount ->
-                viewModel.initiateTopUp(amount)
-                val ussdCode = viewModel.generateTopUpUssd(amount)
-                val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:${Uri.encode(ussdCode)}"))
-                context.startActivity(intent)
-                showTopUpDialog = false
-                topUpAmount = ""
-            }
+                val result = viewModel.validateAndInitiateTopUp(amount)
+                if (result.success) {
+                    val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:${Uri.encode(result.ussdCode!!)}"))
+                    context.startActivity(intent)
+                    showTopUpDialog = false
+                    topUpAmount = ""
+                } else {
+                    // Error shown in dialog via snackbar
+                }
+            },
+            momoNumberSet = uiState.merchantPhone.isNotBlank(),
+            errorMessage = uiState.error
         )
     }
 }
@@ -294,10 +299,12 @@ private fun TopUpDialog(
     currentAmount: String,
     onAmountChange: (String) -> Unit,
     onDismiss: () -> Unit,
-    onTopUp: (Long) -> Unit
+    onTopUp: (Long) -> Unit,
+    momoNumberSet: Boolean = true,
+    errorMessage: String? = null
 ) {
     val amount = currentAmount.toLongOrNull() ?: 0
-    val isValid = amount in 100..4000
+    val isValid = amount in 100..4000 && momoNumberSet
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -338,6 +345,32 @@ private fun TopUpDialog(
                     }
                 }
                 Spacer(Modifier.height(16.dp))
+                
+                if (!momoNumberSet) {
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
+                        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
+                            Icon(Icons.Filled.Warning, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Column {
+                                Text("Mobile Money Required", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                                Text("Please add your Mobile Money number in Settings first.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onErrorContainer)
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+                
+                if (errorMessage != null) {
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f))) {
+                        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Error, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(errorMessage, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onErrorContainer)
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+                
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))) {
                     Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
                         Icon(Icons.Filled.Info, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))

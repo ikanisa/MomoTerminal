@@ -94,6 +94,7 @@ fun HomeScreen(
     val isNfcActive = nfcState.isWorking()
     val isSuccess = nfcState is NfcState.Success
     var isAmountFocused by remember { mutableStateOf(false) }
+    var showMomoRequiredDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -176,7 +177,8 @@ fun HomeScreen(
                         isAmountFocused = isAmountFocused,
                         isAmountValid = viewModel.isAmountValid(),
                         isNfcAvailable = viewModel.isNfcAvailable(),
-                        isNfcActive = isNfcActive
+                        isNfcActive = isNfcActive,
+                        onShowMomoRequiredDialog = { showMomoRequiredDialog = true }
                     )
                 }
             }
@@ -199,7 +201,8 @@ private fun PaymentInputContent(
     isAmountFocused: Boolean,
     isAmountValid: Boolean,
     isNfcAvailable: Boolean,
-    isNfcActive: Boolean
+    isNfcActive: Boolean,
+    onShowMomoRequiredDialog: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -313,7 +316,14 @@ private fun PaymentInputContent(
                     // NFC Button - requires NFC to be available
                     MomoButton(
                         text = if (isNfcActive) "NFC ACTIVE" else "NFC",
-                        onClick = { viewModel.activatePaymentWithMethod(HomeViewModel.PaymentMethod.NFC) },
+                        onClick = { 
+                            if (uiState.merchantPhone.isBlank()) {
+                                onAmountFocused(false)
+                                onShowMomoRequiredDialog()
+                            } else {
+                                viewModel.activatePaymentWithMethod(HomeViewModel.PaymentMethod.NFC)
+                            }
+                        },
                         enabled = isAmountValid && isNfcAvailable && !isNfcActive,
                         modifier = Modifier
                             .weight(1f)
@@ -324,7 +334,14 @@ private fun PaymentInputContent(
                     // QR Code Button - always available if amount is valid
                     MomoButton(
                         text = "QR CODE",
-                        onClick = { viewModel.activatePaymentWithMethod(HomeViewModel.PaymentMethod.QR_CODE) },
+                        onClick = { 
+                            if (uiState.merchantPhone.isBlank()) {
+                                onAmountFocused(false)
+                                onShowMomoRequiredDialog()
+                            } else {
+                                viewModel.activatePaymentWithMethod(HomeViewModel.PaymentMethod.QR_CODE)
+                            }
+                        },
                         enabled = isAmountValid && !isNfcActive,
                         modifier = Modifier
                             .weight(1f)

@@ -106,10 +106,45 @@ fun SettingsScreen(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            ProfileInfoCard(
-                phoneNumber = uiState.authPhone,
-                profileCountry = uiState.profileCountryName
-            )
+            if (uiState.isLoadingProfile) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            } else {
+                ProfileInfoCard(
+                    phoneNumber = uiState.authPhone,
+                    profileCountry = uiState.profileCountryName,
+                    merchantName = uiState.userName,
+                    isEditing = uiState.isEditingProfile,
+                    onMerchantNameChange = viewModel::updateMerchantName,
+                    onToggleEdit = viewModel::toggleEditProfile
+                )
+            }
+            
+            val profileError = uiState.profileError
+            if (profileError != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f))) {
+                    Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Error, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text("Profile Load Error", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                            Text(profileError, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onErrorContainer)
+                        }
+                    }
+                }
+            }
             
             Spacer(modifier = Modifier.height(24.dp))
             HorizontalDivider()
@@ -560,12 +595,16 @@ fun SettingsScreen(
 }
 
 /**
- * Profile info card showing WhatsApp registration details.
+ * Profile info card showing WhatsApp registration details with editable merchant name.
  */
 @Composable
 private fun ProfileInfoCard(
     phoneNumber: String,
-    profileCountry: String
+    profileCountry: String,
+    merchantName: String = "",
+    isEditing: Boolean = false,
+    onMerchantNameChange: (String) -> Unit = {},
+    onToggleEdit: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -579,6 +618,61 @@ private fun ProfileInfoCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
+            // Merchant Name (Editable)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Business,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Business Name",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (isEditing) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            MomoTextField(
+                                value = merchantName,
+                                onValueChange = onMerchantNameChange,
+                                label = "",
+                                placeholder = "Enter business name",
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                        } else {
+                            Text(
+                                text = merchantName.ifBlank { "Not set" },
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+                IconButton(onClick = onToggleEdit) {
+                    Icon(
+                        imageVector = if (isEditing) Icons.Default.Check else Icons.Default.Edit,
+                        contentDescription = if (isEditing) "Save" else "Edit",
+                        tint = if (isEditing) SuccessGreen else MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Spacer(modifier = Modifier.height(16.dp))
+            
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {

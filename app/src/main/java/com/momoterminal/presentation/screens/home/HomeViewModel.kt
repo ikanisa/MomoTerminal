@@ -14,6 +14,7 @@ import com.momoterminal.offline.SyncState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -132,6 +133,13 @@ class HomeViewModel @Inject constructor(
     fun activatePaymentWithMethod(method: PaymentMethod) {
         val state = _uiState.value
         if (!isAmountValid()) return
+        
+        // Check if mobile money number is configured
+        if (state.merchantPhone.isBlank()) {
+            // Show error - merchant phone not configured
+            Timber.w("Cannot activate payment: Mobile Money number not configured")
+            return
+        }
         
         // Only check NFC availability for NFC payment method
         if (method == PaymentMethod.NFC && !state.isNfcEnabled) return

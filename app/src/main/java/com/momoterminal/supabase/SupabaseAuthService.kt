@@ -255,6 +255,49 @@ class SupabaseAuthService @Inject constructor(
     }
     
     /**
+     * Get user profile from database.
+     *
+     * @return AuthResult with UserProfile data
+     */
+    suspend fun getUserProfile(): AuthResult<UserProfile> = withContext(Dispatchers.IO) {
+        try {
+            val userId = auth.currentUserOrNull()?.id
+            if (userId == null) {
+                Timber.e("No authenticated user found")
+                return@withContext AuthResult.Error(
+                    message = "Not authenticated",
+                    code = "NOT_AUTHENTICATED"
+                )
+            }
+            
+            Timber.d("Fetching user profile for user: $userId")
+            
+            val response = edgeFunctionsApi.getUserProfile(
+                GetProfileRequest(userId = userId)
+            )
+            
+            if (response.isSuccessful && response.body()?.success == true && response.body()?.profile != null) {
+                val profile = response.body()!!.profile!!
+                Timber.d("User profile fetched successfully")
+                AuthResult.Success(profile)
+            } else {
+                val errorMessage = response.body()?.error ?: "Failed to fetch profile"
+                Timber.e("Profile fetch failed: $errorMessage")
+                AuthResult.Error(
+                    message = errorMessage,
+                    code = response.body()?.code ?: "PROFILE_FETCH_FAILED"
+                )
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch user profile")
+            AuthResult.Error(
+                message = e.message ?: "Failed to fetch profile",
+                code = "PROFILE_FETCH_FAILED"
+            )
+        }
+    }
+    
+    /**
      * Update user profile with MoMo configuration and settings.
      *
      * @param countryCode User's profile country code

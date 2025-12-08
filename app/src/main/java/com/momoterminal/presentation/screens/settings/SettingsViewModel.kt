@@ -15,6 +15,7 @@ import com.momoterminal.core.common.preferences.UserPreferences
 import com.momoterminal.data.repository.CountryRepository
 import com.momoterminal.core.security.BiometricHelper
 import com.momoterminal.core.common.LocaleManager
+import com.momoterminal.supabase.AuthResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -77,7 +78,10 @@ class SettingsViewModel @Inject constructor(
         val showSaveSuccess: Boolean = false,
         val showLogoutDialog: Boolean = false,
         val permissions: PermissionState = PermissionState(),
-        val currentLanguage: String = "en"
+        val currentLanguage: String = "en",
+        val isEditingProfile: Boolean = false,
+        val isLoadingProfile: Boolean = false,
+        val profileError: String? = null
     )
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -90,12 +94,87 @@ class SettingsViewModel @Inject constructor(
         loadAppVersion()
         refreshPermissionStates()
         loadLanguage()
+        loadProfileFromDatabase()
     }
 
     private fun loadLanguage() {
         viewModelScope.launch {
             userPreferences.languageFlow.collect { lang ->
                 _uiState.update { it.copy(currentLanguage = lang.ifEmpty { "en" }) }
+            }
+        }
+    }
+    
+    /**
+     * Load user profile from Supabase database.
+     */
+    private fun loadProfileFromDatabase() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingProfile = true, profileError = null) }
+            
+            try {
+                when (val result = supabaseAuthService.getUserProfile()) {
+                    is AuthResult.Success -> {
+                        val profile = result.data
+                        Timber.d("Profile loaded from database: ${profile.phoneNumber}")
+                        
+                        // Update UI state with database values
+                        val profileCountry = countryRepository.getByCode(profile.countryCode ?: "RW") ?: CountryConfig.DEFAULT
+                        val momoCountry = countryRepository.getByCode(profile.momoCountryCode ?: profile.countryCode ?: "RW") ?: profileCountry
+                        
+                        _uiState.update {
+                            it.copy(
+                                userName = profile.merchantName ?: "",
+                                authPhone = profile.phoneNumber,
+                                whatsappNumber = formatPhoneDisplay(profile.phoneNumber, profileCountry.phonePrefix),
+                                profileCountryCode = profile.countryCode ?: "RW",
+                                profileCountryName = profileCountry.name,
+                                momoCountryCode = profile.momoCountryCode ?: profile.countryCode ?: "RW",
+                                momoCountryName = momoCountry.name,
+                                momoCountryFlag = momoCountry.flagEmoji,
+                                momoCurrency = momoCountry.currency,
+                                momoIdentifier = profile.momoPhone ?: profile.phoneNumber,
+                                merchantPhone = profile.momoPhone ?: profile.phoneNumber,
+                                useMomoCode = profile.useMomoCode,
+                                momoPhonePlaceholder = "X".repeat(momoCountry.phoneLength),
+                                momoProviderName = momoCountry.providerName,
+                                isBiometricEnabled = profile.biometricEnabled,
+                                isNfcTerminalEnabled = profile.nfcTerminalEnabled,
+                                currentLanguage = profile.language,
+                                isConfigured = profile.momoPhone?.isNotBlank() == true,
+                                isLoadingProfile = false,
+                                profileError = null
+                            )
+                        }
+                        
+                        // Also update local preferences
+                        userPreferences.updateMomoConfig(
+                            momoCountryCode = profile.momoCountryCode ?: profile.countryCode ?: "RW",
+                            momoIdentifier = profile.momoPhone ?: profile.phoneNumber,
+                            useMomoCode = profile.useMomoCode
+                        )
+                    }
+                    is AuthResult.Error -> {
+                        Timber.e("Failed to load profile from database: ${result.message}")
+                        _uiState.update { 
+                            it.copy(
+                                isLoadingProfile = false,
+                                profileError = result.message
+                            ) 
+                        }
+                    }
+                    else -> {
+                        _uiState.update { it.copy(isLoadingProfile = false) }
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error loading profile from database")
+                _uiState.update { 
+                    it.copy(
+                        isLoadingProfile = false,
+                        profileError = "Failed to load profile"
+                    ) 
+                }
             }
         }
     }
@@ -259,6 +338,14 @@ class SettingsViewModel @Inject constructor(
     
     // Alias for backward compatibility
     fun updateMomoCountryCode(code: String) = updateMomoCountry(code)
+    
+    fun updateMerchantName(name: String) {
+        _uiState.update { it.copy(userName = name) }
+    }
+    
+    fun toggleEditProfile() {
+        _uiState.update { it.copy(isEditingProfile = !it.isEditingProfile) }
+    }
 
     fun toggleBiometric(enabled: Boolean) {
         if (enabled && !_uiState.value.isBiometricAvailable) return

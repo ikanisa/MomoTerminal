@@ -98,3 +98,38 @@ data class UpdateProfileResponse(
     val error: String? = null,
     val code: String? = null
 )
+
+/**
+ * Get user profile request.
+ */
+data class GetProfileRequest(
+    val userId: String
+)
+
+/**
+ * User profile data from database.
+ */
+data class UserProfile(
+    val id: String,
+    val phoneNumber: String,
+    val merchantName: String? = null,
+    val countryCode: String? = null,
+    val momoCountryCode: String? = null,
+    val momoPhone: String? = null,
+    val useMomoCode: Boolean = false,
+    val biometricEnabled: Boolean = false,
+    val nfcTerminalEnabled: Boolean = false,
+    val language: String = "en",
+    val createdAt: String? = null,
+    val updatedAt: String? = null
+)
+
+/**
+ * Get user profile response.
+ */
+data class GetProfileResponse(
+    val success: Boolean,
+    val profile: UserProfile? = null,
+    val error: String? = null,
+    val code: String? = null
+)

@@ -28,6 +28,11 @@ interface EdgeFunctionsApi {
     suspend fun updateUserProfile(
         @Body request: UpdateProfileRequest
     ): Response<UpdateProfileResponse>
+    
+    @POST("get-user-profile")
+    suspend fun getUserProfile(
+        @Body request: GetProfileRequest
+    ): Response<GetProfileResponse>
 }
 
 data class SendOtpRequest(
