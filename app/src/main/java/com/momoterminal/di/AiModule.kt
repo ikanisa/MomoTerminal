@@ -1,7 +1,7 @@
 package com.momoterminal.di
 
 import com.momoterminal.ai.AiSmsParserService
-import com.momoterminal.sms.MomoSmsParser
+import com.momoterminal.feature.sms.MomoSmsParser
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
