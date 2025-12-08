@@ -40,6 +40,7 @@ include(":feature:settings")
 include(":feature:nfc")
 include(":feature:sms")
 include(":feature:wallet")
+include(":feature:vending")
 
 // Baseline profile
 include(":baselineprofile")

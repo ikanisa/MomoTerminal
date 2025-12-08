@@ -12,6 +12,7 @@ data class VendingMachine(
     val productName: String,
     val productSizeML: Int = 500,
     val price: Long,
+    val currency: String = "XAF",
     val stockLevel: StockLevel,
     val imageUrl: String? = null
 ) {

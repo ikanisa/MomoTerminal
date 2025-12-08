@@ -1,60 +1,55 @@
 package com.momoterminal.feature.vending.data
 
-import kotlinx.serialization.Serializable
+import com.google.gson.annotations.SerializedName
 
-@Serializable
 data class VendingMachineDto(
     val id: String,
     val name: String,
     val location: String,
     val latitude: Double,
     val longitude: Double,
-    val distance_meters: Int? = null,
+    @SerializedName("distance_meters") val distanceMeters: Int? = null,
     val status: String,
-    val product_id: String,
-    val product_name: String,
-    val product_size_ml: Int = 500,
+    @SerializedName("product_id") val productId: String,
+    @SerializedName("product_name") val productName: String,
+    @SerializedName("product_size_ml") val productSizeML: Int = 500,
     val price: Long,
-    val stock_level: String,
-    val image_url: String? = null
+    val currency: String = "XAF",
+    @SerializedName("stock_level") val stockLevel: String,
+    @SerializedName("image_url") val imageUrl: String? = null
 )
 
-@Serializable
 data class VendingOrderDto(
     val id: String,
-    val user_id: String,
-    val machine_id: String,
-    val machine_name: String,
-    val machine_location: String,
-    val product_name: String,
-    val product_size_ml: Int,
+    @SerializedName("user_id") val userId: String,
+    @SerializedName("machine_id") val machineId: String,
+    @SerializedName("machine_name") val machineName: String,
+    @SerializedName("machine_location") val machineLocation: String,
+    @SerializedName("product_name") val productName: String,
+    @SerializedName("product_size_ml") val productSizeML: Int,
     val amount: Long,
     val status: String,
-    val created_at: Long,
+    @SerializedName("created_at") val createdAt: Long,
     val code: String? = null,
-    val code_expires_at: Long? = null,
-    val code_used_at: Long? = null
+    @SerializedName("code_expires_at") val codeExpiresAt: Long? = null,
+    @SerializedName("code_used_at") val codeUsedAt: Long? = null
 )
 
-@Serializable
 data class CreateOrderRequest(
-    val machine_id: String,
+    @SerializedName("machine_id") val machineId: String,
     val amount: Long
 )
 
-@Serializable
 data class CreateOrderResponse(
     val order: VendingOrderDto,
     val code: String,
-    val code_expires_at: Long
+    @SerializedName("code_expires_at") val codeExpiresAt: Long
 )
 
-@Serializable
 data class MachinesResponse(
     val machines: List<VendingMachineDto>
 )
 
-@Serializable
 data class OrdersResponse(
     val orders: List<VendingOrderDto>
 )

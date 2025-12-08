@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -55,10 +54,10 @@ dependencies {
     implementation(libs.navigation.compose)
     
     implementation(libs.coroutines.android)
-    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.gson)
+    implementation(libs.retrofit)
     
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.mockk)
-    testImplementation(libs.turbine)
 }

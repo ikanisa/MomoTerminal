@@ -292,8 +292,8 @@ fun NavGraph(
             }
         ) {
             com.momoterminal.presentation.screens.wallet.WalletScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
+                onNavigateToTransactions = {
+                    navController.navigate(Screen.Transactions.route)
                 }
             )
         }
