@@ -308,7 +308,7 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors()
             ) {
-                Icon(Icons.Default.DeleteSweep, contentDescription = null)
+                Icon(Icons.Default.DeleteSweep, contentDescription = "Clear cache")
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Clear Cache")
             }

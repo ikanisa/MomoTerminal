@@ -355,9 +355,19 @@ class SettingsViewModel @Inject constructor(
     fun clearCache() {
         viewModelScope.launch {
             try {
-                // Clear app cache
-                context.cacheDir.deleteRecursively()
-                Timber.d("Cache cleared successfully")
+                // Clear app cache safely - only clear cache directory, not data
+                val cacheDir = context.cacheDir
+                val deletedFiles = cacheDir.listFiles()?.count { file ->
+                    try {
+                        file.deleteRecursively()
+                        true
+                    } catch (e: Exception) {
+                        Timber.w(e, "Failed to delete cache file: ${file.name}")
+                        false
+                    }
+                } ?: 0
+                
+                Timber.d("Cache cleared successfully. Deleted $deletedFiles items from cache.")
             } catch (e: Exception) {
                 Timber.e(e, "Failed to clear cache")
             }
