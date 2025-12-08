@@ -20,8 +20,19 @@ CREATE TABLE IF NOT EXISTS countries (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Add ussd_template column if table exists but column doesn't
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'countries' AND column_name = 'ussd_template'
+    ) THEN
+        ALTER TABLE countries ADD COLUMN ussd_template VARCHAR(100) NOT NULL DEFAULT '*182*8*1*{merchant}*{amount}#';
+    END IF;
+END $$;
+
 -- Index for active countries lookup
-CREATE INDEX idx_countries_active ON countries(is_active) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_countries_active ON countries(is_active) WHERE is_active = true;
 
 -- Insert initial countries
 INSERT INTO countries (code, name, name_local, currency, currency_symbol, phone_prefix, phone_length, flag_emoji, provider_name, provider_code, provider_color, ussd_template) VALUES
@@ -47,9 +58,27 @@ ON CONFLICT (code) DO NOTHING;
 ALTER TABLE countries ENABLE ROW LEVEL SECURITY;
 
 -- Allow read access to all authenticated users
-CREATE POLICY "Countries are viewable by authenticated users" ON countries
-    FOR SELECT TO authenticated USING (true);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'countries' 
+        AND policyname = 'Countries are viewable by authenticated users'
+    ) THEN
+        CREATE POLICY "Countries are viewable by authenticated users" ON countries
+            FOR SELECT TO authenticated USING (true);
+    END IF;
+END $$;
 
 -- Allow read access to anon users (for app startup)
-CREATE POLICY "Countries are viewable by anon" ON countries
-    FOR SELECT TO anon USING (is_active = true);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'countries' 
+        AND policyname = 'Countries are viewable by anon'
+    ) THEN
+        CREATE POLICY "Countries are viewable by anon" ON countries
+            FOR SELECT TO anon USING (is_active = true);
+    END IF;
+END $$;

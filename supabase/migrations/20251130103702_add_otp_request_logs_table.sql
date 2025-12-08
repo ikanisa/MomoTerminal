@@ -5,20 +5,29 @@ CREATE TABLE IF NOT EXISTS public.otp_request_logs (
   ip_address text NOT NULL,
   user_agent text,
   request_type text NOT NULL CHECK (request_type IN ('send_otp', 'verify_otp')),
-  created_at timestamptz NOT NULL DEFAULT NOW(),
-  
-  -- Indexes for efficient rate limiting queries
-  INDEX idx_otp_logs_phone_created ON otp_request_logs(phone_number, created_at DESC),
-  INDEX idx_otp_logs_ip_created ON otp_request_logs(ip_address, created_at DESC),
-  INDEX idx_otp_logs_type_created ON otp_request_logs(request_type, created_at DESC)
+  created_at timestamptz NOT NULL DEFAULT NOW()
 );
+
+-- Indexes for efficient rate limiting queries
+CREATE INDEX IF NOT EXISTS idx_otp_logs_phone_created ON otp_request_logs(phone_number, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_otp_logs_ip_created ON otp_request_logs(ip_address, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_otp_logs_type_created ON otp_request_logs(request_type, created_at DESC);
 
 -- Enable RLS
 ALTER TABLE public.otp_request_logs ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Service role can do anything
-CREATE POLICY "Service role full access" ON public.otp_request_logs
-  FOR ALL USING (auth.role() = 'service_role');
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'otp_request_logs' 
+        AND policyname = 'Service role full access'
+    ) THEN
+        CREATE POLICY "Service role full access" ON public.otp_request_logs
+          FOR ALL USING (auth.role() = 'service_role');
+    END IF;
+END $$;
 
 -- Add partitioning hint comment for future optimization
 COMMENT ON TABLE public.otp_request_logs IS 'Logs all OTP requests for rate limiting and analytics. Consider partitioning by created_at when volume grows.';

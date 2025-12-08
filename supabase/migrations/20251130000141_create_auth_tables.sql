@@ -25,9 +25,10 @@ CREATE TABLE IF NOT EXISTS otp_codes (
     CONSTRAINT max_attempts CHECK (attempts <= 5)
 );
 
--- Index for fast lookup by phone and code (only unverified, non-expired)
+-- Index for fast lookup by phone and code (only unverified)
+-- Note: Cannot use NOW() in partial index as it's not immutable
 CREATE INDEX IF NOT EXISTS idx_otp_phone_code ON otp_codes(phone_number, code) 
-    WHERE verified_at IS NULL AND expires_at > NOW();
+    WHERE verified_at IS NULL;
 
 -- Index for rate limiting queries
 CREATE INDEX IF NOT EXISTS idx_otp_phone_created ON otp_codes(phone_number, created_at DESC);
@@ -61,34 +62,70 @@ CREATE INDEX IF NOT EXISTS idx_user_profiles_phone ON user_profiles(phone_number
 ALTER TABLE otp_codes ENABLE ROW LEVEL SECURITY;
 
 -- Only service role can insert/update/delete OTP codes
-CREATE POLICY "Service role can manage OTP codes" ON otp_codes
-    FOR ALL
-    TO service_role
-    USING (true)
-    WITH CHECK (true);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'otp_codes' 
+        AND policyname = 'Service role can manage OTP codes'
+    ) THEN
+        CREATE POLICY "Service role can manage OTP codes" ON otp_codes
+            FOR ALL
+            TO service_role
+            USING (true)
+            WITH CHECK (true);
+    END IF;
+END $$;
 
 -- Enable RLS on user_profiles
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
 -- Users can read their own profile
-CREATE POLICY "Users can view own profile" ON user_profiles
-    FOR SELECT
-    TO authenticated
-    USING (auth.uid() = id);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'user_profiles' 
+        AND policyname = 'Users can view own profile'
+    ) THEN
+        CREATE POLICY "Users can view own profile" ON user_profiles
+            FOR SELECT
+            TO authenticated
+            USING (auth.uid() = id);
+    END IF;
+END $$;
 
 -- Users can update their own profile
-CREATE POLICY "Users can update own profile" ON user_profiles
-    FOR UPDATE
-    TO authenticated
-    USING (auth.uid() = id)
-    WITH CHECK (auth.uid() = id);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'user_profiles' 
+        AND policyname = 'Users can update own profile'
+    ) THEN
+        CREATE POLICY "Users can update own profile" ON user_profiles
+            FOR UPDATE
+            TO authenticated
+            USING (auth.uid() = id)
+            WITH CHECK (auth.uid() = id);
+    END IF;
+END $$;
 
 -- Service role can manage all profiles
-CREATE POLICY "Service role can manage profiles" ON user_profiles
-    FOR ALL
-    TO service_role
-    USING (true)
-    WITH CHECK (true);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'user_profiles' 
+        AND policyname = 'Service role can manage profiles'
+    ) THEN
+        CREATE POLICY "Service role can manage profiles" ON user_profiles
+            FOR ALL
+            TO service_role
+            USING (true)
+            WITH CHECK (true);
+    END IF;
+END $$;
 
 -- ============================================
 -- Helper Functions

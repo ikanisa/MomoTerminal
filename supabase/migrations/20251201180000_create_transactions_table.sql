@@ -35,43 +35,90 @@ CREATE TABLE IF NOT EXISTS public.transactions (
     CONSTRAINT unique_user_local_transaction UNIQUE(user_id, local_id, device_id)
 );
 
+-- Add user_id column if table exists but column doesn't
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'transactions' AND column_name = 'user_id'
+    ) THEN
+        ALTER TABLE public.transactions ADD COLUMN user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE;
+    END IF;
+END $$;
+
 -- Indexes for performance
-CREATE INDEX idx_transactions_user_id ON public.transactions(user_id);
-CREATE INDEX idx_transactions_status ON public.transactions(status);
-CREATE INDEX idx_transactions_timestamp ON public.transactions(timestamp DESC);
-CREATE INDEX idx_transactions_provider ON public.transactions(provider);
-CREATE INDEX idx_transactions_device ON public.transactions(device_id);
-CREATE INDEX idx_transactions_user_timestamp ON public.transactions(user_id, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON public.transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_status ON public.transactions(status);
+CREATE INDEX IF NOT EXISTS idx_transactions_timestamp ON public.transactions(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_transactions_provider ON public.transactions(provider);
+CREATE INDEX IF NOT EXISTS idx_transactions_device ON public.transactions(device_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_user_timestamp ON public.transactions(user_id, timestamp DESC);
 
 -- Enable Row Level Security
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
-CREATE POLICY "Users can view own transactions" 
-    ON public.transactions
-    FOR SELECT
-    TO authenticated
-    USING (auth.uid() = user_id);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'transactions' 
+        AND policyname = 'Users can view own transactions'
+    ) THEN
+        CREATE POLICY "Users can view own transactions" 
+            ON public.transactions
+            FOR SELECT
+            TO authenticated
+            USING (auth.uid() = user_id);
+    END IF;
+END $$;
 
-CREATE POLICY "Users can insert own transactions" 
-    ON public.transactions
-    FOR INSERT
-    TO authenticated
-    WITH CHECK (auth.uid() = user_id);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'transactions' 
+        AND policyname = 'Users can insert own transactions'
+    ) THEN
+        CREATE POLICY "Users can insert own transactions" 
+            ON public.transactions
+            FOR INSERT
+            TO authenticated
+            WITH CHECK (auth.uid() = user_id);
+    END IF;
+END $$;
 
-CREATE POLICY "Users can update own transactions" 
-    ON public.transactions
-    FOR UPDATE
-    TO authenticated
-    USING (auth.uid() = user_id)
-    WITH CHECK (auth.uid() = user_id);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'transactions' 
+        AND policyname = 'Users can update own transactions'
+    ) THEN
+        CREATE POLICY "Users can update own transactions" 
+            ON public.transactions
+            FOR UPDATE
+            TO authenticated
+            USING (auth.uid() = user_id)
+            WITH CHECK (auth.uid() = user_id);
+    END IF;
+END $$;
 
-CREATE POLICY "Service role full access" 
-    ON public.transactions
-    FOR ALL
-    TO service_role
-    USING (true)
-    WITH CHECK (true);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'transactions' 
+        AND policyname = 'Service role full access'
+    ) THEN
+        CREATE POLICY "Service role full access" 
+            ON public.transactions
+            FOR ALL
+            TO service_role
+            USING (true)
+            WITH CHECK (true);
+    END IF;
+END $$;
 
 -- Comments
 COMMENT ON TABLE public.transactions IS 'Cloud-synced transaction records from mobile devices';

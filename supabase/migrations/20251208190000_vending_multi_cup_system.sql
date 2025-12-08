@@ -580,33 +580,87 @@ ALTER TABLE vending_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_age_verification ENABLE ROW LEVEL SECURITY;
 
 -- Everyone can view products and machines
-CREATE POLICY "Anyone can view active products"
-    ON vending_products FOR SELECT
-    USING (is_active = true);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'vending_products' 
+        AND policyname = 'Anyone can view active products'
+    ) THEN
+        CREATE POLICY "Anyone can view active products"
+            ON vending_products FOR SELECT
+            USING (is_active = true);
+    END IF;
+END $$;
 
-CREATE POLICY "Anyone can view available machines"
-    ON vending_machines FOR SELECT
-    USING (true);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'vending_machines' 
+        AND policyname = 'Anyone can view available machines'
+    ) THEN
+        CREATE POLICY "Anyone can view available machines"
+            ON vending_machines FOR SELECT
+            USING (true);
+    END IF;
+END $$;
 
 -- Users can only see their own orders
-CREATE POLICY "Users can view their own orders"
-    ON vending_orders FOR SELECT
-    USING (auth.uid() = user_id);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'vending_orders' 
+        AND policyname = 'Users can view their own orders'
+    ) THEN
+        CREATE POLICY "Users can view their own orders"
+            ON vending_orders FOR SELECT
+            USING (auth.uid() = user_id);
+    END IF;
+END $$;
 
 -- Users can view their own transactions
-CREATE POLICY "Users can view their own transactions"
-    ON vending_transactions FOR SELECT
-    USING (auth.uid() = user_id);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'vending_transactions' 
+        AND policyname = 'Users can view their own transactions'
+    ) THEN
+        CREATE POLICY "Users can view their own transactions"
+            ON vending_transactions FOR SELECT
+            USING (auth.uid() = user_id);
+    END IF;
+END $$;
 
 -- Users can view their own age verification
-CREATE POLICY "Users can view their own age verification"
-    ON user_age_verification FOR SELECT
-    USING (auth.uid() = user_id);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'user_age_verification' 
+        AND policyname = 'Users can view their own age verification'
+    ) THEN
+        CREATE POLICY "Users can view their own age verification"
+            ON user_age_verification FOR SELECT
+            USING (auth.uid() = user_id);
+    END IF;
+END $$;
 
 -- Sessions are handled via functions only
-CREATE POLICY "No direct session access"
-    ON vending_sessions FOR ALL
-    USING (false);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'vending_sessions' 
+        AND policyname = 'No direct session access'
+    ) THEN
+        CREATE POLICY "No direct session access"
+            ON vending_sessions FOR ALL
+            USING (false);
+    END IF;
+END $$;
 
 -- =====================================================
 -- 13. TRIGGERS FOR UPDATED_AT
