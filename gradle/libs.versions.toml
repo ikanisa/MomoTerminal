@@ -181,6 +181,9 @@ hilt-work = { module = "androidx.hilt:hilt-work", version = "1.2.0" }
 hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version = "1.2.0" }
 hilt-androidx-compiler = { module = "androidx.hilt:hilt-compiler", version = "1.2.0" }
 
+# Dependency Injection
+javax-inject = { module = "javax.inject:javax.inject", version = "1" }
+
 # Room
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }

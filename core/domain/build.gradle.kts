@@ -24,4 +24,5 @@ android {
 dependencies {
     implementation(project(":core:common"))
     implementation(libs.coroutines.android)
+    implementation(libs.javax.inject)
 }
