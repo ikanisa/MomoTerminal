@@ -111,7 +111,7 @@ fun SettingsScreen(
             )
             
             Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            HorizontalDivider()
             Spacer(modifier = Modifier.height(24.dp))
 
             // Mobile Money Configuration
@@ -132,6 +132,7 @@ fun SettingsScreen(
             )
             
             Spacer(modifier = Modifier.height(12.dp))
+            
             // ==================== PERMISSIONS SECTION ====================
             SectionHeader(title = "Permissions & Controls", icon = Icons.Default.Security)
             Spacer(modifier = Modifier.height(16.dp))
@@ -264,112 +265,6 @@ fun SettingsScreen(
             HorizontalDivider()
             Spacer(modifier = Modifier.height(24.dp))
             
-            // ==================== APP CONTROLS ====================
-            SectionHeader(title = "App Controls", icon = Icons.Default.Tune)
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            SettingsToggle(
-                icon = Icons.Default.ScreenLockPortrait,
-                title = "Keep Screen On",
-                description = "Prevent phone from sleeping during transactions",
-                checked = uiState.permissions.keepScreenOnEnabled,
-                onCheckedChange = viewModel::toggleKeepScreenOn
-            )
-            
-            SettingsToggle(
-                icon = Icons.Default.Vibration,
-                title = "Vibration Feedback",
-                description = "Vibrate on payment received",
-                checked = uiState.permissions.vibrationEnabled,
-                onCheckedChange = viewModel::toggleVibration
-            )
-            
-            SettingsToggle(
-                icon = Icons.Default.Message,
-                title = "Auto-Sync SMS Transactions",
-                description = "Automatically sync SMS transactions to backend",
-                checked = uiState.smsAutoSyncEnabled,
-                onCheckedChange = viewModel::toggleSmsAutoSync
-            )
-            
-            SettingsToggle(
-                icon = Icons.Default.DarkMode,
-                title = "Dark Mode",
-                description = "Use dark theme throughout the app",
-                checked = uiState.isDarkModeEnabled,
-                onCheckedChange = viewModel::toggleDarkMode
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Clear Cache Button
-            OutlinedButton(
-                onClick = { viewModel.clearCache() },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.outlinedButtonColors()
-            ) {
-                Icon(Icons.Default.DeleteSweep, contentDescription = "Clear cache")
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Clear Cache")
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // About Section
-            SectionHeader(
-                title = stringResource(R.string.about),
-                icon = Icons.Default.Info
-            )
-            SettingsToggle(
-                icon = Icons.Default.Fingerprint,
-                title = "Biometric Login",
-                description = if (uiState.isBiometricAvailable) "Use fingerprint or face to unlock" else "Not available on this device",
-                checked = uiState.isBiometricEnabled,
-                onCheckedChange = viewModel::toggleBiometric,
-                enabled = uiState.isBiometricAvailable
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Language Selection
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-            ) {
-                LanguageSettingsRow(
-                    currentLanguage = uiState.currentLanguage,
-                    onLanguageChange = viewModel::setLanguage
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // ==================== MERCHANT PROFILE ====================
-            SectionHeader(title = stringResource(R.string.merchant_profile), icon = Icons.Default.Person)
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Display registered WhatsApp number (read-only)
-            if (uiState.whatsappNumber.isNotBlank()) {
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                ) {
-                    Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Phone, null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(stringResource(R.string.registered_number), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(uiState.whatsappNumber, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            
             // MoMo Input Type Selector (Phone or Code)
             Text(stringResource(R.string.momo_identifier_type), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(8.dp))
@@ -423,6 +318,114 @@ fun SettingsScreen(
             HorizontalDivider()
             Spacer(modifier = Modifier.height(24.dp))
             
+            // ==================== SECURITY ====================
+            SectionHeader(title = "Security", icon = Icons.Default.Security)
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            SettingsToggle(
+                icon = Icons.Default.Fingerprint,
+                title = "Biometric Login",
+                description = if (uiState.isBiometricAvailable) "Use fingerprint or face to unlock" else "Not available on this device",
+                checked = uiState.isBiometricEnabled,
+                onCheckedChange = viewModel::toggleBiometric,
+                enabled = uiState.isBiometricAvailable
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                        Icon(Icons.Default.Pin, null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text("Change PIN", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                            Text("Update your security PIN", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // ==================== PREFERENCES ====================
+            SectionHeader(title = "Preferences", icon = Icons.Default.Settings)
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            SettingsToggle(
+                icon = Icons.Default.ScreenLockPortrait,
+                title = "Keep Screen On",
+                description = "Prevent phone from sleeping during transactions",
+                checked = uiState.permissions.keepScreenOnEnabled,
+                onCheckedChange = viewModel::toggleKeepScreenOn
+            )
+            
+            SettingsToggle(
+                icon = Icons.Default.Vibration,
+                title = "Vibration Feedback",
+                description = "Vibrate on payment received",
+                checked = uiState.permissions.vibrationEnabled,
+                onCheckedChange = viewModel::toggleVibration
+            )
+            
+            SettingsToggle(
+                icon = Icons.Default.Message,
+                title = "Auto-Sync SMS Transactions",
+                description = "Automatically sync SMS transactions to backend",
+                checked = uiState.smsAutoSyncEnabled,
+                onCheckedChange = viewModel::toggleSmsAutoSync
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Language Selection
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+            ) {
+                LanguageSettingsRow(
+                    currentLanguage = uiState.currentLanguage,
+                    onLanguageChange = viewModel::setLanguage
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            SettingsToggle(
+                icon = Icons.Default.DarkMode,
+                title = "Dark Mode",
+                description = "Use dark theme",
+                checked = uiState.isDarkModeEnabled,
+                onCheckedChange = viewModel::toggleDarkMode
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Clear Cache Button
+            OutlinedButton(
+                onClick = { viewModel.clearCache() },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors()
+            ) {
+                Icon(Icons.Default.DeleteSweep, contentDescription = "Clear cache")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Clear Cache")
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
+            
             // ==================== ABOUT ====================
             SectionHeader(title = stringResource(R.string.about), icon = Icons.Default.Info)
             Spacer(modifier = Modifier.height(16.dp))
@@ -439,7 +442,6 @@ fun SettingsScreen(
                 Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
             }
             
-            // Terms of Service Link
             TextButton(
                 onClick = { uriHandler.openUri("https://momoterminal.app/terms") },
                 modifier = Modifier.fillMaxWidth()
@@ -455,9 +457,25 @@ fun SettingsScreen(
                 )
             }
             
-            Spacer(modifier = Modifier.height(48.dp))
-            TextButton(onClick = { uriHandler.openUri("https://momoterminal.app/terms") }, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.terms_of_service), modifier = Modifier.weight(1f))
+            TextButton(
+                onClick = { uriHandler.openUri("https://github.com/ikanisa/MomoTerminal") },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Open Source Licenses",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
+            }
+            
+            TextButton(
+                onClick = { 
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${context.packageName}")))
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Rate Us ⭐⭐⭐⭐⭐", modifier = Modifier.weight(1f))
                 Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
             }
             
