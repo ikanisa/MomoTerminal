@@ -131,7 +131,10 @@ class HomeViewModel @Inject constructor(
 
     fun activatePaymentWithMethod(method: PaymentMethod) {
         val state = _uiState.value
-        if (!isAmountValid() || !state.isNfcEnabled) return
+        if (!isAmountValid()) return
+        
+        // Only check NFC availability for NFC payment method
+        if (method == PaymentMethod.NFC && !state.isNfcEnabled) return
 
         val amountValue = state.amount.toDoubleOrNull() ?: return
         
@@ -146,7 +149,14 @@ class HomeViewModel @Inject constructor(
             provider = NfcPaymentData.Provider.fromString(state.providerCode)
         )
 
-        nfcManager.activatePayment(paymentData)
+        // Only activate NFC manager for NFC payments
+        // QR code doesn't need NFC hardware
+        if (method == PaymentMethod.NFC) {
+            nfcManager.activatePayment(paymentData)
+        } else {
+            // For QR code, just store the data and show the QR
+            // The UI will render QR code based on selectedPaymentMethod
+        }
     }
 
     fun activatePayment() {
