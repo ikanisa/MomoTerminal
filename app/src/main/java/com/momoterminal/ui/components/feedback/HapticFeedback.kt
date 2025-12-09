@@ -20,10 +20,12 @@ import androidx.compose.ui.platform.LocalView
 /**
  * Manager class for haptic feedback with various feedback types.
  * Supports different vibration patterns for different user interactions.
+ * Respects user's vibration preference setting.
  */
 class HapticFeedbackManager(
     private val context: Context,
-    private val view: View
+    private val view: View,
+    private val isEnabled: () -> Boolean = { true }
 ) {
     private val vibrator: Vibrator? by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -39,6 +41,7 @@ class HapticFeedbackManager(
      * Light tap feedback for button presses.
      */
     fun performClick() {
+        if (!isEnabled()) return
         view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
     }
 
@@ -47,6 +50,7 @@ class HapticFeedbackManager(
      * Uses CONFIRM effect on Android 11+ or double click pattern.
      */
     fun performSuccess() {
+        if (!isEnabled()) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -68,6 +72,7 @@ class HapticFeedbackManager(
      * Uses REJECT effect on Android 11+ or heavy click pattern.
      */
     fun performError() {
+        if (!isEnabled()) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             view.performHapticFeedback(HapticFeedbackConstants.REJECT)
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -88,6 +93,7 @@ class HapticFeedbackManager(
      * Moderate feedback for warning situations.
      */
     fun performWarning() {
+        if (!isEnabled()) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator?.vibrate(
                 VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE)
@@ -102,6 +108,7 @@ class HapticFeedbackManager(
      * Long press feedback.
      */
     fun performLongPress() {
+        if (!isEnabled()) return
         view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
     }
 
@@ -109,6 +116,7 @@ class HapticFeedbackManager(
      * Keyboard tap feedback.
      */
     fun performKeyboardTap() {
+        if (!isEnabled()) return
         view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
     }
 
@@ -116,6 +124,7 @@ class HapticFeedbackManager(
      * Context click (right-click) feedback.
      */
     fun performContextClick() {
+        if (!isEnabled()) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
         } else {
@@ -128,6 +137,7 @@ class HapticFeedbackManager(
      * Celebratory double-pulse pattern.
      */
     fun performMoneyReceived() {
+        if (!isEnabled()) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator?.vibrate(
                 VibrationEffect.createWaveform(
@@ -147,6 +157,7 @@ class HapticFeedbackManager(
      * Short acknowledgment pulse.
      */
     fun performMoneySent() {
+        if (!isEnabled()) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator?.vibrate(
                 VibrationEffect.createWaveform(
@@ -166,6 +177,7 @@ class HapticFeedbackManager(
      * Quick pulse to indicate NFC tap detected.
      */
     fun performNfcTap() {
+        if (!isEnabled()) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             vibrator?.vibrate(
                 VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK)
@@ -184,6 +196,7 @@ class HapticFeedbackManager(
      * Heavy click feedback.
      */
     fun performHeavyClick() {
+        if (!isEnabled()) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             vibrator?.vibrate(
                 VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK)
@@ -202,6 +215,7 @@ class HapticFeedbackManager(
      * Double click feedback.
      */
     fun performDoubleClick() {
+        if (!isEnabled()) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             vibrator?.vibrate(
                 VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK)
@@ -230,13 +244,17 @@ class HapticFeedbackManager(
 
 /**
  * Remember a HapticFeedbackManager instance.
+ * Uses default enabled state (always on).
+ * For preference-aware feedback, inject UserPreferences and collect the flow.
  */
 @Composable
-fun rememberHapticFeedback(): HapticFeedbackManager {
+fun rememberHapticFeedback(
+    isEnabled: () -> Boolean = { true }
+): HapticFeedbackManager {
     val context = LocalContext.current
     val view = LocalView.current
-    return remember(context, view) {
-        HapticFeedbackManager(context, view)
+    return remember(context, view, isEnabled) {
+        HapticFeedbackManager(context, view, isEnabled)
     }
 }
 

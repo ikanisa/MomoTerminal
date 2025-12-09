@@ -55,7 +55,10 @@ class ComposeMainActivity : ComponentActivity() {
         enableEdgeToEdge()
         
         setContent {
-            MomoTerminalTheme {
+            // Collect dark mode preference
+            val darkMode by userPreferences.darkModeEnabledFlow.collectAsState(initial = false)
+            
+            MomoTerminalTheme(darkTheme = darkMode) {
                 LocaleProvider(userPreferences = userPreferences) {
                     AppErrorBoundary(
                         onError = { throwable ->
