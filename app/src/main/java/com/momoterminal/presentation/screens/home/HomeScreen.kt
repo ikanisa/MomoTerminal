@@ -184,6 +184,46 @@ fun HomeScreen(
             }
         }
     }
+    
+    // Mobile Money Required Dialog
+    if (showMomoRequiredDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showMomoRequiredDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
+            title = {
+                Text(text = "Mobile Money Number Required")
+            },
+            text = {
+                Text(
+                    text = "Please add your mobile money number in Settings to use payment features.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        showMomoRequiredDialog = false
+                        onNavigateToSettings()
+                    }
+                ) {
+                    Text("Go to Settings")
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = { showMomoRequiredDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable

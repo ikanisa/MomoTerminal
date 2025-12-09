@@ -21,6 +21,31 @@ interface UpdateProfileRequest {
   language?: string
 }
 
+// Input sanitization helper
+function sanitizeInput(input: string | undefined, maxLength: number = 255): string | undefined {
+  if (!input) return undefined
+  // Remove any non-printable characters, trim, and limit length
+  return input.replace(/[^\x20-\x7E]/g, '').trim().slice(0, maxLength)
+}
+
+function validatePhoneNumber(phone: string | undefined): boolean {
+  if (!phone) return true
+  // Phone should be digits only, 8-15 characters
+  return /^\d{8,15}$/.test(phone)
+}
+
+function validateCountryCode(code: string | undefined): boolean {
+  if (!code) return true
+  // Country code should be 2 uppercase letters
+  return /^[A-Z]{2}$/.test(code)
+}
+
+function validateLanguage(lang: string | undefined): boolean {
+  if (!lang) return true
+  // Language code should be 2 lowercase letters
+  return /^[a-z]{2}$/.test(lang)
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
@@ -57,16 +82,73 @@ serve(async (req) => {
       )
     }
 
-    // Build update object with only provided fields
+    // Input validation and sanitization
+    if (body.momoPhone && !validatePhoneNumber(body.momoPhone)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Invalid phone number format',
+          code: 'INVALID_PHONE'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      )
+    }
+
+    if (body.countryCode && !validateCountryCode(body.countryCode)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Invalid country code format',
+          code: 'INVALID_COUNTRY_CODE'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      )
+    }
+
+    if (body.momoCountryCode && !validateCountryCode(body.momoCountryCode)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Invalid MoMo country code format',
+          code: 'INVALID_MOMO_COUNTRY_CODE'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      )
+    }
+
+    if (body.language && !validateLanguage(body.language)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Invalid language code format',
+          code: 'INVALID_LANGUAGE'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      )
+    }
+
+    // Build update object with only provided fields (sanitized)
     const updateData: any = {}
-    if (body.countryCode !== undefined) updateData.country_code = body.countryCode
-    if (body.momoCountryCode !== undefined) updateData.momo_country_code = body.momoCountryCode
-    if (body.momoPhone !== undefined) updateData.momo_phone = body.momoPhone
+    if (body.countryCode !== undefined) updateData.country_code = sanitizeInput(body.countryCode, 2)
+    if (body.momoCountryCode !== undefined) updateData.momo_country_code = sanitizeInput(body.momoCountryCode, 2)
+    if (body.momoPhone !== undefined) updateData.momo_phone = sanitizeInput(body.momoPhone, 15)
     if (body.useMomoCode !== undefined) updateData.use_momo_code = body.useMomoCode
-    if (body.merchantName !== undefined) updateData.merchant_name = body.merchantName
+    if (body.merchantName !== undefined) updateData.merchant_name = sanitizeInput(body.merchantName, 100)
     if (body.biometricEnabled !== undefined) updateData.biometric_enabled = body.biometricEnabled
     if (body.nfcTerminalEnabled !== undefined) updateData.nfc_terminal_enabled = body.nfcTerminalEnabled
-    if (body.language !== undefined) updateData.language = body.language
+    if (body.language !== undefined) updateData.language = sanitizeInput(body.language, 2)
 
     // Update user profile
     const { data, error } = await supabaseClient
