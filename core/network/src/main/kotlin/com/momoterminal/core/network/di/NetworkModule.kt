@@ -1,5 +1,6 @@
 package com.momoterminal.core.network.di
 
+import com.momoterminal.core.network.BuildConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,8 +32,10 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        // Use Supabase Edge Functions URL for API calls
+        val baseUrl = "${BuildConfig.SUPABASE_URL}/functions/v1/"
         return Retrofit.Builder()
-            .baseUrl("https://api.example.com/") // Override in app module
+            .baseUrl(baseUrl)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
