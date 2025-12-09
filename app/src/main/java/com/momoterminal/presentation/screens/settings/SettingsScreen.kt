@@ -126,6 +126,8 @@ fun SettingsScreen(
                     profileCountry = uiState.profileCountryName,
                     merchantName = uiState.userName,
                     isEditing = uiState.isEditingProfile,
+                    isSaved = uiState.userName.isNotBlank() && !uiState.isEditingProfile,
+                    showSaveSuccess = uiState.showSaveSuccess,
                     onMerchantNameChange = viewModel::updateMerchantName,
                     onToggleEdit = viewModel::toggleEditProfile
                 )
@@ -656,6 +658,8 @@ private fun ProfileInfoCard(
     profileCountry: String,
     merchantName: String = "",
     isEditing: Boolean = false,
+    isSaved: Boolean = false,
+    showSaveSuccess: Boolean = false,
     onMerchantNameChange: (String) -> Unit = {},
     onToggleEdit: () -> Unit = {}
 ) {
@@ -671,53 +675,80 @@ private fun ProfileInfoCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Merchant Name (Editable)
-            Row(
+            // Business Name - Editable with Save/Change button
+            Text(
+                text = "Business Name",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            MomoTextField(
+                value = merchantName,
+                onValueChange = onMerchantNameChange,
+                label = "",
+                placeholder = "Enter your business name",
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Business,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Business Name",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        if (isEditing) {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            MomoTextField(
-                                value = merchantName,
-                                onValueChange = onMerchantNameChange,
-                                label = "",
-                                placeholder = "Enter business name",
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true
-                            )
-                        } else {
-                            Text(
-                                text = merchantName.ifBlank { "Not set" },
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium
-                            )
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        if (merchantName.isNotBlank()) {
+                            onToggleEdit()
                         }
                     }
+                )
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Save/Change Button Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = if (isSaved) Arrangement.SpaceBetween else Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (isSaved) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = SuccessGreen,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Saved",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = SuccessGreen,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
-                IconButton(onClick = onToggleEdit) {
-                    Icon(
-                        imageVector = if (isEditing) Icons.Default.Check else Icons.Default.Edit,
-                        contentDescription = if (isEditing) "Save" else "Edit",
-                        tint = if (isEditing) SuccessGreen else MaterialTheme.colorScheme.primary
+                
+                MomoButton(
+                    text = if (isSaved) "Change" else "Save",
+                    onClick = onToggleEdit,
+                    enabled = merchantName.isNotBlank(),
+                    modifier = Modifier.width(if (isSaved) 120.dp else 140.dp)
+                )
+            }
+            
+            AnimatedVisibility(visible = showSaveSuccess) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Check, null, tint = SuccessGreen, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Business name saved successfully!",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SuccessGreen
                     )
                 }
             }
@@ -726,6 +757,7 @@ private fun ProfileInfoCard(
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(modifier = Modifier.height(16.dp))
             
+            // WhatsApp Number (Read-only)
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -752,6 +784,7 @@ private fun ProfileInfoCard(
             
             Spacer(modifier = Modifier.height(12.dp))
             
+            // Country (Read-only)
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
