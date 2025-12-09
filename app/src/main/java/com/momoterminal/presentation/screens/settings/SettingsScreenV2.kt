@@ -2,6 +2,7 @@ package com.momoterminal.presentation.screens.settings
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -9,6 +10,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -136,7 +138,7 @@ fun SettingsScreenV2(
                     contentColor = MaterialTheme.colorScheme.error
                 )
             ) {
-                Icon(Icons.Default.Logout, contentDescription = null)
+                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Sign Out")
             }
@@ -149,7 +151,7 @@ fun SettingsScreenV2(
             onDismissRequest = { viewModel.hideLogoutDialog() },
             icon = {
                 Icon(
-                    Icons.Default.Logout,
+                    Icons.AutoMirrored.Filled.Logout,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.error
                 )
@@ -213,7 +215,7 @@ private fun ProfileCard(
                 SaveStatusIndicator(isSaving, lastSaved)
             }
             
-            Divider()
+            HorizontalDivider()
             
             // Business Name - Editable with auto-save
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -254,7 +256,7 @@ private fun ProfileCard(
                 )
             }
             
-            Divider()
+            HorizontalDivider()
             
             // WhatsApp Number - Read only
             Row(
@@ -344,7 +346,7 @@ private fun MobileMoneyCard(
                 SaveStatusIndicator(isSaving, lastSaved)
             }
             
-            Divider()
+            HorizontalDivider()
             
             // Mobile Money Number
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -500,7 +502,7 @@ private fun SkeletonProfileCard() {
                     .height(24.dp)
                     .shimmerEffect()
             )
-            Divider()
+            HorizontalDivider()
             repeat(3) {
                 Box(
                     modifier = Modifier
