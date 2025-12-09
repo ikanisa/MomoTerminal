@@ -344,6 +344,13 @@ class SettingsViewModel @Inject constructor(
     }
     
     fun toggleEditProfile() {
+        val isCurrentlyEditing = _uiState.value.isEditingProfile
+        
+        if (isCurrentlyEditing) {
+            // Save the business name when toggling from edit mode to view mode
+            saveSettings()
+        }
+        
         _uiState.update { it.copy(isEditingProfile = !it.isEditingProfile) }
     }
 
@@ -411,7 +418,7 @@ class SettingsViewModel @Inject constructor(
             }
 
             _uiState.update { it.copy(showSaveSuccess = true, isConfigured = state.momoIdentifier.isNotBlank()) }
-            kotlinx.coroutines.delay(100)
+            kotlinx.coroutines.delay(2000) // Show success message for 2 seconds
             _uiState.update { it.copy(showSaveSuccess = false) }
         }
     }

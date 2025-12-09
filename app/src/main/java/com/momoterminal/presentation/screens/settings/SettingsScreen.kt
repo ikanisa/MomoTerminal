@@ -333,35 +333,108 @@ fun SettingsScreen(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // MoMo Phone Number or Code input (no country prefix)
-            MomoTextField(
-                value = uiState.momoIdentifier,
-                onValueChange = viewModel::updateMomoIdentifier,
-                label = if (uiState.useMomoCode) stringResource(R.string.momo_code) else stringResource(R.string.momo_phone_number),
-                placeholder = if (uiState.useMomoCode) "123456" else uiState.momoPhonePlaceholder,
+            // MoMo Phone Number or Code input with Save/Change button
+            Card(
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = if (uiState.useMomoCode) KeyboardType.Number else KeyboardType.Phone,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        if (uiState.isMomoIdentifierValid && uiState.momoIdentifier.isNotBlank()) {
-                            viewModel.saveSettings()
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (uiState.useMomoCode) stringResource(R.string.momo_code) else stringResource(R.string.momo_phone_number),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            MomoTextField(
+                                value = uiState.momoIdentifier,
+                                onValueChange = viewModel::updateMomoIdentifier,
+                                label = "",
+                                placeholder = if (uiState.useMomoCode) "123456" else uiState.momoPhonePlaceholder,
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = if (uiState.useMomoCode) KeyboardType.Number else KeyboardType.Phone,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        if (uiState.isMomoIdentifierValid && uiState.momoIdentifier.isNotBlank()) {
+                                            viewModel.saveSettings()
+                                        }
+                                    }
+                                ),
+                                isError = uiState.momoIdentifier.isNotBlank() && !uiState.isMomoIdentifierValid
+                            )
                         }
                     }
-                ),
-                isError = uiState.momoIdentifier.isNotBlank() && !uiState.isMomoIdentifierValid
-            )
-            
-            if (uiState.momoIdentifier.isNotBlank() && !uiState.isMomoIdentifierValid) {
-                Text(
-                    text = if (uiState.useMomoCode) stringResource(R.string.invalid_momo_code) else stringResource(R.string.invalid_phone_format),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-                )
+                    
+                    if (uiState.momoIdentifier.isNotBlank() && !uiState.isMomoIdentifierValid) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = if (uiState.useMomoCode) stringResource(R.string.invalid_momo_code) else stringResource(R.string.invalid_phone_format),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Save/Change Button
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = if (uiState.isConfigured) Arrangement.SpaceBetween else Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (uiState.isConfigured) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = SuccessGreen,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Saved",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = SuccessGreen,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                        
+                        MomoButton(
+                            text = if (uiState.isConfigured) "Change" else "Save",
+                            onClick = { viewModel.saveSettings() },
+                            enabled = uiState.isMomoIdentifierValid && uiState.momoIdentifier.isNotBlank(),
+                            modifier = Modifier.width(if (uiState.isConfigured) 120.dp else 140.dp)
+                        )
+                    }
+                    
+                    AnimatedVisibility(visible = uiState.showSaveSuccess) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Check, null, tint = SuccessGreen, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Changes saved successfully!",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SuccessGreen
+                            )
+                        }
+                    }
+                }
             }
             
             Spacer(modifier = Modifier.height(24.dp))
@@ -531,14 +604,6 @@ fun SettingsScreen(
             
             Spacer(modifier = Modifier.height(32.dp))
             
-            MomoButton(
-                text = stringResource(R.string.save_configuration),
-                onClick = { viewModel.saveSettings() },
-                enabled = uiState.isMomoPhoneValid
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
             OutlinedButton(
                 onClick = { viewModel.showLogoutDialog() },
                 modifier = Modifier.fillMaxWidth(),
@@ -547,18 +612,6 @@ fun SettingsScreen(
                 Icon(Icons.AutoMirrored.Filled.Logout, null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(R.string.logout))
-            }
-            
-            AnimatedVisibility(visible = uiState.isConfigured) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Check, null, tint = SuccessGreen)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.configuration_saved), style = MaterialTheme.typography.bodyMedium, color = SuccessGreen, fontWeight = FontWeight.Medium)
-                }
             }
             
             Spacer(modifier = Modifier.height(32.dp))
