@@ -27,7 +27,7 @@ import com.momoterminal.presentation.screens.auth.RegisterScreen
 import com.momoterminal.presentation.screens.home.HomeScreen
 import com.momoterminal.presentation.screens.home.HomeViewModel
 import com.momoterminal.presentation.screens.nfc.NfcTerminalScreen
-import com.momoterminal.presentation.screens.settings.SettingsScreenV2
+import com.momoterminal.presentation.screens.settings.SettingsScreen
 import com.momoterminal.presentation.screens.transaction.TransactionDetailScreen
 import com.momoterminal.presentation.screens.transactions.TransactionsScreen
 import com.momoterminal.feature.vending.navigation.VendingDestination
@@ -249,9 +249,12 @@ fun NavGraph(
         
         // Settings screen
         composable(route = Screen.Settings.route) {
-            SettingsScreenV2(
+            SettingsScreen(
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToVending = {
+                    navController.navigate(Screen.Vending.route)
                 },
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
