@@ -391,18 +391,11 @@ class SettingsViewModel @Inject constructor(
     fun saveSettings() {
         viewModelScope.launch {
             val state = _uiState.value
+            _uiState.update { it.copy(isLoadingProfile = true, profileError = null) }
             
-            // Save to local DataStore first
-            userPreferences.updateMomoConfig(
-                momoCountryCode = state.momoCountryCode,
-                momoIdentifier = state.momoIdentifier,
-                useMomoCode = state.useMomoCode
-            )
-            userPreferences.updateBiometricEnabled(state.isBiometricEnabled)
-
-            // Sync to Supabase database
             try {
-                supabaseAuthService.updateUserProfile(
+                // Save to Supabase FIRST (single source of truth)
+                when (val result = supabaseAuthService.updateUserProfile(
                     countryCode = state.profileCountryCode,
                     momoCountryCode = state.momoCountryCode,
                     momoPhone = state.momoIdentifier,
@@ -411,15 +404,52 @@ class SettingsViewModel @Inject constructor(
                     biometricEnabled = state.isBiometricEnabled,
                     nfcTerminalEnabled = state.isNfcTerminalEnabled,
                     language = state.currentLanguage
-                )
-                Timber.d("Settings synced to Supabase successfully")
+                )) {
+                    is com.momoterminal.supabase.AuthResult.Success -> {
+                        Timber.d("Settings saved to database successfully")
+                        
+                        // Update local cache ONLY after cloud success
+                        userPreferences.updateMomoConfig(
+                            momoCountryCode = state.momoCountryCode,
+                            momoIdentifier = state.momoIdentifier,
+                            useMomoCode = state.useMomoCode
+                        )
+                        userPreferences.updateBiometricEnabled(state.isBiometricEnabled)
+                        userPreferences.setNfcTerminalEnabled(state.isNfcTerminalEnabled)
+                        
+                        _uiState.update { 
+                            it.copy(
+                                showSaveSuccess = true,
+                                isConfigured = state.momoIdentifier.isNotBlank(),
+                                isLoadingProfile = false,
+                                profileError = null
+                            ) 
+                        }
+                        kotlinx.coroutines.delay(2000)
+                        _uiState.update { it.copy(showSaveSuccess = false) }
+                    }
+                    is com.momoterminal.supabase.AuthResult.Error -> {
+                        Timber.e("Failed to save settings to database: ${result.message}")
+                        _uiState.update { 
+                            it.copy(
+                                isLoadingProfile = false,
+                                profileError = "Failed to save: ${result.message}"
+                            ) 
+                        }
+                    }
+                    else -> {
+                        _uiState.update { it.copy(isLoadingProfile = false) }
+                    }
+                }
             } catch (e: Exception) {
-                Timber.e(e, "Failed to sync settings to Supabase")
+                Timber.e(e, "Exception saving settings to database")
+                _uiState.update { 
+                    it.copy(
+                        isLoadingProfile = false,
+                        profileError = "Failed to save settings"
+                    ) 
+                }
             }
-
-            _uiState.update { it.copy(showSaveSuccess = true, isConfigured = state.momoIdentifier.isNotBlank()) }
-            kotlinx.coroutines.delay(2000) // Show success message for 2 seconds
-            _uiState.update { it.copy(showSaveSuccess = false) }
         }
     }
 

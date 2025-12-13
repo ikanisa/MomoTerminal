@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.momoterminal.core.common.preferences.UserPreferences
 import com.momoterminal.core.database.dao.TransactionDao
+import com.momoterminal.data.repository.WalletRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -13,7 +14,8 @@ import javax.inject.Inject
 @HiltViewModel
 class WalletViewModel @Inject constructor(
     private val userPreferences: UserPreferences,
-    private val transactionDao: TransactionDao
+    private val transactionDao: TransactionDao,
+    private val walletRepository: WalletRepository
 ) : ViewModel() {
 
     data class WalletUiState(
@@ -63,7 +65,22 @@ class WalletViewModel @Inject constructor(
 
     private fun loadWalletBalance() {
         viewModelScope.launch {
-            _uiState.update { it.copy(balance = 0, isLoading = false) }
+            try {
+                // Load balance from local Room database (offline-first)
+                userPreferences.userPreferencesFlow.first().let { prefs ->
+                    val userId = prefs.merchantPhone.ifBlank { prefs.phoneNumber.ifBlank { "default" } }
+                    if (userId.isNotBlank()) {
+                        val balance = walletRepository.getBalance(userId)
+                        _uiState.update { it.copy(balance = balance, isLoading = false) }
+                        Timber.d("Wallet balance loaded: $balance")
+                    } else {
+                        _uiState.update { it.copy(balance = 0, isLoading = false) }
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to load wallet balance")
+                _uiState.update { it.copy(balance = 0, isLoading = false, error = e.message) }
+            }
         }
     }
 

@@ -4,6 +4,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { verify } from "https://deno.land/x/djwt@v2.8/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,7 +12,7 @@ const corsHeaders = {
 }
 
 interface GetProfileRequest {
-  userId: string
+  // userId is now extracted from JWT
 }
 
 interface UserProfile {
@@ -36,42 +37,49 @@ serve(async (req) => {
   }
 
   try {
+    // Verify JWT
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const JWT_SECRET = Deno.env.get('SUPABASE_JWT_SECRET') || Deno.env.get('JWT_SECRET')!
+
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing Authorization header', code: 'UNAUTHORIZED' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      )
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    const keyData = new TextEncoder().encode(JWT_SECRET)
+    const cryptoKey = await crypto.subtle.importKey("raw", keyData, { name: "HMAC", hash: "SHA-256" }, true, ["verify"])
+    
+    let userId: string
+    try {
+      const payload = await verify(token, cryptoKey)
+      userId = payload.sub as string
+    } catch (e) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid token', code: 'UNAUTHORIZED' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      )
+    }
+
     // Create Supabase client with service role for data access
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
         auth: {
           autoRefreshToken: false,
           persistSession: false
         }
-      }
-    )
+    })
 
-    const body: GetProfileRequest = await req.json()
-    
-    // Validate required field
-    if (!body.userId) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'User ID is required',
-          code: 'MISSING_USER_ID'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400
-        }
-      )
-    }
-
-    console.log(`Fetching profile for user: ${body.userId}`)
+    console.log(`Fetching profile for user: ${userId}`)
 
     // Fetch user profile from canonical table: user_profiles
     const { data, error } = await supabaseClient
       .from('user_profiles')
       .select('*')
-      .eq('id', body.userId)
+      .eq('id', userId)
       .single()
 
     if (error) {
@@ -122,7 +130,7 @@ serve(async (req) => {
       updatedAt: data.updated_at
     }
 
-    console.log(`Profile fetched successfully for user: ${body.userId}`)
+    console.log(`Profile fetched successfully for user: ${userId}`)
 
     return new Response(
       JSON.stringify({

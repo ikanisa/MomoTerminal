@@ -3,6 +3,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { verify } from "https://deno.land/x/djwt@v2.8/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,7 +11,7 @@ const corsHeaders = {
 }
 
 interface UpdateProfileRequest {
-  userId: string
+  // userId is now extracted from JWT
   countryCode?: string
   momoCountryCode?: string
   momoPhone?: string
@@ -21,6 +22,31 @@ interface UpdateProfileRequest {
   language?: string
 }
 
+// Input sanitization helper
+function sanitizeInput(input: string | undefined, maxLength: number = 255): string | undefined {
+  if (!input) return undefined
+  // Remove any non-printable characters, trim, and limit length
+  return input.replace(/[^\x20-\x7E]/g, '').trim().slice(0, maxLength)
+}
+
+function validatePhoneNumber(phone: string | undefined): boolean {
+  if (!phone) return true
+  // Phone should be digits only, 8-15 characters
+  return /^\d{8,15}$/.test(phone)
+}
+
+function validateCountryCode(code: string | undefined): boolean {
+  if (!code) return true
+  // Country code should be 2 uppercase letters
+  return /^[A-Z]{2}$/.test(code)
+}
+
+function validateLanguage(lang: string | undefined): boolean {
+  if (!lang) return true
+  // Language code should be 2 lowercase letters
+  return /^[a-z]{2}$/.test(lang)
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
@@ -28,26 +54,51 @@ serve(async (req) => {
   }
 
   try {
+    // Verify JWT
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const JWT_SECRET = Deno.env.get('SUPABASE_JWT_SECRET') || Deno.env.get('JWT_SECRET')!
+
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing Authorization header', code: 'UNAUTHORIZED' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      )
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    const keyData = new TextEncoder().encode(JWT_SECRET)
+    const cryptoKey = await crypto.subtle.importKey("raw", keyData, { name: "HMAC", hash: "SHA-256" }, true, ["verify"])
+    
+    let userId: string
+    try {
+      const payload = await verify(token, cryptoKey)
+      userId = payload.sub as string
+    } catch (e) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid token', code: 'UNAUTHORIZED' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      )
+    }
+
     // Create Supabase client with service role
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
         auth: {
           autoRefreshToken: false,
           persistSession: false
         }
-      }
-    )
+    })
 
     const body: UpdateProfileRequest = await req.json()
     
-    // Validate required field
-    if (!body.userId) {
+    // Validate required field (userId logic removed from body check)
+    if (!userId) {
+       // Should not happen if token verified
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'User ID is required',
+          error: 'User ID missing from token',
           code: 'MISSING_USER_ID'
         }),
         {
@@ -57,16 +108,73 @@ serve(async (req) => {
       )
     }
 
-    // Build update object with only provided fields
+    // Input validation and sanitization
+    if (body.momoPhone && !validatePhoneNumber(body.momoPhone)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Invalid phone number format',
+          code: 'INVALID_PHONE'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      )
+    }
+
+    if (body.countryCode && !validateCountryCode(body.countryCode)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Invalid country code format',
+          code: 'INVALID_COUNTRY_CODE'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      )
+    }
+
+    if (body.momoCountryCode && !validateCountryCode(body.momoCountryCode)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Invalid MoMo country code format',
+          code: 'INVALID_MOMO_COUNTRY_CODE'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      )
+    }
+
+    if (body.language && !validateLanguage(body.language)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Invalid language code format',
+          code: 'INVALID_LANGUAGE'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      )
+    }
+
+    // Build update object with only provided fields (sanitized)
     const updateData: any = {}
-    if (body.countryCode !== undefined) updateData.country_code = body.countryCode
-    if (body.momoCountryCode !== undefined) updateData.momo_country_code = body.momoCountryCode
-    if (body.momoPhone !== undefined) updateData.momo_phone = body.momoPhone
+    if (body.countryCode !== undefined) updateData.country_code = sanitizeInput(body.countryCode, 2)
+    if (body.momoCountryCode !== undefined) updateData.momo_country_code = sanitizeInput(body.momoCountryCode, 2)
+    if (body.momoPhone !== undefined) updateData.momo_phone = sanitizeInput(body.momoPhone, 15)
     if (body.useMomoCode !== undefined) updateData.use_momo_code = body.useMomoCode
-    if (body.merchantName !== undefined) updateData.merchant_name = body.merchantName
+    if (body.merchantName !== undefined) updateData.merchant_name = sanitizeInput(body.merchantName, 100)
     if (body.biometricEnabled !== undefined) updateData.biometric_enabled = body.biometricEnabled
     if (body.nfcTerminalEnabled !== undefined) updateData.nfc_terminal_enabled = body.nfcTerminalEnabled
-    if (body.language !== undefined) updateData.language = body.language
+    if (body.language !== undefined) updateData.language = sanitizeInput(body.language, 2)
 
     // Update user profile
     const { data, error } = await supabaseClient
@@ -75,7 +183,7 @@ serve(async (req) => {
         ...updateData,
         updated_at: new Date().toISOString()
       })
-      .eq('id', body.userId)
+      .eq('id', userId)
       .select()
       .single()
 
@@ -94,7 +202,7 @@ serve(async (req) => {
       )
     }
 
-    console.log(`Profile updated successfully for user: ${body.userId}`)
+    console.log(`Profile updated successfully for user: ${userId}`)
 
     return new Response(
       JSON.stringify({

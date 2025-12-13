@@ -2,6 +2,7 @@ package com.momoterminal.supabase
 
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.Header
 import retrofit2.http.POST
 
 /**
@@ -21,16 +22,19 @@ interface EdgeFunctionsApi {
     
     @POST("complete-user-profile")
     suspend fun completeUserProfile(
+        @Header("Authorization") authorization: String,
         @Body request: CompleteProfileRequest
     ): Response<CompleteProfileResponse>
     
     @POST("update-user-profile")
     suspend fun updateUserProfile(
+        @Header("Authorization") authorization: String,
         @Body request: UpdateProfileRequest
     ): Response<UpdateProfileResponse>
     
     @POST("get-user-profile")
     suspend fun getUserProfile(
+        @Header("Authorization") authorization: String,
         @Body request: GetProfileRequest
     ): Response<GetProfileResponse>
 }

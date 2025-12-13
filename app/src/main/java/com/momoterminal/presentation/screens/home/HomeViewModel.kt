@@ -24,7 +24,8 @@ class HomeViewModel @Inject constructor(
     private val countryRepository: CountryRepository,
     private val offlineFirstManager: OfflineFirstManager,
     private val transactionDao: TransactionDao,
-    private val walletRepository: WalletRepository
+    private val walletRepository: WalletRepository,
+    private val supabaseAuthService: com.momoterminal.supabase.SupabaseAuthService
 ) : ViewModel() {
 
     enum class PaymentMethod {
@@ -55,9 +56,57 @@ class HomeViewModel @Inject constructor(
     val pendingCount: StateFlow<Int> = offlineFirstManager.pendingCount
 
     init {
+        loadProfileFromDatabase()
         loadUserConfig()
         checkNfcAvailability()
         observeLocalData()
+    }
+
+    private fun loadProfileFromDatabase() {
+        viewModelScope.launch {
+            try {
+                when (val result = supabaseAuthService.getUserProfile()) {
+                    is com.momoterminal.supabase.AuthResult.Success -> {
+                        val profile = result.data
+                        Timber.d("Profile loaded from database: ${profile.phoneNumber}")
+                        
+                        val country = countryRepository.getByCode(profile.momoCountryCode ?: profile.countryCode ?: "RW")
+                            ?: countryRepository.getCurrentCountry()
+                        
+                        val momoPhone = profile.momoPhone ?: profile.phoneNumber
+                        
+                        _uiState.update {
+                            it.copy(
+                                merchantPhone = momoPhone,
+                                countryCode = profile.momoCountryCode ?: profile.countryCode ?: "RW",
+                                currency = country.currency,
+                                currencySymbol = country.currencySymbol,
+                                providerName = country.providerName,
+                                providerCode = country.providerCode,
+                                isConfigured = momoPhone.isNotBlank()
+                            )
+                        }
+                        
+                        // Update local cache
+                        userPreferences.updateMomoConfig(
+                            momoCountryCode = profile.momoCountryCode ?: profile.countryCode ?: "RW",
+                            momoIdentifier = momoPhone,
+                            useMomoCode = profile.useMomoCode
+                        )
+                    }
+                    is com.momoterminal.supabase.AuthResult.Error -> {
+                        Timber.w("Failed to load profile from database: ${result.message}, falling back to local cache")
+                        loadUserConfig()
+                    }
+                    else -> {
+                        loadUserConfig()
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error loading profile from database, falling back to local cache")
+                loadUserConfig()
+            }
+        }
     }
 
     private fun loadUserConfig() {

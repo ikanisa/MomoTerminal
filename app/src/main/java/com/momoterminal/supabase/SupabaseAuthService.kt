@@ -76,13 +76,18 @@ class SupabaseAuthService @Inject constructor(
                 val body = response.body()!!
                 Timber.d("OTP verified successfully, user: ${body.userId}")
                 
-                // Edge Function returns null tokens because Supabase phone provider is not enabled
-                // Create a simple session with the user ID
+                // Use real access token from response
+                val accessToken = body.accessToken
+                if (accessToken.isNullOrEmpty()) {
+                     Timber.e("No access token received from verifyOtp")
+                     return@withContext AuthResult.Error("No access token received", "MISSING_TOKEN")
+                }
+
                 val sessionData = SessionData(
-                    accessToken = "whatsapp_otp_${body.userId}_${System.currentTimeMillis()}",
-                    refreshToken = "refresh_${body.userId}_${System.currentTimeMillis()}",
-                    expiresIn = 604800L, // 7 days
-                    expiresAt = System.currentTimeMillis() / 1000 + 604800L,
+                    accessToken = accessToken,
+                    refreshToken = body.refreshToken ?: "", // Refresh token might be null/empty in this flow
+                    expiresIn = body.expiresIn?.toLong() ?: 604800L,
+                    expiresAt = System.currentTimeMillis() / 1000 + (body.expiresIn?.toLong() ?: 604800L),
                     user = SupabaseUser(
                         id = body.userId ?: "",
                         phone = phoneNumber,
@@ -129,9 +134,15 @@ class SupabaseAuthService @Inject constructor(
         try {
             Timber.d("Completing profile for user: $userId")
             
+            val accessToken = auth.currentSessionOrNull()?.accessToken
+            if (accessToken == null) {
+                 return@withContext AuthResult.Error("Not authenticated", "NOT_AUTHENTICATED")
+            }
+
             val response = edgeFunctionsApi.completeUserProfile(
-                CompleteProfileRequest(
-                    userId = userId,
+                authorization = "Bearer $accessToken",
+                request = CompleteProfileRequest(
+                    userId = userId, // Backend ignores this now but useful for logging/compat
                     pin = pin,
                     merchantName = merchantName,
                     acceptedTerms = acceptedTerms
@@ -272,8 +283,14 @@ class SupabaseAuthService @Inject constructor(
             
             Timber.d("Fetching user profile for user: $userId")
             
+            val accessToken = auth.currentSessionOrNull()?.accessToken
+            if (accessToken == null) {
+                 return@withContext AuthResult.Error("Not authenticated", "NOT_AUTHENTICATED")
+            }
+
             val response = edgeFunctionsApi.getUserProfile(
-                GetProfileRequest(userId = userId)
+                authorization = "Bearer $accessToken",
+                request = GetProfileRequest(userId = userId)
             )
             
             if (response.isSuccessful && response.body()?.success == true && response.body()?.profile != null) {
@@ -332,8 +349,14 @@ class SupabaseAuthService @Inject constructor(
             
             Timber.d("Updating user profile for user: $userId")
             
+            val accessToken = auth.currentSessionOrNull()?.accessToken
+            if (accessToken == null) {
+                 return@withContext AuthResult.Error("Not authenticated", "NOT_AUTHENTICATED")
+            }
+
             val response = edgeFunctionsApi.updateUserProfile(
-                UpdateProfileRequest(
+                authorization = "Bearer $accessToken",
+                request = UpdateProfileRequest(
                     userId = userId,
                     countryCode = countryCode,
                     momoCountryCode = momoCountryCode,
