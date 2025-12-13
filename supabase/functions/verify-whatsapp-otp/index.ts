@@ -3,6 +3,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { create, getNumericDate, Header, Payload } from "https://deno.land/x/djwt@v2.8/mod.ts"
 
 // CORS configuration
 const CORS_HEADERS = {
@@ -54,6 +55,7 @@ serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const JWT_SECRET = Deno.env.get('SUPABASE_JWT_SECRET') || Deno.env.get('JWT_SECRET')!
 
     // Parse and validate request
     const { phoneNumber, otpCode }: RequestBody = await req.json()
@@ -396,20 +398,53 @@ serve(async (req) => {
       console.log(`[OTP-VERIFY] User phone confirmed successfully`)
     }
 
-    // Return success with user info
-    // Note: We don't create a session here because Supabase phone provider is not enabled
-    // The client will need to handle authentication state differently
+    // Generate JWT (HS256)
+    const jwtHeader: Header = { alg: "HS256", typ: "JWT" }
+    const jwtPayload: Payload = {
+      sub: userId!,
+      aud: "authenticated",
+      role: "authenticated",
+      exp: getNumericDate(60 * 60 * 24 * 7), // 7 days
+      iat: getNumericDate(0),
+      // Custom claims if needed
+      phone: phoneNumber,
+      app_metadata: {
+        provider: "whatsapp",
+        providers: ["whatsapp"]
+      },
+      user_metadata: {
+        phone_verified: true
+      }
+    }
+
+    let accessToken: string | null = null
+    
+    // Sign the JWT
+    // Convert secret string to CryptoKey
+    const keyData = new TextEncoder().encode(JWT_SECRET)
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: "SHA-256" },
+      true,
+      ["sign", "verify"]
+    )
+    
+    accessToken = await create(jwtHeader, jwtPayload, cryptoKey)
+    console.log(`[OTP-VERIFY] Generated JWT for user ${userId}`)
+
+    // Return success with JWT
     const response: VerifyOtpResponse = {
       success: true,
       message: 'OTP verified successfully',
       userId: userId!,
       isNewUser: isNewUser,
-      accessToken: null,
-      refreshToken: null,
-      expiresIn: null
+      accessToken: accessToken,
+      refreshToken: null, // We don't implement refresh tokens with this custom flow yet
+      expiresIn: 60 * 60 * 24 * 7 // 7 days in seconds
     }
 
-    console.log(`[OTP-VERIFY] Returning success response for user ${userId}`)
+    console.log(`[OTP-VERIFY] Returning success response with JWT for user ${userId}`)
 
     return new Response(
       JSON.stringify(response),

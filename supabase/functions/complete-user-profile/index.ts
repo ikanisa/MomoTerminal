@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { verify } from "https://deno.land/x/djwt@v2.8/mod.ts"
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -7,7 +8,7 @@ const CORS_HEADERS = {
 }
 
 interface CompleteProfileRequest {
-  userId: string
+  // userId is now extracted from JWT
   pin: string
   merchantName: string
   acceptedTerms: boolean
@@ -30,15 +31,39 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const JWT_SECRET = Deno.env.get('SUPABASE_JWT_SECRET') || Deno.env.get('JWT_SECRET')!
+    
+    // Verify JWT
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('Missing Authorization header')
+    }
+    const token = authHeader.replace('Bearer ', '')
+    const keyData = new TextEncoder().encode(JWT_SECRET)
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw", 
+      keyData, 
+      { name: "HMAC", hash: "SHA-256" }, 
+      true, 
+      ["verify"]
+    )
+    
+    const payload = await verify(token, cryptoKey)
+    const userId = payload.sub
+    
+    if (!userId) {
+       throw new Error('Invalid token: missing subject')
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Parse request body
-    const { userId, pin, merchantName, acceptedTerms }: CompleteProfileRequest = await req.json()
+    const { pin, merchantName, acceptedTerms }: CompleteProfileRequest = await req.json()
 
     console.log(`[PROFILE-COMPLETE] Completing profile for user: ${userId}`)
 
     // Validate inputs
-    if (!userId || !pin || !merchantName) {
+    if (!pin || !merchantName) {
       return new Response(
         JSON.stringify({
           success: false,

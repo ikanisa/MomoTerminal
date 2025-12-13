@@ -3,6 +3,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { verify } from "https://deno.land/x/djwt@v2.8/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,7 +11,7 @@ const corsHeaders = {
 }
 
 interface UpdateProfileRequest {
-  userId: string
+  // userId is now extracted from JWT
   countryCode?: string
   momoCountryCode?: string
   momoPhone?: string
@@ -53,26 +54,51 @@ serve(async (req) => {
   }
 
   try {
+    // Verify JWT
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const JWT_SECRET = Deno.env.get('SUPABASE_JWT_SECRET') || Deno.env.get('JWT_SECRET')!
+
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing Authorization header', code: 'UNAUTHORIZED' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      )
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    const keyData = new TextEncoder().encode(JWT_SECRET)
+    const cryptoKey = await crypto.subtle.importKey("raw", keyData, { name: "HMAC", hash: "SHA-256" }, true, ["verify"])
+    
+    let userId: string
+    try {
+      const payload = await verify(token, cryptoKey)
+      userId = payload.sub as string
+    } catch (e) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid token', code: 'UNAUTHORIZED' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      )
+    }
+
     // Create Supabase client with service role
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
         auth: {
           autoRefreshToken: false,
           persistSession: false
         }
-      }
-    )
+    })
 
     const body: UpdateProfileRequest = await req.json()
     
-    // Validate required field
-    if (!body.userId) {
+    // Validate required field (userId logic removed from body check)
+    if (!userId) {
+       // Should not happen if token verified
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'User ID is required',
+          error: 'User ID missing from token',
           code: 'MISSING_USER_ID'
         }),
         {
@@ -157,7 +183,7 @@ serve(async (req) => {
         ...updateData,
         updated_at: new Date().toISOString()
       })
-      .eq('id', body.userId)
+      .eq('id', userId)
       .select()
       .single()
 
@@ -176,7 +202,7 @@ serve(async (req) => {
       )
     }
 
-    console.log(`Profile updated successfully for user: ${body.userId}`)
+    console.log(`Profile updated successfully for user: ${userId}`)
 
     return new Response(
       JSON.stringify({
